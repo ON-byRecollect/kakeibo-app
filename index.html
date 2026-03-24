@@ -6,42 +6,47 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>家計簿アプリ</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <style>
-    /* iPhoneの安全領域（ノッチや下のバー）を避けるための設定 */
     .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
-    body { overscroll-behavior-y: none; } /* スクロール時の余振れ防止 */
+    body { overscroll-behavior-y: none; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
-  
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect } = React;
 
     // ==========================================
-    // 共通コンポーネント
+    // 🌟 改善点：データ自動保存機能（LocalStorage）
     // ==========================================
+    function useLocalStorage(key, initialValue) {
+      const [value, setValue] = useState(() => {
+        const saved = localStorage.getItem(key);
+        return saved !== null ? JSON.parse(saved) : initialValue;
+      });
+      useEffect(() => {
+        localStorage.setItem(key, JSON.stringify(value));
+      }, [key, value]);
+      return [value, setValue];
+    }
+
+    // --- 共通コンポーネント ---
     const AccountIcon = ({ label, bgColor }) => (
-      <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm ${bgColor}`}>
-        {label}
-      </div>
+      <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm ${bgColor}`}>{label}</div>
     );
 
     // ==========================================
-    // 1. 資産タブ
+    // 1. 資産タブ（自動保存対応）
     // ==========================================
     const AssetTab = () => {
-      const [cashAssets, setCashAssets] = useState({ matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
-      const [pointAssets, setPointAssets] = useState({ w: '', p: '', nisa: '' });
+      // 🌟 useState を useLocalStorage に変更し、データを永続化
+      const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
+      const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
 
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
@@ -52,10 +57,8 @@
         { id: 'ic', label: 'IC', color: 'bg-green-500' }, { id: 'w', label: 'W', color: 'bg-blue-400' },
         { id: 'gen', label: '現', color: 'bg-gray-400' }
       ];
-
       const pointAccounts = [
-        { id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' },
-        { id: 'nisa', label: 'NISA', color: 'bg-red-700' }
+        { id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' }, { id: 'nisa', label: 'NISA', color: 'bg-red-700' }
       ];
 
       return (
@@ -100,12 +103,13 @@
     };
 
     // ==========================================
-    // 2. 固定タブ
+    // 2. 固定タブ（自動保存対応）
     // ==========================================
     const FixedTab = () => {
-      const [fixedCosts, setFixedCosts] = useState([
+      // 🌟 固定費データも LocalStorage に保存
+      const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', [
         { id: 1, accountLabel: '松', color: 'bg-blue-700', name: '家賃', date: '25', amount: 80000, isPaid: false },
-        { id: 2, accountLabel: '新', color: 'bg-yellow-400', name: 'スマホ代', date: '10', amount: 4500, isPaid: true },
+        { id: 2, accountLabel: '新', color: 'bg-yellow-400', name: 'スマホ代', date: '10', amount: 4500, isPaid: false },
         { id: 3, accountLabel: 'か', color: 'bg-orange-500', name: '地方競馬専門紙', date: '1', amount: 3000, isPaid: false },
         { id: 4, accountLabel: 'か', color: 'bg-orange-500', name: 'ネット代', date: '15', amount: 5000, isPaid: false },
         { id: 5, accountLabel: 'か', color: 'bg-orange-500', name: 'サブスク', date: '20', amount: 1500, isPaid: false },
@@ -142,7 +146,7 @@
     };
 
     // ==========================================
-    // 3. 変動タブ
+    // 3. 変動タブ（※UIレイアウトのみ・次ステップで連動予定）
     // ==========================================
     const VariableTab = () => {
       const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -208,13 +212,12 @@
     };
 
     // ==========================================
-    // 4. 累計タブ
+    // 4. 累計タブ（※UIレイアウトのみ・次ステップで連動予定）
     // ==========================================
     const TotalTab = () => {
       const monthlyData = [
         { id: 1, month: '2026年3月', food: { out: 12500, cook: 18000 }, utility: { electric: 8500, gas: 4200 }, transport: 5400 },
-        { id: 2, month: '2026年2月', food: { out: 22000, cook: 15000 }, utility: { electric: 9500, gas: 5000 }, transport: 7200 },
-        { id: 3, month: '2026年1月', food: { out: 18000, cook: 19000 }, utility: { electric: 11000, gas: 5500 }, transport: 4800 }
+        { id: 2, month: '2026年2月', food: { out: 22000, cook: 15000 }, utility: { electric: 9500, gas: 5000 }, transport: 7200 }
       ];
 
       return (
@@ -250,7 +253,7 @@
     };
 
     // ==========================================
-    // 5. 入力タブ
+    // 5. 入力タブ（※UIレイアウトのみ・次ステップで連動予定）
     // ==========================================
     const InputTab = () => {
       const [amount, setAmount] = useState('');
@@ -270,7 +273,7 @@
 
       const handleSubmit = () => {
         if (!isSubmitEnabled) return;
-        alert(`登録完了！\n金額: ${amount}円\nカテゴリ: ${category}`);
+        alert(`【次ステップで実装予定】\n金額: ${amount}円\nこのデータをカレンダーや累計タブに送る機能を今後追加します。`);
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
       };
 
@@ -283,7 +286,7 @@
               <span className="text-xl font-bold text-gray-700">円</span>
             </div>
             {category === '固定' && (
-              <div className="mt-4 animate-fade-in-down">
+              <div className="mt-4">
                 <h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃、サブスクなど）</h2>
                 <input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
@@ -322,7 +325,7 @@
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション
+    // メインアプリケーション
     // ==========================================
     const App = () => {
       const [activeTab, setActiveTab] = useState('資産');
@@ -363,7 +366,6 @@
       );
     };
 
-    // 画面に表示するおまじない
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>

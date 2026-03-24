@@ -55,7 +55,8 @@
         { id: 'ka', label: 'か', color: 'bg-orange-500' }, { id: 'p', label: 'P', color: 'bg-red-600' },
         { id: 'ic', label: 'IC', color: 'bg-green-500' }, { id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'gen', label: '現', color: 'bg-gray-400' }
       ];
-      const pointAccounts = [{ id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' }, { id: 'nisa', label: 'NISA', color: 'bg-red-700' }];
+      // 🌟 NISAを「N」に変更（要望5）
+      const pointAccounts = [{ id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' }, { id: 'nisa', label: 'N', color: 'bg-red-700' }];
 
       const cashTotal = Object.values(cashAssets).reduce((sum, val) => sum + Number(val || 0), 0);
       const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
@@ -68,7 +69,7 @@
       };
 
       return (
-        <div className="flex flex-col space-y-6 pt-4 pb-10 w-full">
+        <div className="flex flex-col space-y-6 pt-4 pb-28 w-full">
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
@@ -77,9 +78,9 @@
                   <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
                   <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id]} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
                   <div className="col-span-5">
-                    {/* 🌟 収支の枠（border）と背景色（bg-gray-50）を撤廃 */}
-                    <div className={`w-full h-10 px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
-                      {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
+                    {/* 🌟 収支の枠を復活させ、「円」表記を追加（要望6・7） */}
+                    <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
+                      {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}円
                     </div>
                   </div>
                 </div>
@@ -88,8 +89,8 @@
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
             <span className="font-bold">合計</span>
-            {/* 🌟 合計の枠（border）を撤廃 */}
-            <div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{cashTotal.toLocaleString()}</div>
+            {/* 🌟 合計に「円」表記を追加（要望7） */}
+            <div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{cashTotal.toLocaleString()}円</div>
           </div>
 
           <div className="px-4 mt-6">
@@ -106,8 +107,8 @@
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
             <span className="font-bold">合計</span>
-            {/* 🌟 ポイント合計の枠（border）を撤廃 */}
-            <div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{pointTotal.toLocaleString()}</div>
+            {/* 🌟 ポイント合計に「円」表記を追加（要望7） */}
+            <div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{pointTotal.toLocaleString()}円</div>
           </div>
         </div>
       );
@@ -116,28 +117,33 @@
     // ==========================================
     // 2. 固定タブ
     // ==========================================
-    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, currentYearMonth }) => {
+    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, currentYearMonth, budgets }) => {
       const togglePaid = (id) => {
         setFixedCosts(fixedCosts.map(cost => cost.id === id ? { ...cost, isPaid: !cost.isPaid } : cost));
       };
       
       const totalAmount = fixedCosts.filter(c => !c.isPaid).reduce((sum, cost) => sum + cost.amount, 0);
 
+      // 🌟 日付順に並び替え（月末は99として一番下へ）（要望4）
+      const getDayNum = (d) => d === '月末' ? 99 : Number(d) || 0;
+      const sortedFixedCosts = [...fixedCosts].sort((a, b) => getDayNum(a.date) - getDayNum(b.date));
+
       return (
-        <div className="flex flex-col h-full pt-2 pb-10 w-full">
+        <div className="flex flex-col h-full pt-2 pb-28 w-full">
           <div className="px-4 flex-1">
             <div className="text-center font-bold text-gray-600 mb-2">{currentYearMonth}</div>
-            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
-            <div className="space-y-3">
-              {fixedCosts.map((cost) => (
-                <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
+            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600 border-b border-gray-300 pb-1"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
+            <div className="space-y-0">
+              {sortedFixedCosts.map((cost) => (
+                // 🌟 横線（border-b）を追加し行間を調整（要望3）
+                <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 border-b border-gray-200 py-2 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
                   <div className="col-span-2 flex justify-center"><AccountIcon label={cost.accountLabel} bgColor={cost.color} /></div>
-                  {/* 🌟 項目、日付、金額の枠（border）と背景（bg-white）を撤廃 */}
                   <div className="col-span-4 cursor-pointer" onClick={() => { if(window.confirm(`固定費「${cost.name}」を削除しますか？`)) handleDeleteFixed(cost.id); }}>
-                    <div className="w-full h-10 flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap active:bg-gray-200">{cost.name}</div>
+                    <div className="w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap active:bg-gray-200">{cost.name}</div>
                   </div>
-                  <div className="col-span-2"><div className="w-full h-10 flex items-center justify-center text-sm bg-transparent">{cost.date}</div></div>
-                  <div className="col-span-3"><div className="w-full h-10 flex items-center justify-end px-1 text-sm bg-transparent">{cost.amount.toLocaleString()}</div></div>
+                  <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent">{cost.date}</div></div>
+                  {/* 🌟 金額に「円」表記を追加（要望7） */}
+                  <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent">{cost.amount.toLocaleString()}円</div></div>
                   <div className="col-span-1 flex justify-center"><input type="checkbox" checked={cost.isPaid} onChange={() => togglePaid(cost.id)} className="w-6 h-6 text-green-600 border-gray-400 rounded focus:ring-green-500" /></div>
                 </div>
               ))}
@@ -145,8 +151,20 @@
             </div>
             {fixedCosts.length > 0 && <div className="text-xs text-gray-400 text-right mt-2">※項目名をタップすると削除できます</div>}
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 mt-6 mb-4 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
-            <span className="font-bold text-sm">未払い合計</span><div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}</div>
+
+          <div className="bg-emerald-500 text-white px-4 py-3 mt-4 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
+            {/* 🌟 合計に「円」表記を追加（要望7） */}
+            <span className="font-bold text-sm">未払い合計</span><div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}円</div>
+          </div>
+
+          {/* 🌟 変動タブで設定した予算を最下部に表示（要望9） */}
+          <div className="bg-white px-4 py-3 mt-4 mb-4 rounded-xl mx-2 shadow-sm border border-gray-200">
+            <div className="font-bold text-gray-700 text-sm mb-2 border-b pb-1">変動費 予算枠</div>
+            <div className="space-y-1 text-sm text-gray-600">
+              <div className="flex justify-between"><span>食費 (外食+自炊)</span><span className="font-bold">{budgets.food.toLocaleString()}円</span></div>
+              <div className="flex justify-between"><span>電気</span><span className="font-bold">{budgets.electric.toLocaleString()}円</span></div>
+              <div className="flex justify-between"><span>ガス</span><span className="font-bold">{budgets.gas.toLocaleString()}円</span></div>
+            </div>
           </div>
         </div>
       );
@@ -155,20 +173,22 @@
     // ==========================================
     // 3. 変動タブ
     // ==========================================
-    const VariableTab = ({ expenses, currentYearMonth, todayDay }) => {
+    const VariableTab = ({ expenses, currentYearMonth, todayDay, budgets, setBudgets }) => {
       const days = Array.from({ length: 31 }, (_, i) => i + 1);
       
       const dailyExpenses = {};
       const monthlyVariableCosts = { electric: 0, gas: 0 };
-      let totalSpent = 0;
+      
+      // 🌟 食費（外食+自炊）と交通費を分けて計算（要望9）
+      let foodSpent = 0;
+      let transSpent = 0;
 
       expenses.filter(e => e.yearMonth === currentYearMonth).forEach(e => {
         if (['外食', '自炊', '交通'].includes(e.category)) {
           if (!dailyExpenses[e.day]) dailyExpenses[e.day] = { out: 0, cook: 0, trans: 0 };
-          if (e.category === '外食') dailyExpenses[e.day].out += e.amount;
-          if (e.category === '自炊') dailyExpenses[e.day].cook += e.amount;
-          if (e.category === '交通') dailyExpenses[e.day].trans += e.amount;
-          totalSpent += e.amount;
+          if (e.category === '外食') { dailyExpenses[e.day].out += e.amount; foodSpent += e.amount; }
+          if (e.category === '自炊') { dailyExpenses[e.day].cook += e.amount; foodSpent += e.amount; }
+          if (e.category === '交通') { dailyExpenses[e.day].trans += e.amount; transSpent += e.amount; }
         } else if (e.category === '電気') {
           monthlyVariableCosts.electric += e.amount;
         } else if (e.category === 'ガス') {
@@ -176,9 +196,8 @@
         }
       });
 
-      const budget = 40000; 
-      const remaining = budget - totalSpent;
-      const progressPercent = Math.min((totalSpent / budget) * 100, 100);
+      const remainingFood = budgets.food - foodSpent;
+      const progressPercent = Math.min((foodSpent / budgets.food) * 100, 100) || 0;
 
       const getProgressColor = () => {
         if (progressPercent >= 90) return 'bg-red-500';
@@ -187,7 +206,7 @@
       };
 
       return (
-        <div className="flex flex-col h-full pt-2 pb-6 w-full">
+        <div className="flex flex-col h-full pt-2 pb-28 w-full">
           <div className="px-2 flex-1 overflow-y-auto">
             <div className="text-center font-bold text-gray-600 mb-2">{currentYearMonth}</div>
             <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1"><div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div></div>
@@ -208,15 +227,38 @@
               })}
             </div>
 
-            <div className="bg-emerald-500 text-white px-4 py-3 mt-6 mb-8 flex flex-col space-y-3 shrink-0 rounded-xl shadow-md mx-1">
+            {/* 🌟 予算設定エリアを新設（要望9） */}
+            <div className="bg-white p-4 mx-1 mt-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="font-bold text-gray-700 text-sm mb-3 border-b pb-1">予算設定（当月）</div>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex justify-between items-center">
+                  <span>食費（外食＋自炊）</span>
+                  <div className="flex items-center"><input type="number" inputMode="numeric" value={budgets.food} onChange={e => setBudgets({...budgets, food: Number(e.target.value)})} className="w-20 border border-gray-300 rounded px-1 py-1 text-right mr-1 focus:ring-2 focus:ring-emerald-500 outline-none"/>円</div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>電気</span>
+                  <div className="flex items-center"><input type="number" inputMode="numeric" value={budgets.electric} onChange={e => setBudgets({...budgets, electric: Number(e.target.value)})} className="w-20 border border-gray-300 rounded px-1 py-1 text-right mr-1 focus:ring-2 focus:ring-emerald-500 outline-none"/>円</div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>ガス</span>
+                  <div className="flex items-center"><input type="number" inputMode="numeric" value={budgets.gas} onChange={e => setBudgets({...budgets, gas: Number(e.target.value)})} className="w-20 border border-gray-300 rounded px-1 py-1 text-right mr-1 focus:ring-2 focus:ring-emerald-500 outline-none"/>円</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 🌟 食費プログレスバーと各実績の表示 */}
+            <div className="bg-emerald-500 text-white px-4 py-3 mt-4 mb-8 flex flex-col space-y-3 shrink-0 rounded-xl shadow-md mx-1">
               <div>
-                <div className="flex justify-between text-xs font-bold mb-1"><span>日々の変動費（残額: {remaining.toLocaleString()}円）</span><span>{totalSpent.toLocaleString()} / {budget.toLocaleString()}円</span></div>
+                <div className="flex justify-between text-xs font-bold mb-1"><span>食費（残額: {remainingFood.toLocaleString()}円）</span><span>{foodSpent.toLocaleString()} / {budgets.food.toLocaleString()}円</span></div>
                 <div className="w-full h-3 bg-white/30 rounded-full overflow-hidden"><div className={`h-full transition-all duration-500 ${getProgressColor()}`} style={{ width: `${progressPercent}%` }}></div></div>
               </div>
               <hr className="border-white/30" />
               <div className="flex justify-between items-center text-sm font-bold">
                 <div className="flex space-x-4"><span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-300 mr-1"></span>電気</span><span className="flex items-center"><span className="w-2 h-2 rounded-full bg-blue-300 mr-1"></span>ガス</span></div>
                 <div className="flex space-x-3"><span>{monthlyVariableCosts.electric.toLocaleString()}円</span><span>{monthlyVariableCosts.gas.toLocaleString()}円</span></div>
+              </div>
+              <div className="flex justify-between items-center text-sm font-bold pt-2 border-t border-white/30">
+                <span>交通費</span><span>{transSpent.toLocaleString()}円</span>
               </div>
             </div>
 
@@ -244,7 +286,7 @@
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
 
       return (
-        <div className="flex flex-col h-full bg-gray-100 pt-4 pb-10 overflow-y-auto px-4 space-y-4 w-full">
+        <div className="flex flex-col h-full bg-gray-100 pt-4 pb-28 overflow-y-auto px-4 space-y-4 w-full">
           {sortedMonths.length === 0 && <div className="text-center text-gray-400 mt-10">変動費データがありません</div>}
           {sortedMonths.map((data, index) => {
             const foodTotal = data.food.out + data.food.cook;
@@ -289,15 +331,16 @@
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶月', '奇月'];
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
 
+      // 🌟 口座の入力必須判定（外食、自炊、交通は必須としない）（要望1）
+      const isAccountRequired = !['外食', '自炊', '交通'].includes(category);
       const isDayDisabled = timing === '今日';
-      const isSubmitEnabled = amount !== '' && category !== '' && account !== '' && timing !== '' && (isDayDisabled || day !== '');
+      
+      const isSubmitEnabled = amount !== '' && category !== '' && (!isAccountRequired || account !== '') && timing !== '' && (isDayDisabled || day !== '');
 
       const onSubmit = () => {
         if (!isSubmitEnabled) return;
         let targetDay = isDayDisabled ? todayDay : (day === '月末' ? 31 : Number(day));
-        
         handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: currentYearMonth });
-        
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
       };
 
@@ -305,7 +348,6 @@
 
       return (
         <div className="flex flex-col h-full bg-white w-full">
-          {/* 🌟 paddingとbox-borderを徹底し、横見切れを防止 */}
           <div className="px-4 py-4 shrink-0 w-full box-border">
             <h2 className="text-lg font-bold text-gray-700 mb-2">支出</h2>
             <div className="flex items-center space-x-2 w-full"><input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="flex-1 min-w-0 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500" /><span className="text-xl font-bold text-gray-700 shrink-0">円</span></div>
@@ -313,14 +355,15 @@
               <div className="mt-4 animate-fade-in-down w-full"><h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃など）</h2><input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border" /></div>
             )}
           </div>
-          {/* 🌟 上部の角丸（rounded）を撤廃し、画面端までまっすぐ塗りつぶす */}
-          <div className="bg-emerald-500 flex-1 px-2 py-4 flex flex-col overflow-y-auto shadow-inner w-full box-border rounded-none">
-            <div className="flex flex-wrap justify-center gap-1.5 mb-3">{categories.map((cat) => (<button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
-            <div className="flex flex-wrap justify-center gap-2 mb-3">{accounts.map((acc) => (<button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
+          {/* 🌟 緑エリアを全画面（下まで）塗りつぶし（pb-32を追加）（要望2） */}
+          <div className="bg-emerald-500 flex-1 px-2 py-4 pb-32 flex flex-col overflow-y-auto shadow-inner w-full box-border rounded-none">
+            {/* 🌟 すべての選択ボタンを左詰め（justify-start）に変更（要望8） */}
+            <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1">{categories.map((cat) => (<button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
+            <div className="flex flex-wrap justify-start gap-2 mb-3 px-1">{accounts.map((acc) => (<button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
             
-            <div className="grid grid-cols-4 gap-1 mb-3 px-1">{timings.map((time) => (<button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`py-1.5 rounded-full text-[11px] font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
+            <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1">{timings.map((time) => (<button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
             
-            <div className={`flex flex-wrap justify-center gap-1.5 px-1 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`flex flex-wrap justify-start gap-1.5 px-1 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
               {days.map((d) => (<button key={d} onClick={() => setDay(d)} className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/40 hover:bg-white/20'}`}>{d}</button>))}
             </div>
             
@@ -359,6 +402,9 @@
 
       const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', []);
       const [expenses, setExpenses] = useLocalStorage('kakeibo_expenses', []);
+      
+      // 🌟 予算の保存ステートを新設（要望9）
+      const [budgets, setBudgets] = useLocalStorage('kakeibo_budgets', { food: 40000, gas: 5000, electric: 10000 });
 
       const handleAddData = (data) => {
         const accountColors = {
@@ -386,8 +432,8 @@
       const renderContent = () => {
         switch (activeTab) {
           case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} currentYearMonth={currentYearMonth} />;
-          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} currentYearMonth={currentYearMonth} />;
-          case '変動': return <VariableTab expenses={expenses} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
+          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} currentYearMonth={currentYearMonth} budgets={budgets} />;
+          case '変動': return <VariableTab expenses={expenses} currentYearMonth={currentYearMonth} todayDay={todayDay} budgets={budgets} setBudgets={setBudgets} />;
           case '累計': return <TotalTab expenses={expenses} />;
           case '入力': return <InputTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
           default: return <InputTab />;
@@ -395,9 +441,8 @@
       };
 
       return (
-        // 🌟 はみ出し（見切れ）を根本から防止する w-full と overflow-x-hidden の徹底
-        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative">
-          <div className="flex-1 overflow-y-auto pb-24 w-full">
+        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
+          <div className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">

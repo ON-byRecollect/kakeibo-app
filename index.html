@@ -44,7 +44,7 @@
     );
 
     const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
-      <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200">
+      <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <button onClick={prevMonth} className="p-2 text-emerald-600 font-bold active:bg-emerald-50 rounded-full transition-colors">＜ 前月</button>
         <div className="font-bold text-gray-700 text-lg">{displayYearMonth}</div>
         <button onClick={nextMonth} className="p-2 text-emerald-600 font-bold active:bg-emerald-50 rounded-full transition-colors">翌月 ＞</button>
@@ -60,7 +60,6 @@
       return `${y}年${m}月`;
     };
 
-    // 🌟 月指定（1〜12）のフィルター判定を追加
     const isCostVisibleInMonth = (cost, currentYM) => {
       if (!cost.yearMonth || !cost.timing) return true;
       const parseYM = (ymStr) => {
@@ -73,7 +72,6 @@
 
       if (currentNum < targetNum) return false;
 
-      // 1〜12の数字のみが選ばれた場合は、毎年その月に表示する
       if (!isNaN(cost.timing)) {
         const targetMonth = parseInt(cost.timing);
         return currentMonthVal === targetMonth && currentNum >= targetNum;
@@ -125,7 +123,6 @@
       );
     };
 
-
     // ==========================================
     // 1. 資産タブ
     // ==========================================
@@ -142,9 +139,6 @@
         { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] }, { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
       ];
       const pointAccounts = [{ id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, { id: 'nisa', label: 'N', color: 'bg-red-700' }];
-
-      const cashTotal = Object.values(cashAssets).reduce((sum, val) => sum + Number(val || 0), 0);
-      const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
 
       const prevYM = getPrevYearMonth(displayYearMonth);
 
@@ -166,8 +160,13 @@
         return val - unpaidFixed - remainingBudgetForAcc;
       };
 
+      // 🌟 【修正2】現金合計を「収支の合計」に変更
+      const cashTotal = cashAccounts.reduce((sum, acc) => sum + getBalance(acc.label, cashAssets[acc.id]), 0);
+      const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+
       return (
-        <div className="flex flex-col space-y-6 pt-4 pb-28 w-full">
+        // 🌟 【修正7】不具合の原因だった高さ固定を外し、自然に広がるように修正（以下全タブ共通）
+        <div className="flex flex-col space-y-6 pt-4 pb-8 w-full bg-gray-50 min-h-full">
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
@@ -235,7 +234,6 @@
         .filter(c => isCostVisibleInMonth(c, prevYM) && !(c.paidMonths || []).includes(prevYM))
         .map(c => ({ ...c, isCarryOver: true, targetYM: prevYM, isBudget: false }));
 
-      // 🌟 予算アイテムを生成し、リストに混ぜる（要望3）
       const budgetItems = [
         { id: 'budget-food', accountLabel: safeBudgets.food.account, color: ACCOUNT_COLORS[safeBudgets.food.account] || 'bg-gray-500', name: '食費', date: safeBudgets.food.date, remaining: Math.max(0, safeBudgets.food.amount - monthlySpents.food), isBudget: true, isPaid: false, targetYM: displayYearMonth },
         { id: 'budget-electric', accountLabel: safeBudgets.electric.account, color: ACCOUNT_COLORS[safeBudgets.electric.account] || 'bg-gray-500', name: '電気', date: safeBudgets.electric.date, remaining: Math.max(0, safeBudgets.electric.amount - monthlySpents.electric), isBudget: true, isPaid: false, targetYM: displayYearMonth },
@@ -245,15 +243,21 @@
 
       const allDisplayItems = [...carryOverItems, ...currentItems, ...budgetItems];
 
-      // 🌟 日付順に完全統合して並び替え（-は一番下）
+      // 🌟 【修正5】「月末」の際にその月の最終日の数値を計算する関数
+      const getEndOfMonthDate = (ymStr) => {
+        const m = ymStr.match(/(\d+)年(\d+)月/);
+        if(!m) return 31;
+        return new Date(parseInt(m[1]), parseInt(m[2]), 0).getDate();
+      };
+
       const getDayNum = (d) => d === '月末' ? 99 : d === '-' ? 100 : Number(d) || 0;
+      
       allDisplayItems.sort((a, b) => {
         if (a.isCarryOver && !b.isCarryOver) return -1;
         if (!a.isCarryOver && b.isCarryOver) return 1;
         return getDayNum(a.date) - getDayNum(b.date);
       });
 
-      // 🌟 未払い合計（固定費未払い ＋ 予算残額）を計算（要望4）
       const totalAmount = allDisplayItems.reduce((sum, item) => {
         if (item.isBudget) return sum + item.remaining;
         if (!item.isBudget && !(item.paidMonths || []).includes(item.targetYM)) return sum + item.amount;
@@ -261,20 +265,26 @@
       }, 0);
 
       return (
-        <div className="flex flex-col h-full pb-28 w-full bg-gray-50">
+        <div className="flex flex-col pb-8 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
-          <div className="px-4 flex-1">
+          <div className="px-4 mt-2">
             <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600 border-b border-gray-300 pb-1"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
             
             <div className="space-y-0">
               {allDisplayItems.map((item) => {
+                // 🌟 【修正5】日付が「月末」の場合は動的に最終日に変換
+                let displayDateStr = item.date;
+                if (item.date === '月末') {
+                    displayDateStr = getEndOfMonthDate(item.targetYM).toString();
+                }
+
                 if (item.isBudget) {
                   return (
                     <div key={item.id} className="grid grid-cols-12 gap-1 items-center border-b border-gray-200 py-2 bg-emerald-50/30">
                       <div className="col-span-2 flex justify-center"><AccountIcon label={item.accountLabel} bgColor={item.color} /></div>
                       <div className="col-span-4 w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap text-gray-800 font-normal">{item.name}</div>
-                      <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">{item.date}</div></div>
+                      <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">{displayDateStr}</div></div>
                       <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.remaining.toLocaleString()}円</div></div>
                       <div className="col-span-1 flex justify-center text-gray-400 text-sm font-normal">-</div>
                     </div>
@@ -289,7 +299,7 @@
                       </div>
                       <div className="col-span-2">
                         <div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">
-                          {item.isCarryOver ? <span className="text-red-500 font-bold text-xs">前月</span> : item.date}
+                          {item.isCarryOver ? <span className="text-red-500 font-bold text-xs">前月</span> : displayDateStr}
                         </div>
                       </div>
                       <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.amount.toLocaleString()}円</div></div>
@@ -299,10 +309,10 @@
                 }
               })}
             </div>
-            {allDisplayItems.length > 0 && <div className="text-xs text-gray-400 text-right mt-2">※項目名をタップすると削除できます</div>}
+            {allDisplayItems.length > 0 && <div className="text-xs text-gray-400 text-right mt-2 mb-4">※項目名をタップすると削除できます</div>}
           </div>
 
-          <div className="bg-emerald-500 text-white px-4 py-3 mt-4 mb-4 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
+          <div className="bg-emerald-500 text-white px-4 py-3 mt-auto mb-4 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
             <span className="font-bold text-sm">未払い合計</span><div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{totalAmount.toLocaleString()}円</div>
           </div>
         </div>
@@ -313,7 +323,21 @@
     // 3. 変動タブ
     // ==========================================
     const VariableTab = ({ expenses, displayYearMonth, todayDay, safeBudgets, handleBudgetChange, monthlySpents, prevMonth, nextMonth }) => {
-      const days = Array.from({ length: 31 }, (_, i) => i + 1);
+      
+      // 🌟 【修正1】実際の暦と曜日を同期させるカレンダー生成ロジック
+      const getCalendarCells = (ymStr) => {
+        const match = ymStr.match(/(\d+)年(\d+)月/);
+        const year = parseInt(match[1]);
+        const month = parseInt(match[2]);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0(日) 〜 6(土)
+        
+        const cells = Array(firstDayOfWeek).fill(null); // 月初の空白
+        for (let i = 1; i <= daysInMonth; i++) cells.push(i);
+        return cells;
+      };
+      
+      const calendarCells = getCalendarCells(displayYearMonth);
       const dailyExpenses = {};
 
       expenses.filter(e => e.yearMonth === displayYearMonth).forEach(e => {
@@ -326,22 +350,25 @@
       });
 
       return (
-        <div className="flex flex-col h-full pb-28 w-full bg-gray-50">
+        <div className="flex flex-col pb-8 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
-          <div className="px-2 flex-1 overflow-y-auto">
+          <div className="px-2 mt-2">
             <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1"><div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div></div>
             <div className="grid grid-cols-7 gap-1">
-              {days.map(day => {
+              {calendarCells.map((day, idx) => {
+                if (day === null) return <div key={`empty-${idx}`} className="min-h-[4rem] border border-transparent"></div>;
+
                 const expense = dailyExpenses[day] || {};
                 const isToday = new Date().getFullYear() + '年' + (new Date().getMonth() + 1) + '月' === displayYearMonth && day === todayDay;
                 return (
                   <div key={day} className={`min-h-[4rem] border rounded-sm flex flex-col p-0.5 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
                     <div className={`text-xs font-bold text-center ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>{day}</div>
-                    <div className="flex flex-col mt-auto space-y-[1px]">
-                      {expense.out > 0 && <span className="text-[9px] text-blue-600 leading-tight bg-blue-50 rounded px-0.5 truncate">{expense.out}</span>}
-                      {expense.cook > 0 && <span className="text-[9px] text-yellow-600 leading-tight bg-yellow-50 rounded px-0.5 truncate">{expense.cook}</span>}
-                      {expense.trans > 0 && <span className="text-[9px] text-green-600 leading-tight bg-green-50 rounded px-0.5 truncate">{expense.trans}</span>}
+                    <div className="flex flex-col mt-auto space-y-[2px]">
+                      {/* 🌟 【修正6】カレンダーの配色とラベルを統一し視認性をアップ */}
+                      {expense.out > 0 && <span className="text-[9px] text-orange-700 bg-orange-100 border border-orange-200 rounded px-0.5 truncate text-left">外:{expense.out}</span>}
+                      {expense.cook > 0 && <span className="text-[9px] text-yellow-700 bg-yellow-100 border border-yellow-200 rounded px-0.5 truncate text-left">自:{expense.cook}</span>}
+                      {expense.trans > 0 && <span className="text-[9px] text-green-700 bg-green-100 border border-green-200 rounded px-0.5 truncate text-left">交:{expense.trans}</span>}
                     </div>
                   </div>
                 );
@@ -376,7 +403,7 @@
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
 
       return (
-        <div className="flex flex-col h-full bg-gray-100 pt-4 pb-28 overflow-y-auto px-4 space-y-4 w-full">
+        <div className="flex flex-col pt-4 pb-8 px-4 space-y-4 w-full bg-gray-100 min-h-full">
           {sortedMonths.length === 0 && <div className="text-center text-gray-400 mt-10">変動費データがありません</div>}
           {sortedMonths.map((data, index) => {
             const foodTotal = data.food.out + data.food.cook;
@@ -418,7 +445,6 @@
 
       const categories = ['固定', '外食', '自炊', '交通', '電気', 'ガス'];
       const accounts = ['松', '新', 'か', 'P'];
-      // 🌟 1〜12の月指定ボタンを追加（要望2）
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶月', '奇月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
 
@@ -428,7 +454,12 @@
 
       const onSubmit = () => {
         if (!isSubmitEnabled) return;
-        let targetDay = isDayDisabled ? todayDay : (day === '月末' ? 31 : Number(day));
+        
+        // 🌟 変動費（固定以外）の場合は、ここで月末の実際の日にちを計算して保存
+        let targetDay = day; 
+        if (category !== '固定') {
+            targetDay = isDayDisabled ? todayDay : day;
+        }
         
         let targetYearMonth = currentYearMonth;
         if (timing === '来月' || timing === '再来月') {
@@ -436,9 +467,18 @@
           d.setMonth(d.getMonth() + (timing === '来月' ? 1 : 2));
           targetYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
         } else if (!isNaN(timing)) {
-          // 1〜12の数字が選ばれた場合は、今年のその月を指定
           const d = new Date();
           targetYearMonth = `${d.getFullYear()}年${timing}月`;
+        }
+
+        // 変動費かつ月末の場合の計算
+        if (category !== '固定' && targetDay === '月末') {
+           const matchYM = targetYearMonth.match(/(\d+)年(\d+)月/);
+           if (matchYM) {
+               targetDay = new Date(parseInt(matchYM[1]), parseInt(matchYM[2]), 0).getDate();
+           }
+        } else if (category !== '固定' && !isDayDisabled) {
+           targetDay = Number(targetDay);
         }
 
         handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: targetYearMonth });
@@ -449,14 +489,14 @@
       const recentExpenses = [...expenses].reverse().slice(0, 5);
 
       return (
-        <div className="flex flex-col h-full bg-white w-full">
+        <div className="flex flex-col w-full bg-white min-h-full">
           <div className="px-4 py-4 shrink-0 w-full box-border mt-2">
             <div className="flex items-center space-x-2 w-full"><input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="flex-1 min-w-0 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500" /><span className="text-xl font-bold text-gray-700 shrink-0">円</span></div>
             {category === '固定' && (
               <div className="mt-4 animate-fade-in-down w-full"><h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃など）</h2><input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 box-border" /></div>
             )}
           </div>
-          <div className="bg-emerald-500 flex-1 px-2 py-4 pb-32 flex flex-col overflow-y-auto shadow-inner w-full box-border rounded-none">
+          <div className="bg-emerald-500 flex-1 px-2 py-4 flex flex-col w-full box-border rounded-none pb-12">
             <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1">{categories.map((cat) => (<button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
             <div className="flex flex-wrap justify-start gap-2 mb-3 px-1">{accounts.map((acc) => (<button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
             
@@ -466,14 +506,13 @@
               {days.map((d) => (<button key={d} onClick={() => setDay(d)} className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/40 hover:bg-white/20'}`}>{d}</button>))}
             </div>
             
-            {/* 🌟 登録ボタンのデザインを白基調に刷新（要望1） */}
             <div className="mt-6 pt-2 pb-2 px-2 w-full box-border">
               <button onClick={onSubmit} disabled={!isSubmitEnabled} className={`w-full h-12 rounded-full font-bold text-lg shadow-sm transition-all ${isSubmitEnabled ? 'bg-white text-emerald-600 border-2 border-emerald-500 active:bg-gray-50' : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'}`}>
                 登録
               </button>
             </div>
 
-            <div className="mt-4 pb-8 px-2 w-full box-border">
+            <div className="mt-4 px-2 w-full box-border">
               <h3 className="text-sm font-bold text-white mb-2 border-b border-white/30 pb-1">最近の入力履歴（タップで取り消し）</h3>
               <div className="space-y-2">
                 {recentExpenses.map(e => (
@@ -498,7 +537,8 @@
     // 🚀 メインアプリケーション
     // ==========================================
     const App = () => {
-      const [activeTab, setActiveTab] = useState('支出');
+      // 🌟 【修正4】再起動時は「資産」タブを固定表示
+      const [activeTab, setActiveTab] = useState('資産');
 
       const d = new Date();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
@@ -565,7 +605,8 @@
       const handleDeleteFixed = (id) => setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
       const handleDeleteExpense = (id) => setExpenses(expenses.filter(expense => expense.id !== id));
 
-      const tabs = ['資産', '固定', '変動', '累計', '支出'];
+      // 🌟 【修正3】タブの順番を「支出」と「累計」で入れ替え
+      const tabs = ['資産', '固定', '変動', '支出', '累計'];
       const renderContent = () => {
         switch (activeTab) {
           case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} />;
@@ -573,13 +614,14 @@
           case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} handleBudgetChange={handleBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case '累計': return <TotalTab expenses={expenses} />;
           case '支出': return <ExpenseTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
-          default: return <ExpenseTab />;
+          default: return <AssetTab />;
         }
       };
 
       return (
         <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
-          <div className="flex-1 overflow-y-auto w-full">
+          {/* 🌟 【修正7】不具合の原因だった高さの束縛をなくし、親要素にスクロールを一任 */}
+          <div className="flex-1 overflow-y-auto w-full pb-16">
             {renderContent()}
           </div>
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">

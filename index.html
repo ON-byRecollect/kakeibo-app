@@ -13,9 +13,7 @@
   <style>
     * { -webkit-overflow-scrolling: touch; }
     body { overscroll-behavior-y: none; }
-    .safe-area-pb { 
-      padding-bottom: max(env(safe-area-inset-bottom), 16px); 
-    }
+    .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
   </style>
 </head>
@@ -36,7 +34,6 @@
       return [value, setValue];
     }
 
-    // 🌟 アプリ全体で使うカラーパレットを定義
     const ACCOUNT_COLORS = {
       '松': 'bg-blue-700', '新': 'bg-yellow-400', 'か': 'bg-orange-500', 'P': 'bg-red-600',
       'IC': 'bg-green-500', 'W': 'bg-blue-400', '現': 'bg-gray-400'
@@ -46,10 +43,19 @@
       <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm ${bgColor} shrink-0`}>{label}</div>
     );
 
+    // 🌟 月切り替え用の共通ヘッダーコンポーネント
+    const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
+      <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200">
+        <button onClick={prevMonth} className="p-2 text-emerald-600 font-bold active:bg-emerald-50 rounded-full transition-colors">＜ 前月</button>
+        <div className="font-bold text-gray-700 text-lg">{displayYearMonth}</div>
+        <button onClick={nextMonth} className="p-2 text-emerald-600 font-bold active:bg-emerald-50 rounded-full transition-colors">翌月 ＞</button>
+      </div>
+    );
+
     // ==========================================
     // 1. 資産タブ
     // ==========================================
-    const AssetTab = ({ fixedCosts, expenses, currentYearMonth }) => {
+    const AssetTab = ({ fixedCosts, expenses, displayYearMonth }) => {
       const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
       const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
 
@@ -68,8 +74,9 @@
 
       const getBalance = (accLabel, currentVal) => {
         const val = Number(currentVal || 0);
-        const unpaidFixed = fixedCosts.filter(c => c.accountLabel === accLabel && !c.isPaid).reduce((sum, c) => sum + c.amount, 0);
-        const monthlyVars = expenses.filter(e => e.accountLabel === accLabel && e.yearMonth === currentYearMonth).reduce((sum, e) => sum + e.amount, 0);
+        // 固定費は当月（displayYearMonth）未払いのものを引く
+        const unpaidFixed = fixedCosts.filter(c => c.accountLabel === accLabel && !(c.paidMonths || []).includes(displayYearMonth)).reduce((sum, c) => sum + c.amount, 0);
+        const monthlyVars = expenses.filter(e => e.accountLabel === accLabel && e.yearMonth === displayYearMonth).reduce((sum, e) => sum + e.amount, 0);
         return val - unpaidFixed - monthlyVars;
       };
 
@@ -83,7 +90,6 @@
                   <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
                   <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id]} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
                   <div className="col-span-5">
-                    {/* 🌟 収支から「円」を削除（要望1） */}
                     <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
                       {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
                     </div>
@@ -93,8 +99,7 @@
             </div>
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
-            <span className="font-bold">合計</span>
-            <div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{cashTotal.toLocaleString()}円</div>
+            <span className="font-bold">合計</span><div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{cashTotal.toLocaleString()}円</div>
           </div>
 
           <div className="px-4 mt-6">
@@ -110,142 +115,162 @@
             </div>
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
-            <span className="font-bold">合計</span>
-            <div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{pointTotal.toLocaleString()}円</div>
+            <span className="font-bold">合計</span><div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{pointTotal.toLocaleString()}円</div>
           </div>
         </div>
       );
     };
 
     // ==========================================
-    // 2. 固定タブ
+    // 2. 固定タブ（🌟 予算枠の完全統合）
     // ==========================================
-    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, currentYearMonth, safeBudgets }) => {
+    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, safeBudgets, monthlySpents, prevMonth, nextMonth }) => {
+      
+      // 🌟 月ごとの支払いチェック機能
       const togglePaid = (id) => {
-        setFixedCosts(fixedCosts.map(cost => cost.id === id ? { ...cost, isPaid: !cost.isPaid } : cost));
+        setFixedCosts(fixedCosts.map(cost => {
+          if (cost.id === id) {
+            const paidMonths = cost.paidMonths || (cost.isPaid ? [displayYearMonth] : []);
+            if (paidMonths.includes(displayYearMonth)) {
+              return { ...cost, paidMonths: paidMonths.filter(m => m !== displayYearMonth) };
+            } else {
+              return { ...cost, paidMonths: [...paidMonths, displayYearMonth] };
+            }
+          }
+          return cost;
+        }));
       };
       
-      const totalAmount = fixedCosts.filter(c => !c.isPaid).reduce((sum, cost) => sum + cost.amount, 0);
-
       const getDayNum = (d) => d === '月末' ? 99 : d === '-' ? 100 : Number(d) || 0;
       const sortedFixedCosts = [...fixedCosts].sort((a, b) => getDayNum(a.date) - getDayNum(b.date));
 
+      // 🌟 固定費の未払い合計（当月）
+      const fixedUnpaidTotal = fixedCosts.filter(c => !(c.paidMonths || []).includes(displayYearMonth)).reduce((sum, cost) => sum + cost.amount, 0);
+
+      // 🌟 予算の残額計算
+      const foodRemaining = Math.max(0, safeBudgets.food.amount - monthlySpents.food);
+      const electricRemaining = Math.max(0, safeBudgets.electric.amount - monthlySpents.electric);
+      const gasRemaining = Math.max(0, safeBudgets.gas.amount - monthlySpents.gas);
+
+      // 🌟 未払い総合計（固定未払い ＋ 予算残額）
+      const totalAmount = fixedUnpaidTotal + foodRemaining + electricRemaining + gasRemaining;
+
       return (
-        <div className="flex flex-col h-full pt-2 pb-28 w-full">
+        <div className="flex flex-col h-full pb-28 w-full bg-gray-50">
+          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
+          
           <div className="px-4 flex-1">
-            <div className="text-center font-bold text-gray-600 mb-2">{currentYearMonth}</div>
             <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600 border-b border-gray-300 pb-1"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
+            
             <div className="space-y-0">
-              {sortedFixedCosts.map((cost) => (
-                <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 border-b border-gray-200 py-2 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
-                  <div className="col-span-2 flex justify-center"><AccountIcon label={cost.accountLabel} bgColor={cost.color} /></div>
-                  <div className="col-span-4 cursor-pointer" onClick={() => { if(window.confirm(`固定費「${cost.name}」を削除しますか？`)) handleDeleteFixed(cost.id); }}>
-                    <div className="w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap active:bg-gray-200">{cost.name}</div>
+              {/* 通常の固定費ループ */}
+              {sortedFixedCosts.map((cost) => {
+                const isPaid = (cost.paidMonths || []).includes(displayYearMonth);
+                return (
+                  <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 border-b border-gray-200 py-2 ${isPaid ? 'opacity-50' : 'opacity-100'}`}>
+                    <div className="col-span-2 flex justify-center"><AccountIcon label={cost.accountLabel} bgColor={cost.color} /></div>
+                    <div className="col-span-4 cursor-pointer" onClick={() => { if(window.confirm(`固定費「${cost.name}」を削除しますか？`)) handleDeleteFixed(cost.id); }}>
+                      <div className="w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap active:bg-gray-200">{cost.name}</div>
+                    </div>
+                    <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent">{cost.date}</div></div>
+                    <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent">{cost.amount.toLocaleString()}円</div></div>
+                    <div className="col-span-1 flex justify-center"><input type="checkbox" checked={isPaid} onChange={() => togglePaid(cost.id)} className="w-6 h-6 text-green-600 border-gray-400 rounded focus:ring-green-500" /></div>
                   </div>
-                  <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent">{cost.date}</div></div>
-                  <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent">{cost.amount.toLocaleString()}円</div></div>
-                  <div className="col-span-1 flex justify-center"><input type="checkbox" checked={cost.isPaid} onChange={() => togglePaid(cost.id)} className="w-6 h-6 text-green-600 border-gray-400 rounded focus:ring-green-500" /></div>
+                );
+              })}
+
+              {/* 🌟 予算枠を通常の固定費と全く同じデザインで挿入 */}
+              {[
+                { id: 'food', name: '食費 予算', data: safeBudgets.food, remaining: foodRemaining },
+                { id: 'electric', name: '電気 予算', data: safeBudgets.electric, remaining: electricRemaining },
+                { id: 'gas', name: 'ガス 予算', data: safeBudgets.gas, remaining: gasRemaining }
+              ].map(item => (
+                <div key={item.id} className="grid grid-cols-12 gap-1 items-center border-b border-gray-200 py-2 bg-emerald-50/30">
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={item.data.account} bgColor={ACCOUNT_COLORS[item.data.account] || 'bg-gray-500'} /></div>
+                  <div className="col-span-4 w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap text-emerald-800 font-bold">{item.name}</div>
+                  <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-700">{item.data.date}</div></div>
+                  {/* 予算 - 実績 = 残金 を表示 */}
+                  <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-700 font-bold">{item.remaining.toLocaleString()}円</div></div>
+                  <div className="col-span-1 flex justify-center text-gray-400 text-sm font-bold">-</div>
                 </div>
               ))}
-              {fixedCosts.length === 0 && <div className="text-center text-gray-400 mt-10">固定費はまだ登録されていません</div>}
             </div>
             {fixedCosts.length > 0 && <div className="text-xs text-gray-400 text-right mt-2">※項目名をタップすると削除できます</div>}
           </div>
 
-          <div className="bg-emerald-500 text-white px-4 py-3 mt-4 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
-            <span className="font-bold text-sm">未払い合計</span><div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}円</div>
-          </div>
-
-          {/* 🌟 予算枠を固定費と同じレイアウトで表示（要望2） */}
-          <div className="bg-white px-4 py-3 mt-4 mb-4 rounded-xl mx-2 shadow-sm border border-gray-200">
-            <div className="font-bold text-gray-700 text-sm mb-2 border-b pb-1">変動費 予算枠</div>
-            <div className="space-y-0 text-sm text-gray-600">
-              {[
-                { id: 'food', name: '食費予算', data: safeBudgets.food },
-                { id: 'electric', name: '電気予算', data: safeBudgets.electric },
-                { id: 'gas', name: 'ガス予算', data: safeBudgets.gas }
-              ].map(item => (
-                <div key={item.id} className="grid grid-cols-12 gap-1 items-center border-b border-gray-100 py-2 last:border-0">
-                  <div className="col-span-2 flex justify-center"><AccountIcon label={item.data.account} bgColor={ACCOUNT_COLORS[item.data.account] || 'bg-gray-500'} /></div>
-                  <div className="col-span-4 w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap text-gray-700">{item.name}</div>
-                  <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-700">{item.data.date}</div></div>
-                  <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-700">{item.data.amount.toLocaleString()}円</div></div>
-                  <div className="col-span-1 flex justify-center text-gray-300 text-xs">-</div>
-                </div>
-              ))}
-            </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 mt-4 mb-4 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
+            <span className="font-bold text-sm">未払い合計</span><div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{totalAmount.toLocaleString()}円</div>
           </div>
         </div>
       );
     };
 
     // ==========================================
-    // 3. 変動タブ
+    // 3. 変動タブ（🌟 UIの統合）
     // ==========================================
-    const VariableTab = ({ expenses, currentYearMonth, todayDay, safeBudgets, handleBudgetChange }) => {
+    const VariableTab = ({ expenses, displayYearMonth, todayDay, safeBudgets, handleBudgetChange, monthlySpents, prevMonth, nextMonth }) => {
       const days = Array.from({ length: 31 }, (_, i) => i + 1);
-      
       const dailyExpenses = {};
-      const monthlyVariableCosts = { electric: 0, gas: 0 };
-      
-      let foodSpent = 0;
-      let transSpent = 0;
 
-      expenses.filter(e => e.yearMonth === currentYearMonth).forEach(e => {
+      expenses.filter(e => e.yearMonth === displayYearMonth).forEach(e => {
         if (['外食', '自炊', '交通'].includes(e.category)) {
           if (!dailyExpenses[e.day]) dailyExpenses[e.day] = { out: 0, cook: 0, trans: 0 };
-          if (e.category === '外食') { dailyExpenses[e.day].out += e.amount; foodSpent += e.amount; }
-          if (e.category === '自炊') { dailyExpenses[e.day].cook += e.amount; foodSpent += e.amount; }
-          if (e.category === '交通') { dailyExpenses[e.day].trans += e.amount; transSpent += e.amount; }
-        } else if (e.category === '電気') {
-          monthlyVariableCosts.electric += e.amount;
-        } else if (e.category === 'ガス') {
-          monthlyVariableCosts.gas += e.amount;
+          if (e.category === '外食') dailyExpenses[e.day].out += e.amount;
+          if (e.category === '自炊') dailyExpenses[e.day].cook += e.amount;
+          if (e.category === '交通') dailyExpenses[e.day].trans += e.amount;
         }
       });
 
-      const remainingFood = safeBudgets.food.amount - foodSpent;
-      const progressPercent = Math.min((foodSpent / safeBudgets.food.amount) * 100, 100) || 0;
+      // 🌟 各項目の統合ブロックコンポーネント
+      const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor }) => {
+        const remaining = budgetData.amount - spent;
+        const progressPercent = Math.min((spent / budgetData.amount) * 100, 100) || 0;
+        const progressColor = progressPercent >= 90 ? 'bg-red-500' : progressPercent >= 70 ? 'bg-yellow-400' : 'bg-emerald-500';
 
-      const getProgressColor = () => {
-        if (progressPercent >= 90) return 'bg-red-500';
-        if (progressPercent >= 70) return 'bg-yellow-400';
-        return 'bg-green-500';
-      };
-
-      // 🌟 現在の月だけを抽出（要望3）
-      const currentMonthStr = currentYearMonth.split('年')[1];
-
-      // 各予算項目の入力UIをコンポーネント化
-      const BudgetEditor = ({ label, budgetData, categoryKey }) => (
-        <div className="flex flex-col mb-3 pb-3 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0">
-          <div className="text-xs font-bold text-gray-700 mb-1">{label}</div>
-          <div className="flex items-center space-x-1">
-            <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="border border-gray-300 rounded px-1 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none flex-1 bg-white">
-              {['松','新','か','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-            <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="border border-gray-300 rounded px-1 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none flex-1 bg-white">
-              <option value="-">-</option>
-              {Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}
-              <option value="月末">月末</option>
-            </select>
-            <div className="flex items-center border border-gray-300 rounded overflow-hidden bg-white">
-              <input type="number" inputMode="numeric" value={budgetData.amount} onChange={(e) => handleBudgetChange(categoryKey, 'amount', Number(e.target.value))} className="w-16 px-1 py-1.5 text-xs text-right focus:outline-none"/>
-              <span className="text-xs px-1 text-gray-500">円</span>
+        return (
+          <div className="bg-white p-4 mx-2 mt-4 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+              <div className="font-bold text-gray-700 text-sm flex items-center">
+                <span className={`w-2 h-2 rounded-full ${iconColor} mr-2`}></span>{title}
+              </div>
+              {/* 予算設定（口座・日付・金額） */}
+              <div className="flex items-center space-x-1">
+                <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="border border-gray-300 rounded px-1 py-1 text-xs outline-none bg-gray-50">
+                  {['松','新','か','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+                <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="border border-gray-300 rounded px-1 py-1 text-xs outline-none bg-gray-50">
+                  <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
+                </select>
+                <input type="number" inputMode="numeric" value={budgetData.amount} onChange={(e) => handleBudgetChange(categoryKey, 'amount', Number(e.target.value))} className="w-16 border border-gray-300 rounded px-1 py-1 text-xs text-right outline-none bg-gray-50"/>
+                <span className="text-xs text-gray-500">円</span>
+              </div>
+            </div>
+            
+            {/* プログレスと実績 */}
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1 text-gray-600">
+                <span>残額: {remaining.toLocaleString()}円</span>
+                <span>{spent.toLocaleString()} / {budgetData.amount.toLocaleString()}円</span>
+              </div>
+              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className={`h-full transition-all duration-500 ${progressColor}`} style={{ width: `${progressPercent}%` }}></div>
+              </div>
             </div>
           </div>
-        </div>
-      );
+        );
+      };
 
       return (
-        <div className="flex flex-col h-full pt-2 pb-28 w-full">
+        <div className="flex flex-col h-full pb-28 w-full bg-gray-50">
+          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
+          
           <div className="px-2 flex-1 overflow-y-auto">
-            <div className="text-center font-bold text-gray-600 mb-2">{currentYearMonth}</div>
             <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1"><div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div></div>
             <div className="grid grid-cols-7 gap-1">
               {days.map(day => {
                 const expense = dailyExpenses[day] || {};
-                const isToday = day === todayDay;
+                // 今日かどうかの判定（表示している月が現在の月の場合のみハイライト）
+                const isToday = new Date().getFullYear() + '年' + (new Date().getMonth() + 1) + '月' === displayYearMonth && day === todayDay;
                 return (
                   <div key={day} className={`min-h-[4rem] border rounded-sm flex flex-col p-0.5 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
                     <div className={`text-xs font-bold text-center ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>{day}</div>
@@ -259,29 +284,16 @@
               })}
             </div>
 
-            {/* 🌟 〇月変動費予算へ変更し、入力項目をリッチ化（要望2・3） */}
-            <div className="bg-white p-3 mx-1 mt-6 rounded-xl shadow-sm border border-gray-200">
-              <div className="font-bold text-gray-700 text-sm mb-3 border-b pb-1">{currentMonthStr}変動費予算</div>
-              <BudgetEditor label="食費（外食＋自炊）" budgetData={safeBudgets.food} categoryKey="food" />
-              <BudgetEditor label="電気" budgetData={safeBudgets.electric} categoryKey="electric" />
-              <BudgetEditor label="ガス" budgetData={safeBudgets.gas} categoryKey="gas" />
-            </div>
+            {/* 🌟 統合された予算・実績ブロック群 */}
+            <IntegratedBudgetBlock title="食費（外食＋自炊）" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-orange-400" />
+            <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={safeBudgets.electric} spent={monthlySpents.electric} iconColor="bg-yellow-400" />
+            <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={safeBudgets.gas} spent={monthlySpents.gas} iconColor="bg-blue-400" />
 
-            <div className="bg-emerald-500 text-white px-4 py-3 mt-4 mb-8 flex flex-col space-y-3 shrink-0 rounded-xl shadow-md mx-1">
-              <div>
-                <div className="flex justify-between text-xs font-bold mb-1"><span>食費（残額: {remainingFood.toLocaleString()}円）</span><span>{foodSpent.toLocaleString()} / {safeBudgets.food.amount.toLocaleString()}円</span></div>
-                <div className="w-full h-3 bg-white/30 rounded-full overflow-hidden"><div className={`h-full transition-all duration-500 ${getProgressColor()}`} style={{ width: `${progressPercent}%` }}></div></div>
-              </div>
-              <hr className="border-white/30" />
-              <div className="flex justify-between items-center text-sm font-bold">
-                <div className="flex space-x-4"><span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-300 mr-1"></span>電気</span><span className="flex items-center"><span className="w-2 h-2 rounded-full bg-blue-300 mr-1"></span>ガス</span></div>
-                <div className="flex space-x-3"><span>{monthlyVariableCosts.electric.toLocaleString()}円</span><span>{monthlyVariableCosts.gas.toLocaleString()}円</span></div>
-              </div>
-              <div className="flex justify-between items-center text-sm font-bold pt-2 border-t border-white/30">
-                <span>交通費</span><span>{transSpent.toLocaleString()}円</span>
-              </div>
+            {/* 交通費の実績のみ表示 */}
+            <div className="bg-white p-3 mx-2 mt-4 mb-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center text-sm font-bold text-gray-700">
+              <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>交通費 実績</span>
+              <span>{monthlySpents.trans.toLocaleString()}円</span>
             </div>
-
           </div>
         </div>
       );
@@ -336,7 +348,7 @@
     };
 
     // ==========================================
-    // 5. 支出（旧：入力）タブ
+    // 5. 支出タブ
     // ==========================================
     const ExpenseTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
@@ -352,7 +364,6 @@
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
 
       const isDayDisabled = timing === '今日';
-      // 🌟 バグ修正のコードを反映（口座の任意化）
       const isAccountRequired = !['外食', '自炊', '交通'].includes(category);
       const isSubmitEnabled = amount !== '' && category !== '' && (!isAccountRequired || account !== '') && timing !== '' && (isDayDisabled || day !== '');
 
@@ -360,7 +371,15 @@
         if (!isSubmitEnabled) return;
         let targetDay = isDayDisabled ? todayDay : (day === '月末' ? 31 : Number(day));
         
-        handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: currentYearMonth });
+        // 🌟 入力タイミングに応じた月の計算（実用性向上）
+        let targetYearMonth = currentYearMonth;
+        if (timing === '来月' || timing === '再来月') {
+          const d = new Date();
+          d.setMonth(d.getMonth() + (timing === '来月' ? 1 : 2));
+          targetYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+        }
+
+        handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: targetYearMonth });
         
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
       };
@@ -369,7 +388,6 @@
 
       return (
         <div className="flex flex-col h-full bg-white w-full">
-          {/* 🌟 上部の「支出」テキストを削除（要望4） */}
           <div className="px-4 py-4 shrink-0 w-full box-border mt-2">
             <div className="flex items-center space-x-2 w-full"><input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="flex-1 min-w-0 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500" /><span className="text-xl font-bold text-gray-700 shrink-0">円</span></div>
             {category === '固定' && (
@@ -410,15 +428,29 @@
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション
+    // 🚀 メインアプリケーション（🌟 全体の制御）
     // ==========================================
     const App = () => {
-      // 🌟 デフォルトのタブを「支出」に変更（要望4）
       const [activeTab, setActiveTab] = useState('支出');
 
+      // 🌟 表示用の月管理システム
       const d = new Date();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
+
+      const [displayDate, setDisplayDate] = useState(new Date());
+      const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
+
+      const prevMonth = () => {
+        const newDate = new Date(displayDate);
+        newDate.setMonth(newDate.getMonth() - 1);
+        setDisplayDate(newDate);
+      };
+      const nextMonth = () => {
+        const newDate = new Date(displayDate);
+        newDate.setMonth(newDate.getMonth() + 1);
+        setDisplayDate(newDate);
+      };
 
       const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', []);
       const [expenses, setExpenses] = useLocalStorage('kakeibo_expenses', []);
@@ -429,7 +461,6 @@
         gas: { amount: 5000, account: '松', date: '25' }
       });
 
-      // 古いデータ形式（数字だけ）からの安全な移行装置
       const safeBudgets = {
         food: typeof budgets.food === 'object' ? budgets.food : { amount: budgets.food || 0, account: '現', date: '-' },
         electric: typeof budgets.electric === 'object' ? budgets.electric : { amount: budgets.electric || 0, account: '松', date: '25' },
@@ -437,17 +468,25 @@
       };
 
       const handleBudgetChange = (category, field, value) => {
-        setBudgets({
-          ...safeBudgets,
-          [category]: { ...safeBudgets[category], [field]: value }
-        });
+        setBudgets({ ...safeBudgets, [category]: { ...safeBudgets[category], [field]: value } });
       };
+
+      // 🌟 親コンポーネントで当月の変動費を集計し、各タブに配る
+      let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
+      expenses.filter(e => e.yearMonth === displayYearMonth).forEach(e => {
+        if (e.category === '外食' || e.category === '自炊') foodSpent += e.amount;
+        if (e.category === '交通') transSpent += e.amount;
+        if (e.category === '電気') electricSpent += e.amount;
+        if (e.category === 'ガス') gasSpent += e.amount;
+      });
+      const monthlySpents = { food: foodSpent, trans: transSpent, electric: electricSpent, gas: gasSpent };
 
       const handleAddData = (data) => {
         const accColor = ACCOUNT_COLORS[data.accountLabel] || 'bg-gray-500';
 
         if (data.category === '固定') {
-          setFixedCosts([...fixedCosts, { id: Date.now(), accountLabel: data.accountLabel, color: accColor, name: data.itemName || '未設定', date: data.day.toString(), amount: data.amount, isPaid: false }]);
+          // 新規追加時は、当月の支払いを未済状態（paidMonths=[]）として保存
+          setFixedCosts([...fixedCosts, { id: Date.now(), accountLabel: data.accountLabel, color: accColor, name: data.itemName || '未設定', date: data.day.toString(), amount: data.amount, isPaid: false, paidMonths: [] }]);
         } else {
           setExpenses([...expenses, { id: Date.now(), amount: data.amount, category: data.category, day: data.day, yearMonth: data.yearMonth, accountLabel: data.accountLabel }]);
         }
@@ -456,13 +495,12 @@
       const handleDeleteFixed = (id) => setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
       const handleDeleteExpense = (id) => setExpenses(expenses.filter(expense => expense.id !== id));
 
-      // 🌟 タブ名を「入力」から「支出」に変更（要望4）
       const tabs = ['資産', '固定', '変動', '累計', '支出'];
       const renderContent = () => {
         switch (activeTab) {
-          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} currentYearMonth={currentYearMonth} />;
-          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} />;
-          case '変動': return <VariableTab expenses={expenses} currentYearMonth={currentYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} handleBudgetChange={handleBudgetChange} />;
+          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} />;
+          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
+          case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} handleBudgetChange={handleBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case '累計': return <TotalTab expenses={expenses} />;
           case '支出': return <ExpenseTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
           default: return <ExpenseTab />;

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>家計簿アプリ</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* iPhoneの安全領域（ノッチや下のバー）を避けるための設定 */
+    .safe-area-pb { padding-bottom: env(safe-area-inset-bottom); }
+    body { overscroll-behavior-y: none; } /* スクロール時の余振れ防止 */
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    // ==========================================
+    // 共通コンポーネント
+    // ==========================================
+    const AccountIcon = ({ label, bgColor }) => (
+      <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm ${bgColor}`}>
+        {label}
+      </div>
+    );
+
+    // ==========================================
+    // 1. 資産タブ
+    // ==========================================
+    const AssetTab = () => {
+      const [cashAssets, setCashAssets] = useState({ matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
+      const [pointAssets, setPointAssets] = useState({ w: '', p: '', nisa: '' });
+
+      const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
+      const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
+
+      const cashAccounts = [
+        { id: 'matsu', label: '松', color: 'bg-blue-700' }, { id: 'shin', label: '新', color: 'bg-yellow-400' },
+        { id: 'ka', label: 'か', color: 'bg-orange-500' }, { id: 'p', label: 'P', color: 'bg-red-600' },
+        { id: 'ic', label: 'IC', color: 'bg-green-500' }, { id: 'w', label: 'W', color: 'bg-blue-400' },
+        { id: 'gen', label: '現', color: 'bg-gray-400' }
+      ];
+
+      const pointAccounts = [
+        { id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' },
+        { id: 'nisa', label: 'NISA', color: 'bg-red-700' }
+      ];
+
+      return (
+        <div className="flex flex-col space-y-6 pt-4 pb-10">
+          <div className="px-4">
+            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600">
+              <div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div>
+            </div>
+            <div className="space-y-3">
+              {cashAccounts.map((acc) => (
+                <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
+                  <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id]} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
+                  <div className="col-span-5"><input type="text" readOnly className="w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-gray-50 text-gray-500" placeholder="自動計算" /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
+            <span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div>
+          </div>
+
+          <div className="px-4 mt-6">
+            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600">
+              <div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div>
+            </div>
+            <div className="space-y-3">
+              {pointAccounts.map((acc) => (
+                <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
+                  <div className="col-span-5"><input type="number" inputMode="numeric" value={pointAssets[acc.id]} onChange={(e) => handlePointChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
+                  <div className="col-span-5"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
+            <span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 2. 固定タブ
+    // ==========================================
+    const FixedTab = () => {
+      const [fixedCosts, setFixedCosts] = useState([
+        { id: 1, accountLabel: '松', color: 'bg-blue-700', name: '家賃', date: '25', amount: 80000, isPaid: false },
+        { id: 2, accountLabel: '新', color: 'bg-yellow-400', name: 'スマホ代', date: '10', amount: 4500, isPaid: true },
+        { id: 3, accountLabel: 'か', color: 'bg-orange-500', name: '地方競馬専門紙', date: '1', amount: 3000, isPaid: false },
+        { id: 4, accountLabel: 'か', color: 'bg-orange-500', name: 'ネット代', date: '15', amount: 5000, isPaid: false },
+        { id: 5, accountLabel: 'か', color: 'bg-orange-500', name: 'サブスク', date: '20', amount: 1500, isPaid: false },
+      ]);
+
+      const togglePaid = (id) => {
+        setFixedCosts(fixedCosts.map(cost => cost.id === id ? { ...cost, isPaid: !cost.isPaid } : cost));
+      };
+      const totalAmount = fixedCosts.reduce((sum, cost) => sum + cost.amount, 0);
+
+      return (
+        <div className="flex flex-col h-full pt-4 pb-10">
+          <div className="px-4 flex-1">
+            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600">
+              <div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div>
+            </div>
+            <div className="space-y-3">
+              {fixedCosts.map((cost) => (
+                <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={cost.accountLabel} bgColor={cost.color} /></div>
+                  <div className="col-span-4"><div className="w-full h-10 flex items-center border border-gray-400 rounded-md px-2 text-sm bg-white overflow-hidden whitespace-nowrap">{cost.name}</div></div>
+                  <div className="col-span-2"><div className="w-full h-10 flex items-center justify-center border border-gray-400 rounded-md text-sm bg-white">{cost.date}</div></div>
+                  <div className="col-span-3"><div className="w-full h-10 flex items-center justify-end border border-gray-400 rounded-md px-2 text-sm bg-white">{cost.amount.toLocaleString()}</div></div>
+                  <div className="col-span-1 flex justify-center"><input type="checkbox" checked={cost.isPaid} onChange={() => togglePaid(cost.id)} className="w-6 h-6 text-green-600 border-gray-400 rounded focus:ring-green-500" /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 mt-6 flex justify-end items-center space-x-4 shrink-0">
+            <span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}</div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 3. 変動タブ
+    // ==========================================
+    const VariableTab = () => {
+      const days = Array.from({ length: 31 }, (_, i) => i + 1);
+      const today = 15; 
+      const dailyExpenses = { 3: { out: 1200, cook: 0, trans: 400 }, 8: { out: 0, cook: 850, trans: 0 }, 12: { out: 3500, cook: 0, trans: 600 }, 15: { out: 800, cook: 500, trans: 0 }, 22: { out: 0, cook: 1200, trans: 300 } };
+      const monthlyVariableCosts = { electric: 8500, gas: 4200 };
+      const budget = 40000; 
+      const totalSpent = Object.values(dailyExpenses).reduce((sum, day) => sum + (day.out || 0) + (day.cook || 0) + (day.trans || 0), 0);
+      const remaining = budget - totalSpent;
+      const progressPercent = Math.min((totalSpent / budget) * 100, 100);
+
+      const getProgressColor = () => {
+        if (progressPercent >= 90) return 'bg-red-500';
+        if (progressPercent >= 70) return 'bg-yellow-400';
+        return 'bg-green-500';
+      };
+
+      return (
+        <div className="flex flex-col h-full pt-2 pb-6">
+          <div className="px-2 flex-1 overflow-y-auto">
+            <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1">
+              <div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div>
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {days.map(day => {
+                const expense = dailyExpenses[day] || {};
+                const isToday = day === today;
+                return (
+                  <div key={day} className={`min-h-[4rem] border rounded-sm flex flex-col p-0.5 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
+                    <div className={`text-xs font-bold text-center ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>{day}</div>
+                    <div className="flex flex-col mt-auto space-y-[1px]">
+                      {expense.out > 0 && <span className="text-[9px] text-blue-600 leading-tight bg-blue-50 rounded px-0.5 truncate">{expense.out}</span>}
+                      {expense.cook > 0 && <span className="text-[9px] text-yellow-600 leading-tight bg-yellow-50 rounded px-0.5 truncate">{expense.cook}</span>}
+                      {expense.trans > 0 && <span className="text-[9px] text-green-600 leading-tight bg-green-50 rounded px-0.5 truncate">{expense.trans}</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 mt-4 flex flex-col space-y-3 shrink-0 rounded-t-xl mx-2">
+            <div>
+              <div className="flex justify-between text-xs font-bold mb-1">
+                <span>日々の変動費（残額: {remaining.toLocaleString()}円）</span><span>{totalSpent.toLocaleString()} / {budget.toLocaleString()}円</span>
+              </div>
+              <div className="w-full h-3 bg-white/30 rounded-full overflow-hidden">
+                <div className={`h-full transition-all duration-500 ${getProgressColor()}`} style={{ width: `${progressPercent}%` }}></div>
+              </div>
+            </div>
+            <hr className="border-white/30" />
+            <div className="flex justify-between items-center text-sm font-bold">
+              <div className="flex space-x-4">
+                <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-300 mr-1"></span>電気</span>
+                <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-blue-300 mr-1"></span>ガス</span>
+              </div>
+              <div className="flex space-x-3">
+                <span>{monthlyVariableCosts.electric.toLocaleString()}円</span><span>{monthlyVariableCosts.gas.toLocaleString()}円</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 4. 累計タブ
+    // ==========================================
+    const TotalTab = () => {
+      const monthlyData = [
+        { id: 1, month: '2026年3月', food: { out: 12500, cook: 18000 }, utility: { electric: 8500, gas: 4200 }, transport: 5400 },
+        { id: 2, month: '2026年2月', food: { out: 22000, cook: 15000 }, utility: { electric: 9500, gas: 5000 }, transport: 7200 },
+        { id: 3, month: '2026年1月', food: { out: 18000, cook: 19000 }, utility: { electric: 11000, gas: 5500 }, transport: 4800 }
+      ];
+
+      return (
+        <div className="flex flex-col h-full bg-gray-100 pt-4 pb-10 overflow-y-auto px-4 space-y-4">
+          {monthlyData.map((data) => {
+            const foodTotal = data.food.out + data.food.cook;
+            const utilityTotal = data.utility.electric + data.utility.gas;
+            const total = foodTotal + utilityTotal + data.transport;
+            return (
+              <div key={data.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <div className="flex justify-between items-end border-b border-gray-100 pb-2 mb-3">
+                  <h2 className="text-lg font-bold text-emerald-600">{data.month}</h2>
+                  <div className="text-sm text-gray-500">変動費合計 <span className="text-lg font-bold text-gray-800 ml-1">{total.toLocaleString()}円</span></div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-orange-400 mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
+                    <div className="flex justify-between text-xs text-gray-500 pl-4"><span>外食: {data.food.out.toLocaleString()}円</span><span>自炊: {data.food.cook.toLocaleString()}円</span></div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-blue-400 mr-2"></span>光熱費</span><span className="text-sm font-bold">{utilityTotal.toLocaleString()}円</span></div>
+                    <div className="flex justify-between text-xs text-gray-500 pl-4"><span>電気: {data.utility.electric.toLocaleString()}円</span><span>ガス: {data.utility.gas.toLocaleString()}円</span></div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>交通費</span><span className="text-sm font-bold">{data.transport.toLocaleString()}円</span></div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 5. 入力タブ
+    // ==========================================
+    const InputTab = () => {
+      const [amount, setAmount] = useState('');
+      const [category, setCategory] = useState('');
+      const [itemName, setItemName] = useState(''); 
+      const [account, setAccount] = useState('');
+      const [timing, setTiming] = useState('');
+      const [day, setDay] = useState('');
+
+      const categories = ['固定', '外食', '自炊', '交通', '電気', 'ガス'];
+      const accounts = ['松', '新', 'か', 'P'];
+      const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶月', '奇月'];
+      const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
+
+      const isDayDisabled = timing === '今日';
+      const isSubmitEnabled = amount !== '' && category !== '' && account !== '' && timing !== '' && (isDayDisabled || day !== '');
+
+      const handleSubmit = () => {
+        if (!isSubmitEnabled) return;
+        alert(`登録完了！\n金額: ${amount}円\nカテゴリ: ${category}`);
+        setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
+      };
+
+      return (
+        <div className="flex flex-col h-full bg-white">
+          <div className="px-6 py-6 shrink-0">
+            <h2 className="text-lg font-bold text-gray-700 mb-2">支出</h2>
+            <div className="flex items-center space-x-2">
+              <input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="flex-1 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              <span className="text-xl font-bold text-gray-700">円</span>
+            </div>
+            {category === '固定' && (
+              <div className="mt-4 animate-fade-in-down">
+                <h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃、サブスクなど）</h2>
+                <input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+            )}
+          </div>
+          <div className="bg-emerald-500 flex-1 px-4 py-4 rounded-t-2xl flex flex-col overflow-y-auto">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {categories.map((cat) => (
+                <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>
+              ))}
+            </div>
+            <hr className="border-white/30 mb-3" />
+            <div className="flex flex-wrap gap-2 mb-3">
+              {accounts.map((acc) => (
+                <button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>
+              ))}
+            </div>
+            <hr className="border-white/30 mb-3" />
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {timings.map((time) => (
+                <button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`px-2 py-1.5 rounded-md text-sm font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>
+              ))}
+            </div>
+            <hr className="border-white/30 mb-3" />
+            <div className={`grid grid-cols-7 gap-1.5 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+              {days.map((d) => (
+                <button key={d} onClick={() => setDay(d)} className={`h-8 rounded-md text-sm font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600' : 'bg-transparent text-white hover:bg-white/20'}`}>{d}</button>
+              ))}
+            </div>
+            <div className="mt-auto pt-6 pb-2">
+              <button onClick={handleSubmit} disabled={!isSubmitEnabled} className={`w-full h-12 rounded-full font-bold text-lg shadow-md transition-all ${isSubmitEnabled ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-300' : 'bg-emerald-600 text-emerald-400 cursor-not-allowed shadow-none'}`}>この内容で登録する</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 🚀 メインアプリケーション
+    // ==========================================
+    const App = () => {
+      const [activeTab, setActiveTab] = useState('資産');
+      const tabs = ['資産', '固定', '変動', '累計', '入力'];
+
+      const renderContent = () => {
+        switch (activeTab) {
+          case '資産': return <AssetTab />;
+          case '固定': return <FixedTab />;
+          case '変動': return <VariableTab />;
+          case '累計': return <TotalTab />;
+          case '入力': return <InputTab />;
+          default: return <AssetTab />;
+        }
+      };
+
+      return (
+        <div className="flex flex-col h-screen">
+          <div className="flex-1 overflow-y-auto pb-20">
+            {renderContent()}
+          </div>
+          <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 safe-area-pb">
+            <div className="flex justify-around items-center h-16">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 h-full text-center text-sm font-bold transition-colors ${
+                    activeTab === tab ? 'text-emerald-600 border-t-2 border-emerald-600 pt-[2px]' : 'text-gray-400'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </nav>
+        </div>
+      );
+    };
+
+    // 画面に表示するおまじない
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

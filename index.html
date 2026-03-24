@@ -21,9 +21,7 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // ==========================================
-    // 🌟 改善点：データ自動保存機能（LocalStorage）
-    // ==========================================
+    // --- LocalStorage用カスタムフック ---
     function useLocalStorage(key, initialValue) {
       const [value, setValue] = useState(() => {
         const saved = localStorage.getItem(key);
@@ -41,10 +39,9 @@
     );
 
     // ==========================================
-    // 1. 資産タブ（自動保存対応）
+    // 1. 資産タブ
     // ==========================================
     const AssetTab = () => {
-      // 🌟 useState を useLocalStorage に変更し、データを永続化
       const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
       const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
 
@@ -54,19 +51,14 @@
       const cashAccounts = [
         { id: 'matsu', label: '松', color: 'bg-blue-700' }, { id: 'shin', label: '新', color: 'bg-yellow-400' },
         { id: 'ka', label: 'か', color: 'bg-orange-500' }, { id: 'p', label: 'P', color: 'bg-red-600' },
-        { id: 'ic', label: 'IC', color: 'bg-green-500' }, { id: 'w', label: 'W', color: 'bg-blue-400' },
-        { id: 'gen', label: '現', color: 'bg-gray-400' }
+        { id: 'ic', label: 'IC', color: 'bg-green-500' }, { id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'gen', label: '現', color: 'bg-gray-400' }
       ];
-      const pointAccounts = [
-        { id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' }, { id: 'nisa', label: 'NISA', color: 'bg-red-700' }
-      ];
+      const pointAccounts = [{ id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' }, { id: 'nisa', label: 'NISA', color: 'bg-red-700' }];
 
       return (
         <div className="flex flex-col space-y-6 pt-4 pb-10">
           <div className="px-4">
-            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600">
-              <div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div>
-            </div>
+            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
               {cashAccounts.map((acc) => (
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
@@ -77,14 +69,10 @@
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
-            <span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div>
-          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div></div>
 
           <div className="px-4 mt-6">
-            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600">
-              <div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div>
-            </div>
+            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div></div>
             <div className="space-y-3">
               {pointAccounts.map((acc) => (
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
@@ -95,26 +83,15 @@
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
-            <span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div>
-          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div></div>
         </div>
       );
     };
 
     // ==========================================
-    // 2. 固定タブ（自動保存対応）
+    // 2. 固定タブ（Appからデータを受け取る）
     // ==========================================
-    const FixedTab = () => {
-      // 🌟 固定費データも LocalStorage に保存
-      const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', [
-        { id: 1, accountLabel: '松', color: 'bg-blue-700', name: '家賃', date: '25', amount: 80000, isPaid: false },
-        { id: 2, accountLabel: '新', color: 'bg-yellow-400', name: 'スマホ代', date: '10', amount: 4500, isPaid: false },
-        { id: 3, accountLabel: 'か', color: 'bg-orange-500', name: '地方競馬専門紙', date: '1', amount: 3000, isPaid: false },
-        { id: 4, accountLabel: 'か', color: 'bg-orange-500', name: 'ネット代', date: '15', amount: 5000, isPaid: false },
-        { id: 5, accountLabel: 'か', color: 'bg-orange-500', name: 'サブスク', date: '20', amount: 1500, isPaid: false },
-      ]);
-
+    const FixedTab = ({ fixedCosts, setFixedCosts }) => {
       const togglePaid = (id) => {
         setFixedCosts(fixedCosts.map(cost => cost.id === id ? { ...cost, isPaid: !cost.isPaid } : cost));
       };
@@ -123,9 +100,7 @@
       return (
         <div className="flex flex-col h-full pt-4 pb-10">
           <div className="px-4 flex-1">
-            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600">
-              <div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div>
-            </div>
+            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
             <div className="space-y-3">
               {fixedCosts.map((cost) => (
                 <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
@@ -136,25 +111,40 @@
                   <div className="col-span-1 flex justify-center"><input type="checkbox" checked={cost.isPaid} onChange={() => togglePaid(cost.id)} className="w-6 h-6 text-green-600 border-gray-400 rounded focus:ring-green-500" /></div>
                 </div>
               ))}
+              {fixedCosts.length === 0 && <div className="text-center text-gray-400 mt-10">固定費はまだ登録されていません</div>}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 mt-6 flex justify-end items-center space-x-4 shrink-0">
-            <span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}</div>
-          </div>
+          <div className="bg-emerald-500 text-white px-4 py-3 mt-6 flex justify-end items-center space-x-4 shrink-0"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}</div></div>
         </div>
       );
     };
 
     // ==========================================
-    // 3. 変動タブ（※UIレイアウトのみ・次ステップで連動予定）
+    // 3. 変動タブ（Appからデータを受け取り自動集計）
     // ==========================================
-    const VariableTab = () => {
+    const VariableTab = ({ expenses, currentYearMonth, todayDay }) => {
       const days = Array.from({ length: 31 }, (_, i) => i + 1);
-      const today = 15; 
-      const dailyExpenses = { 3: { out: 1200, cook: 0, trans: 400 }, 8: { out: 0, cook: 850, trans: 0 }, 12: { out: 3500, cook: 0, trans: 600 }, 15: { out: 800, cook: 500, trans: 0 }, 22: { out: 0, cook: 1200, trans: 300 } };
-      const monthlyVariableCosts = { electric: 8500, gas: 4200 };
+      
+      // 今月のデータを集計
+      const dailyExpenses = {};
+      const monthlyVariableCosts = { electric: 0, gas: 0 };
+      let totalSpent = 0;
+
+      expenses.filter(e => e.yearMonth === currentYearMonth).forEach(e => {
+        if (['外食', '自炊', '交通'].includes(e.category)) {
+          if (!dailyExpenses[e.day]) dailyExpenses[e.day] = { out: 0, cook: 0, trans: 0 };
+          if (e.category === '外食') dailyExpenses[e.day].out += e.amount;
+          if (e.category === '自炊') dailyExpenses[e.day].cook += e.amount;
+          if (e.category === '交通') dailyExpenses[e.day].trans += e.amount;
+          totalSpent += e.amount;
+        } else if (e.category === '電気') {
+          monthlyVariableCosts.electric += e.amount;
+        } else if (e.category === 'ガス') {
+          monthlyVariableCosts.gas += e.amount;
+        }
+      });
+
       const budget = 40000; 
-      const totalSpent = Object.values(dailyExpenses).reduce((sum, day) => sum + (day.out || 0) + (day.cook || 0) + (day.trans || 0), 0);
       const remaining = budget - totalSpent;
       const progressPercent = Math.min((totalSpent / budget) * 100, 100);
 
@@ -167,13 +157,12 @@
       return (
         <div className="flex flex-col h-full pt-2 pb-6">
           <div className="px-2 flex-1 overflow-y-auto">
-            <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1">
-              <div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div>
-            </div>
+            <div className="text-center font-bold text-gray-600 mb-2">{currentYearMonth}</div>
+            <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1"><div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div></div>
             <div className="grid grid-cols-7 gap-1">
               {days.map(day => {
                 const expense = dailyExpenses[day] || {};
-                const isToday = day === today;
+                const isToday = day === todayDay;
                 return (
                   <div key={day} className={`min-h-[4rem] border rounded-sm flex flex-col p-0.5 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
                     <div className={`text-xs font-bold text-center ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>{day}</div>
@@ -189,22 +178,13 @@
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 mt-4 flex flex-col space-y-3 shrink-0 rounded-t-xl mx-2">
             <div>
-              <div className="flex justify-between text-xs font-bold mb-1">
-                <span>日々の変動費（残額: {remaining.toLocaleString()}円）</span><span>{totalSpent.toLocaleString()} / {budget.toLocaleString()}円</span>
-              </div>
-              <div className="w-full h-3 bg-white/30 rounded-full overflow-hidden">
-                <div className={`h-full transition-all duration-500 ${getProgressColor()}`} style={{ width: `${progressPercent}%` }}></div>
-              </div>
+              <div className="flex justify-between text-xs font-bold mb-1"><span>日々の変動費（残額: {remaining.toLocaleString()}円）</span><span>{totalSpent.toLocaleString()} / {budget.toLocaleString()}円</span></div>
+              <div className="w-full h-3 bg-white/30 rounded-full overflow-hidden"><div className={`h-full transition-all duration-500 ${getProgressColor()}`} style={{ width: `${progressPercent}%` }}></div></div>
             </div>
             <hr className="border-white/30" />
             <div className="flex justify-between items-center text-sm font-bold">
-              <div className="flex space-x-4">
-                <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-300 mr-1"></span>電気</span>
-                <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-blue-300 mr-1"></span>ガス</span>
-              </div>
-              <div className="flex space-x-3">
-                <span>{monthlyVariableCosts.electric.toLocaleString()}円</span><span>{monthlyVariableCosts.gas.toLocaleString()}円</span>
-              </div>
+              <div className="flex space-x-4"><span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-300 mr-1"></span>電気</span><span className="flex items-center"><span className="w-2 h-2 rounded-full bg-blue-300 mr-1"></span>ガス</span></div>
+              <div className="flex space-x-3"><span>{monthlyVariableCosts.electric.toLocaleString()}円</span><span>{monthlyVariableCosts.gas.toLocaleString()}円</span></div>
             </div>
           </div>
         </div>
@@ -212,26 +192,35 @@
     };
 
     // ==========================================
-    // 4. 累計タブ（※UIレイアウトのみ・次ステップで連動予定）
+    // 4. 累計タブ（月ごとの自動集計）
     // ==========================================
-    const TotalTab = () => {
-      const monthlyData = [
-        { id: 1, month: '2026年3月', food: { out: 12500, cook: 18000 }, utility: { electric: 8500, gas: 4200 }, transport: 5400 },
-        { id: 2, month: '2026年2月', food: { out: 22000, cook: 15000 }, utility: { electric: 9500, gas: 5000 }, transport: 7200 }
-      ];
+    const TotalTab = ({ expenses }) => {
+      // 登録されたデータを月ごとにグループ化して集計
+      const monthlyDataMap = {};
+      expenses.forEach(e => {
+        if (!monthlyDataMap[e.yearMonth]) {
+          monthlyDataMap[e.yearMonth] = { month: e.yearMonth, food: { out: 0, cook: 0 }, utility: { electric: 0, gas: 0 }, transport: 0 };
+        }
+        if (e.category === '外食') monthlyDataMap[e.yearMonth].food.out += e.amount;
+        if (e.category === '自炊') monthlyDataMap[e.yearMonth].food.cook += e.amount;
+        if (e.category === '電気') monthlyDataMap[e.yearMonth].utility.electric += e.amount;
+        if (e.category === 'ガス') monthlyDataMap[e.yearMonth].utility.gas += e.amount;
+        if (e.category === '交通') monthlyDataMap[e.yearMonth].transport += e.amount;
+      });
+
+      // 最新の月が上に来るように並び替え
+      const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
 
       return (
         <div className="flex flex-col h-full bg-gray-100 pt-4 pb-10 overflow-y-auto px-4 space-y-4">
-          {monthlyData.map((data) => {
+          {sortedMonths.length === 0 && <div className="text-center text-gray-400 mt-10">変動費データがありません</div>}
+          {sortedMonths.map((data, index) => {
             const foodTotal = data.food.out + data.food.cook;
             const utilityTotal = data.utility.electric + data.utility.gas;
             const total = foodTotal + utilityTotal + data.transport;
             return (
-              <div key={data.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <div className="flex justify-between items-end border-b border-gray-100 pb-2 mb-3">
-                  <h2 className="text-lg font-bold text-emerald-600">{data.month}</h2>
-                  <div className="text-sm text-gray-500">変動費合計 <span className="text-lg font-bold text-gray-800 ml-1">{total.toLocaleString()}円</span></div>
-                </div>
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <div className="flex justify-between items-end border-b border-gray-100 pb-2 mb-3"><h2 className="text-lg font-bold text-emerald-600">{data.month}</h2><div className="text-sm text-gray-500">変動費合計 <span className="text-lg font-bold text-gray-800 ml-1">{total.toLocaleString()}円</span></div></div>
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-orange-400 mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
@@ -253,9 +242,9 @@
     };
 
     // ==========================================
-    // 5. 入力タブ（※UIレイアウトのみ・次ステップで連動予定）
+    // 5. 入力タブ（Appへデータを送る）
     // ==========================================
-    const InputTab = () => {
+    const InputTab = ({ handleAddData, currentYearMonth, todayDay }) => {
       const [amount, setAmount] = useState('');
       const [category, setCategory] = useState('');
       const [itemName, setItemName] = useState(''); 
@@ -271,9 +260,25 @@
       const isDayDisabled = timing === '今日';
       const isSubmitEnabled = amount !== '' && category !== '' && account !== '' && timing !== '' && (isDayDisabled || day !== '');
 
-      const handleSubmit = () => {
+      // 登録処理
+      const onSubmit = () => {
         if (!isSubmitEnabled) return;
-        alert(`【次ステップで実装予定】\n金額: ${amount}円\nこのデータをカレンダーや累計タブに送る機能を今後追加します。`);
+        
+        // 日付の計算（今日なら現在の日付、それ以外は選んだ日付）
+        let targetDay = isDayDisabled ? todayDay : (day === '月末' ? 31 : Number(day));
+        
+        // 親コンポーネントへデータを送信
+        handleAddData({
+          amount: Number(amount),
+          category,
+          itemName,
+          accountLabel: account,
+          timing,
+          day: targetDay,
+          yearMonth: currentYearMonth // 今回はシンプルに現在の月として登録
+        });
+
+        alert(`登録しました！\n（${category}タブに反映されています）`);
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
       };
 
@@ -281,84 +286,83 @@
         <div className="flex flex-col h-full bg-white">
           <div className="px-6 py-6 shrink-0">
             <h2 className="text-lg font-bold text-gray-700 mb-2">支出</h2>
-            <div className="flex items-center space-x-2">
-              <input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="flex-1 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-              <span className="text-xl font-bold text-gray-700">円</span>
-            </div>
+            <div className="flex items-center space-x-2"><input type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" className="flex-1 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500" /><span className="text-xl font-bold text-gray-700">円</span></div>
             {category === '固定' && (
-              <div className="mt-4">
-                <h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃、サブスクなど）</h2>
-                <input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-              </div>
+              <div className="mt-4 animate-fade-in-down"><h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃など）</h2><input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
             )}
           </div>
           <div className="bg-emerald-500 flex-1 px-4 py-4 rounded-t-2xl flex flex-col overflow-y-auto">
-            <div className="flex flex-wrap gap-2 mb-3">
-              {categories.map((cat) => (
-                <button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>
-              ))}
-            </div>
-            <hr className="border-white/30 mb-3" />
-            <div className="flex flex-wrap gap-2 mb-3">
-              {accounts.map((acc) => (
-                <button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>
-              ))}
-            </div>
-            <hr className="border-white/30 mb-3" />
-            <div className="grid grid-cols-4 gap-2 mb-3">
-              {timings.map((time) => (
-                <button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`px-2 py-1.5 rounded-md text-sm font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>
-              ))}
-            </div>
-            <hr className="border-white/30 mb-3" />
-            <div className={`grid grid-cols-7 gap-1.5 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
-              {days.map((d) => (
-                <button key={d} onClick={() => setDay(d)} className={`h-8 rounded-md text-sm font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600' : 'bg-transparent text-white hover:bg-white/20'}`}>{d}</button>
-              ))}
-            </div>
-            <div className="mt-auto pt-6 pb-2">
-              <button onClick={handleSubmit} disabled={!isSubmitEnabled} className={`w-full h-12 rounded-full font-bold text-lg shadow-md transition-all ${isSubmitEnabled ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-300' : 'bg-emerald-600 text-emerald-400 cursor-not-allowed shadow-none'}`}>この内容で登録する</button>
-            </div>
+            <div className="flex flex-wrap gap-2 mb-3">{categories.map((cat) => (<button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>))}</div><hr className="border-white/30 mb-3" />
+            <div className="flex flex-wrap gap-2 mb-3">{accounts.map((acc) => (<button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>))}</div><hr className="border-white/30 mb-3" />
+            <div className="grid grid-cols-4 gap-2 mb-3">{timings.map((time) => (<button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`px-2 py-1.5 rounded-md text-sm font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>))}</div><hr className="border-white/30 mb-3" />
+            <div className={`grid grid-cols-7 gap-1.5 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>{days.map((d) => (<button key={d} onClick={() => setDay(d)} className={`h-8 rounded-md text-sm font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600' : 'bg-transparent text-white hover:bg-white/20'}`}>{d}</button>))}</div>
+            <div className="mt-auto pt-6 pb-2"><button onClick={onSubmit} disabled={!isSubmitEnabled} className={`w-full h-12 rounded-full font-bold text-lg shadow-md transition-all ${isSubmitEnabled ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-300' : 'bg-emerald-600 text-emerald-400 cursor-not-allowed shadow-none'}`}>この内容で登録する</button></div>
           </div>
         </div>
       );
     };
 
     // ==========================================
-    // メインアプリケーション
+    // 🚀 メインアプリケーション（データの中央管理）
     // ==========================================
     const App = () => {
-      const [activeTab, setActiveTab] = useState('資産');
-      const tabs = ['資産', '固定', '変動', '累計', '入力'];
+      const [activeTab, setActiveTab] = useState('入力');
 
+      // 今日の日付情報を取得
+      const d = new Date();
+      const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+      const todayDay = d.getDate();
+
+      // 全体のデータを管理
+      const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', []);
+      const [expenses, setExpenses] = useLocalStorage('kakeibo_expenses', []);
+
+      // 入力タブからデータを受け取り、適切な場所へ保存する関数
+      const handleAddData = (data) => {
+        if (data.category === '固定') {
+          // 固定費として登録
+          const newFixed = {
+            id: Date.now(),
+            accountLabel: data.accountLabel,
+            color: 'bg-gray-500', // 初期色はグレー
+            name: data.itemName || '未設定',
+            date: data.day.toString(),
+            amount: data.amount,
+            isPaid: false
+          };
+          setFixedCosts([...fixedCosts, newFixed]);
+        } else {
+          // 変動費として登録
+          const newExpense = {
+            id: Date.now(),
+            amount: data.amount,
+            category: data.category,
+            day: data.day,
+            yearMonth: data.yearMonth
+          };
+          setExpenses([...expenses, newExpense]);
+        }
+      };
+
+      const tabs = ['資産', '固定', '変動', '累計', '入力'];
       const renderContent = () => {
         switch (activeTab) {
           case '資産': return <AssetTab />;
-          case '固定': return <FixedTab />;
-          case '変動': return <VariableTab />;
-          case '累計': return <TotalTab />;
-          case '入力': return <InputTab />;
-          default: return <AssetTab />;
+          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} />;
+          case '変動': return <VariableTab expenses={expenses} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
+          case '累計': return <TotalTab expenses={expenses} />;
+          case '入力': return <InputTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
+          default: return <InputTab />;
         }
       };
 
       return (
         <div className="flex flex-col h-screen">
-          <div className="flex-1 overflow-y-auto pb-20">
-            {renderContent()}
-          </div>
+          <div className="flex-1 overflow-y-auto pb-20">{renderContent()}</div>
           <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 safe-area-pb">
             <div className="flex justify-around items-center h-16">
               {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 h-full text-center text-sm font-bold transition-colors ${
-                    activeTab === tab ? 'text-emerald-600 border-t-2 border-emerald-600 pt-[2px]' : 'text-gray-400'
-                  }`}
-                >
-                  {tab}
-                </button>
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 h-full text-center text-sm font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-2 border-emerald-600 pt-[2px]' : 'text-gray-400'}`}>{tab}</button>
               ))}
             </div>
           </nav>

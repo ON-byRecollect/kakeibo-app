@@ -13,8 +13,7 @@
   <style>
     * { -webkit-overflow-scrolling: touch; }
     body { overscroll-behavior-y: none; }
-    /* 🌟 【修正3】ホームバーの余白をさらに拡大（倍以上） */
-    .safe-area-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
+    .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
   </style>
 </head>
@@ -165,7 +164,6 @@
       const cashTotal = cashAccounts.reduce((sum, acc) => sum + getBalance(acc.label, cashAssets[acc.id]), 0);
       const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
 
-      // 🌟 【修正3】下部余白を大幅に拡張（pb-36）
       return (
         <div className="flex flex-col space-y-6 pt-4 pb-36 w-full bg-gray-50 min-h-full">
           <div className="px-4">
@@ -184,8 +182,11 @@
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
-            <span className="font-bold">合計</span><div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{cashTotal.toLocaleString()}円</div>
+          
+          {/* 🌟 塗りつぶしから枠（カード型）へ変更し、固定タブとデザインを統一 */}
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
+            <span className="font-bold text-sm">合計</span>
+            <div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{cashTotal.toLocaleString()}円</div>
           </div>
 
           <div className="px-4 mt-6">
@@ -200,8 +201,11 @@
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
-            <span className="font-bold">合計</span><div className="w-32 h-8 bg-transparent flex items-center justify-end px-2 font-bold">{pointTotal.toLocaleString()}円</div>
+          
+          {/* 🌟 ポイントの合計も同様にカード型へ変更 */}
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4 shrink-0 rounded-xl mx-2 shadow-md">
+            <span className="font-bold text-sm">合計</span>
+            <div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{pointTotal.toLocaleString()}円</div>
           </div>
         </div>
       );
@@ -264,7 +268,6 @@
         return sum;
       }, 0);
 
-      // 🌟 【修正3】下部余白を大幅に拡張（pb-36）
       return (
         <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
@@ -346,10 +349,9 @@
         }
       });
 
-      // 🌟 【修正3】下部余白を大幅に拡張（pb-36）
       return (
         <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
-          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={nextMonth} nextMonth={nextMonth} prevMonth={prevMonth} />
+          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
             <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1"><div className="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-blue-500">土</div></div>
@@ -372,7 +374,6 @@
               })}
             </div>
 
-            {/* 🌟 【修正1】並び順の変更（食費→交通費→電気→ガス）と、電気の紫色（bg-purple-500）への変更 */}
             <IntegratedBudgetBlock title="食費（外食＋自炊）" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-orange-400" handleBudgetChange={handleBudgetChange} />
             <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-green-500" handleBudgetChange={handleBudgetChange} />
             <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={safeBudgets.electric} spent={monthlySpents.electric} iconColor="bg-purple-500" handleBudgetChange={handleBudgetChange} />
@@ -400,7 +401,6 @@
 
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
 
-      // 🌟 【修正3】下部余白を大幅に拡張（pb-36）
       return (
         <div className="flex flex-col pt-4 pb-36 px-4 space-y-4 w-full bg-gray-100 min-h-full">
           {sortedMonths.length === 0 && <div className="text-center text-gray-400 mt-10">変動費データがありません</div>}
@@ -414,7 +414,6 @@
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-orange-400 mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
-                    {/* 🌟 【修正2】内訳を左詰めに統一し、縦ラインを整える（w-28） */}
                     <div className="flex text-xs text-gray-500 pl-4">
                       <span className="w-28">外食: {data.food.out.toLocaleString()}円</span>
                       <span>自炊: {data.food.cook.toLocaleString()}円</span>
@@ -422,7 +421,6 @@
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>光熱費</span><span className="text-sm font-bold">{utilityTotal.toLocaleString()}円</span></div>
-                    {/* 🌟 【修正2】内訳を左詰めに統一 */}
                     <div className="flex text-xs text-gray-500 pl-4">
                       <span className="w-28">電気: {data.utility.electric.toLocaleString()}円</span>
                       <span>ガス: {data.utility.gas.toLocaleString()}円</span>
@@ -493,7 +491,6 @@
 
       const recentExpenses = [...expenses].reverse().slice(0, 5);
 
-      // 🌟 【修正3】下部余白を大幅に拡張（pb-40）
       return (
         <div className="flex flex-col w-full bg-white min-h-full">
           <div className="px-4 py-4 shrink-0 w-full box-border mt-2">

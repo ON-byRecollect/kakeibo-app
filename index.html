@@ -40,9 +40,17 @@
       return [value, setValue];
     }
 
+    // 🌟 ご指定のカラーコードへ完全刷新
     const ACCOUNT_COLORS = {
-      '松': 'bg-blue-700', '新': 'bg-yellow-400', 'か': 'bg-orange-500', 'P': 'bg-red-600',
-      'IC': 'bg-green-500', 'W': 'bg-blue-400', '現': 'bg-gray-400'
+      '予': 'bg-[#000000]',
+      '松': 'bg-[#4285f4]',
+      '新': 'bg-[#fbbc04]',
+      'か': 'bg-[#ff6d01]',
+      'IC': 'bg-[#34a853]',
+      'W':  'bg-[#57c7e5]',
+      '現': 'bg-[#b7b7b7]',
+      'P':  'bg-[#ea4335]',
+      'N':  'bg-[#ea4335]'
     };
 
     const AccountIcon = ({ label, bgColor }) => (
@@ -104,9 +112,9 @@
               <span className={`w-2 h-2 rounded-full ${iconColor} mr-2`}></span>{title}
             </div>
             <div className="flex items-center space-x-2">
-              {/* 🌟 appearance-noneで矢印を消し、text-centerで文字を中央へ */}
+              {/* 🌟 予備アカウント「予」を選択肢に追加 */}
               <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700">
-                {['松','新','か','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
+                {['予','松','新','か','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700">
                 <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
@@ -135,18 +143,24 @@
     // 1. 資産タブ
     // ==========================================
     const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents }) => {
-      const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
+      const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { yo: '', matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
       const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
 
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
 
+      // 🌟 「予」を配列の先頭に追加
       const cashAccounts = [
-        { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] }, { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
-        { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] }, { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
-        { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] }, { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
+        { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
+        { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] }, 
+        { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
+        { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] }, 
+        { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
+        { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] }, 
+        { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, 
+        { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
       ];
-      const pointAccounts = [{ id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, { id: 'nisa', label: 'N', color: 'bg-red-700' }];
+      const pointAccounts = [{ id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, { id: 'nisa', label: 'N', color: ACCOUNT_COLORS['N'] }];
 
       const prevYM = getPrevYearMonth(displayYearMonth);
 
@@ -165,6 +179,7 @@
           }
         });
 
+        // 予備アカウントも通常の計算式に組み込まれる（使われない限り現在値＝収支として機能）
         return val - unpaidFixed - remainingBudgetForAcc;
       };
 
@@ -179,11 +194,16 @@
               {cashAccounts.map((acc) => (
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
                   <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
-                  <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id]} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
+                  <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id] || ''} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
                   <div className="col-span-5">
-                    <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
-                      {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
-                    </div>
+                    {/* 🌟 予備アカウントの時だけ収支を表示させない処理 */}
+                    {acc.id === 'yo' ? (
+                      <div className="w-full h-10"></div>
+                    ) : (
+                      <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
+                        {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -192,7 +212,8 @@
           
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
             <span className="font-bold text-sm">収支合計</span>
-            <div className="font-bold text-lg">{cashTotal.toLocaleString()}円</div>
+            {/* 🌟 マイナス時の赤文字アラート追加 */}
+            <div className={`font-bold text-lg ${cashTotal < 0 ? 'text-red-300' : ''}`}>{cashTotal.toLocaleString()}円</div>
           </div>
 
           <div className="px-4 mt-6">
@@ -201,7 +222,7 @@
               {pointAccounts.map((acc) => (
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
                   <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
-                  <div className="col-span-5"><input type="number" inputMode="numeric" value={pointAssets[acc.id]} onChange={(e) => handlePointChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
+                  <div className="col-span-5"><input type="number" inputMode="numeric" value={pointAssets[acc.id] || ''} onChange={(e) => handlePointChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
                   <div className="col-span-5"></div>
                 </div>
               ))}
@@ -209,8 +230,9 @@
           </div>
           
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
-            <span className="font-bold text-sm">ポイント合計</span>
-            <div className="font-bold text-lg">{pointTotal.toLocaleString()}円</div>
+            <span className="font-bold text-sm">金融資産合計</span>
+            {/* 🌟 「円分」への変更 */}
+            <div className="font-bold text-lg">{pointTotal.toLocaleString()}円分</div>
           </div>
         </div>
       );
@@ -370,19 +392,20 @@
                   <div key={day} className={`min-h-[4rem] border rounded-sm flex flex-col p-0.5 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}`}>
                     <div className={`text-xs font-bold text-center ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>{day}</div>
                     <div className="flex flex-col mt-auto space-y-[2px]">
-                      {expense.out > 0 && <span className="text-[9px] text-orange-700 bg-orange-100 border border-orange-200 rounded px-0.5 truncate text-left">外:{expense.out.toLocaleString()}円</span>}
-                      {expense.cook > 0 && <span className="text-[9px] text-yellow-700 bg-yellow-100 border border-yellow-200 rounded px-0.5 truncate text-left">自:{expense.cook.toLocaleString()}円</span>}
-                      {expense.trans > 0 && <span className="text-[9px] text-green-700 bg-green-100 border border-green-200 rounded px-0.5 truncate text-left">交:{expense.trans.toLocaleString()}円</span>}
+                      {/* 🌟 指定のカラーコードでタグの背景と文字を生成 */}
+                      {expense.out > 0 && <span className="text-[9px] text-[#57c7e5] bg-[#57c7e5]/10 border border-[#57c7e5]/30 rounded px-0.5 truncate text-left">外:{expense.out.toLocaleString()}円</span>}
+                      {expense.cook > 0 && <span className="text-[9px] text-[#fbbc04] bg-[#fbbc04]/10 border border-[#fbbc04]/30 rounded px-0.5 truncate text-left">自:{expense.cook.toLocaleString()}円</span>}
+                      {expense.trans > 0 && <span className="text-[9px] text-[#34a853] bg-[#34a853]/10 border border-[#34a853]/30 rounded px-0.5 truncate text-left">交:{expense.trans.toLocaleString()}円</span>}
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <IntegratedBudgetBlock title="食費（外食＋自炊）" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-orange-400" handleBudgetChange={handleBudgetChange} />
-            <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-green-500" handleBudgetChange={handleBudgetChange} />
-            <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={safeBudgets.electric} spent={monthlySpents.electric} iconColor="bg-purple-500" handleBudgetChange={handleBudgetChange} />
-            <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={safeBudgets.gas} spent={monthlySpents.gas} iconColor="bg-blue-400" handleBudgetChange={handleBudgetChange} />
+            <IntegratedBudgetBlock title="食費（外食＋自炊）" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" handleBudgetChange={handleBudgetChange} />
+            <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" handleBudgetChange={handleBudgetChange} />
+            <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={safeBudgets.electric} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" handleBudgetChange={handleBudgetChange} />
+            <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={safeBudgets.gas} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" handleBudgetChange={handleBudgetChange} />
           </div>
         </div>
       );
@@ -418,21 +441,21 @@
                 <div className="flex justify-between items-end border-b border-gray-100 pb-2 mb-3"><h2 className="text-lg font-bold text-emerald-600">{data.month}</h2><div className="text-sm text-gray-500">変動費合計 <span className="text-lg font-bold text-gray-800 ml-1">{total.toLocaleString()}円</span></div></div>
                 <div className="space-y-4">
                   <div>
-                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-orange-400 mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
+                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#fbbc04] mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
                     <div className="flex text-xs text-gray-500 pl-4">
                       <span className="w-28">外食: {data.food.out.toLocaleString()}円</span>
                       <span>自炊: {data.food.cook.toLocaleString()}円</span>
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>光熱費</span><span className="text-sm font-bold">{utilityTotal.toLocaleString()}円</span></div>
+                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#4285f4] mr-2"></span>光熱費</span><span className="text-sm font-bold">{utilityTotal.toLocaleString()}円</span></div>
                     <div className="flex text-xs text-gray-500 pl-4">
                       <span className="w-28">電気: {data.utility.electric.toLocaleString()}円</span>
                       <span>ガス: {data.utility.gas.toLocaleString()}円</span>
                     </div>
                   </div>
                   <div>
-                    <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>交通費</span><span className="text-sm font-bold">{data.transport.toLocaleString()}円</span></div>
+                    <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#34a853] mr-2"></span>交通費</span><span className="text-sm font-bold">{data.transport.toLocaleString()}円</span></div>
                   </div>
                 </div>
               </div>
@@ -454,7 +477,8 @@
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通', '電気', 'ガス'];
-      const accounts = ['松', '新', 'か', 'P'];
+      // 🌟 選択肢に「予」を追加
+      const accounts = ['予', '松', '新', 'か', 'P', 'IC', 'W', '現'];
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶月', '奇月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
 

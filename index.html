@@ -89,9 +89,9 @@
     };
 
     // ==========================================
-    // 2. 固定タブ（Appからデータを受け取る）
+    // 2. 固定タブ（🌟 削除機能追加）
     // ==========================================
-    const FixedTab = ({ fixedCosts, setFixedCosts }) => {
+    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed }) => {
       const togglePaid = (id) => {
         setFixedCosts(fixedCosts.map(cost => cost.id === id ? { ...cost, isPaid: !cost.isPaid } : cost));
       };
@@ -105,7 +105,10 @@
               {fixedCosts.map((cost) => (
                 <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
                   <div className="col-span-2 flex justify-center"><AccountIcon label={cost.accountLabel} bgColor={cost.color} /></div>
-                  <div className="col-span-4"><div className="w-full h-10 flex items-center border border-gray-400 rounded-md px-2 text-sm bg-white overflow-hidden whitespace-nowrap">{cost.name}</div></div>
+                  {/* 項目名をタップで削除確認ダイアログ */}
+                  <div className="col-span-4 cursor-pointer" onClick={() => { if(window.confirm(`固定費「${cost.name}」を削除しますか？`)) handleDeleteFixed(cost.id); }}>
+                    <div className="w-full h-10 flex items-center border border-gray-400 rounded-md px-2 text-sm bg-white overflow-hidden whitespace-nowrap active:bg-red-50">{cost.name}</div>
+                  </div>
                   <div className="col-span-2"><div className="w-full h-10 flex items-center justify-center border border-gray-400 rounded-md text-sm bg-white">{cost.date}</div></div>
                   <div className="col-span-3"><div className="w-full h-10 flex items-center justify-end border border-gray-400 rounded-md px-2 text-sm bg-white">{cost.amount.toLocaleString()}</div></div>
                   <div className="col-span-1 flex justify-center"><input type="checkbox" checked={cost.isPaid} onChange={() => togglePaid(cost.id)} className="w-6 h-6 text-green-600 border-gray-400 rounded focus:ring-green-500" /></div>
@@ -113,6 +116,8 @@
               ))}
               {fixedCosts.length === 0 && <div className="text-center text-gray-400 mt-10">固定費はまだ登録されていません</div>}
             </div>
+            {/* 削除のヒントを控えめに追加 */}
+            {fixedCosts.length > 0 && <div className="text-xs text-gray-400 text-right mt-2">※項目名をタップすると削除できます</div>}
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 mt-6 flex justify-end items-center space-x-4 shrink-0"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}</div></div>
         </div>
@@ -120,12 +125,11 @@
     };
 
     // ==========================================
-    // 3. 変動タブ（Appからデータを受け取り自動集計）
+    // 3. 変動タブ
     // ==========================================
     const VariableTab = ({ expenses, currentYearMonth, todayDay }) => {
       const days = Array.from({ length: 31 }, (_, i) => i + 1);
       
-      // 今月のデータを集計
       const dailyExpenses = {};
       const monthlyVariableCosts = { electric: 0, gas: 0 };
       let totalSpent = 0;
@@ -192,10 +196,9 @@
     };
 
     // ==========================================
-    // 4. 累計タブ（月ごとの自動集計）
+    // 4. 累計タブ
     // ==========================================
     const TotalTab = ({ expenses }) => {
-      // 登録されたデータを月ごとにグループ化して集計
       const monthlyDataMap = {};
       expenses.forEach(e => {
         if (!monthlyDataMap[e.yearMonth]) {
@@ -208,7 +211,6 @@
         if (e.category === '交通') monthlyDataMap[e.yearMonth].transport += e.amount;
       });
 
-      // 最新の月が上に来るように並び替え
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
 
       return (
@@ -242,9 +244,9 @@
     };
 
     // ==========================================
-    // 5. 入力タブ（Appへデータを送る）
+    // 5. 入力タブ（🌟 履歴表示と削除機能追加）
     // ==========================================
-    const InputTab = ({ handleAddData, currentYearMonth, todayDay }) => {
+    const InputTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
       const [category, setCategory] = useState('');
       const [itemName, setItemName] = useState(''); 
@@ -260,27 +262,17 @@
       const isDayDisabled = timing === '今日';
       const isSubmitEnabled = amount !== '' && category !== '' && account !== '' && timing !== '' && (isDayDisabled || day !== '');
 
-      // 登録処理
       const onSubmit = () => {
         if (!isSubmitEnabled) return;
-        
-        // 日付の計算（今日なら現在の日付、それ以外は選んだ日付）
         let targetDay = isDayDisabled ? todayDay : (day === '月末' ? 31 : Number(day));
         
-        // 親コンポーネントへデータを送信
-        handleAddData({
-          amount: Number(amount),
-          category,
-          itemName,
-          accountLabel: account,
-          timing,
-          day: targetDay,
-          yearMonth: currentYearMonth // 今回はシンプルに現在の月として登録
-        });
-
-        alert(`登録しました！\n（${category}タブに反映されています）`);
+        handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: currentYearMonth });
+        
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
       };
+
+      // 直近5件の履歴を取得
+      const recentExpenses = [...expenses].reverse().slice(0, 5);
 
       return (
         <div className="flex flex-col h-full bg-white">
@@ -296,62 +288,70 @@
             <div className="flex flex-wrap gap-2 mb-3">{accounts.map((acc) => (<button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>))}</div><hr className="border-white/30 mb-3" />
             <div className="grid grid-cols-4 gap-2 mb-3">{timings.map((time) => (<button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`px-2 py-1.5 rounded-md text-sm font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>))}</div><hr className="border-white/30 mb-3" />
             <div className={`grid grid-cols-7 gap-1.5 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>{days.map((d) => (<button key={d} onClick={() => setDay(d)} className={`h-8 rounded-md text-sm font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600' : 'bg-transparent text-white hover:bg-white/20'}`}>{d}</button>))}</div>
+            
             <div className="mt-auto pt-6 pb-2"><button onClick={onSubmit} disabled={!isSubmitEnabled} className={`w-full h-12 rounded-full font-bold text-lg shadow-md transition-all ${isSubmitEnabled ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-300' : 'bg-emerald-600 text-emerald-400 cursor-not-allowed shadow-none'}`}>この内容で登録する</button></div>
+
+            {/* 🌟 最新の入力履歴エリア */}
+            <div className="mt-6 pb-4">
+              <h3 className="text-sm font-bold text-white mb-2 border-b border-white/30 pb-1">最近の入力履歴（タップで取り消し）</h3>
+              <div className="space-y-2">
+                {recentExpenses.map(e => (
+                  <div key={e.id} onClick={() => { if(window.confirm(`「${e.category} ${e.amount}円」を取り消しますか？`)) handleDeleteExpense(e.id); }} className="flex justify-between items-center bg-white/10 rounded px-3 py-2 text-white text-sm cursor-pointer active:bg-red-500/50 transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-white text-emerald-600 px-2 py-0.5 rounded text-xs font-bold">{e.category}</span>
+                      <span className="text-white/80 text-xs">{e.day}日</span>
+                    </div>
+                    <span className="font-bold">{e.amount.toLocaleString()}円</span>
+                  </div>
+                ))}
+                {recentExpenses.length === 0 && <div className="text-white/70 text-sm">履歴はありません</div>}
+              </div>
+            </div>
+
           </div>
         </div>
       );
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション（データの中央管理）
+    // 🚀 メインアプリケーション（🌟 削除関数の追加）
     // ==========================================
     const App = () => {
       const [activeTab, setActiveTab] = useState('入力');
 
-      // 今日の日付情報を取得
       const d = new Date();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
 
-      // 全体のデータを管理
       const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', []);
       const [expenses, setExpenses] = useLocalStorage('kakeibo_expenses', []);
 
-      // 入力タブからデータを受け取り、適切な場所へ保存する関数
       const handleAddData = (data) => {
         if (data.category === '固定') {
-          // 固定費として登録
-          const newFixed = {
-            id: Date.now(),
-            accountLabel: data.accountLabel,
-            color: 'bg-gray-500', // 初期色はグレー
-            name: data.itemName || '未設定',
-            date: data.day.toString(),
-            amount: data.amount,
-            isPaid: false
-          };
-          setFixedCosts([...fixedCosts, newFixed]);
+          setFixedCosts([...fixedCosts, { id: Date.now(), accountLabel: data.accountLabel, color: 'bg-gray-500', name: data.itemName || '未設定', date: data.day.toString(), amount: data.amount, isPaid: false }]);
         } else {
-          // 変動費として登録
-          const newExpense = {
-            id: Date.now(),
-            amount: data.amount,
-            category: data.category,
-            day: data.day,
-            yearMonth: data.yearMonth
-          };
-          setExpenses([...expenses, newExpense]);
+          setExpenses([...expenses, { id: Date.now(), amount: data.amount, category: data.category, day: data.day, yearMonth: data.yearMonth }]);
         }
+      };
+
+      // 🌟 固定費の削除関数
+      const handleDeleteFixed = (id) => {
+        setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
+      };
+
+      // 🌟 変動費の削除関数
+      const handleDeleteExpense = (id) => {
+        setExpenses(expenses.filter(expense => expense.id !== id));
       };
 
       const tabs = ['資産', '固定', '変動', '累計', '入力'];
       const renderContent = () => {
         switch (activeTab) {
           case '資産': return <AssetTab />;
-          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} />;
+          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} />;
           case '変動': return <VariableTab expenses={expenses} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
           case '累計': return <TotalTab expenses={expenses} />;
-          case '入力': return <InputTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
+          case '入力': return <InputTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
           default: return <InputTab />;
         }
       };

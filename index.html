@@ -39,9 +39,9 @@
     );
 
     // ==========================================
-    // 1. 資産タブ
+    // 1. 資産タブ（🌟 収支計算・合計表示を実装）
     // ==========================================
-    const AssetTab = () => {
+    const AssetTab = ({ fixedCosts, expenses, currentYearMonth }) => {
       const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
       const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
 
@@ -55,6 +55,18 @@
       ];
       const pointAccounts = [{ id: 'w', label: 'W', color: 'bg-blue-400' }, { id: 'p', label: 'P', color: 'bg-red-600' }, { id: 'nisa', label: 'NISA', color: 'bg-red-700' }];
 
+      // 🌟 合計金額の計算
+      const cashTotal = Object.values(cashAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+      const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+
+      // 🌟 各口座の収支計算（現在入力値 - 未払い固定費 - 当月変動費）
+      const getBalance = (accLabel, currentVal) => {
+        const val = Number(currentVal || 0);
+        const unpaidFixed = fixedCosts.filter(c => c.accountLabel === accLabel && !c.isPaid).reduce((sum, c) => sum + c.amount, 0);
+        const monthlyVars = expenses.filter(e => e.accountLabel === accLabel && e.yearMonth === currentYearMonth).reduce((sum, e) => sum + e.amount, 0);
+        return val - unpaidFixed - monthlyVars;
+      };
+
       return (
         <div className="flex flex-col space-y-6 pt-4 pb-10">
           <div className="px-4">
@@ -64,12 +76,21 @@
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
                   <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
                   <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id]} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
-                  <div className="col-span-5"><input type="text" readOnly className="w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-gray-50 text-gray-500" placeholder="自動計算" /></div>
+                  <div className="col-span-5">
+                    {/* 🌟 収支の表示 */}
+                    <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-gray-50 flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
+                      {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div></div>
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
+            <span className="font-bold">合計</span>
+            {/* 🌟 現金合計の表示 */}
+            <div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{cashTotal.toLocaleString()}</div>
+          </div>
 
           <div className="px-4 mt-6">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div></div>
@@ -83,13 +104,17 @@
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent"></div></div>
+          <div className="bg-emerald-500 text-white px-4 py-3 flex justify-end items-center space-x-4">
+            <span className="font-bold">合計</span>
+            {/* 🌟 ポイント合計の表示 */}
+            <div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{pointTotal.toLocaleString()}</div>
+          </div>
         </div>
       );
     };
 
     // ==========================================
-    // 2. 固定タブ（🌟 削除機能追加）
+    // 2. 固定タブ
     // ==========================================
     const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed }) => {
       const togglePaid = (id) => {
@@ -105,7 +130,6 @@
               {fixedCosts.map((cost) => (
                 <div key={cost.id} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 ${cost.isPaid ? 'opacity-50' : 'opacity-100'}`}>
                   <div className="col-span-2 flex justify-center"><AccountIcon label={cost.accountLabel} bgColor={cost.color} /></div>
-                  {/* 項目名をタップで削除確認ダイアログ */}
                   <div className="col-span-4 cursor-pointer" onClick={() => { if(window.confirm(`固定費「${cost.name}」を削除しますか？`)) handleDeleteFixed(cost.id); }}>
                     <div className="w-full h-10 flex items-center border border-gray-400 rounded-md px-2 text-sm bg-white overflow-hidden whitespace-nowrap active:bg-red-50">{cost.name}</div>
                   </div>
@@ -116,7 +140,6 @@
               ))}
               {fixedCosts.length === 0 && <div className="text-center text-gray-400 mt-10">固定費はまだ登録されていません</div>}
             </div>
-            {/* 削除のヒントを控えめに追加 */}
             {fixedCosts.length > 0 && <div className="text-xs text-gray-400 text-right mt-2">※項目名をタップすると削除できます</div>}
           </div>
           <div className="bg-emerald-500 text-white px-4 py-3 mt-6 flex justify-end items-center space-x-4 shrink-0"><span className="font-bold">合計</span><div className="w-32 h-8 border border-white rounded-md bg-transparent flex items-center justify-end px-2 font-bold">{totalAmount.toLocaleString()}</div></div>
@@ -244,7 +267,7 @@
     };
 
     // ==========================================
-    // 5. 入力タブ（🌟 履歴表示と削除機能追加）
+    // 5. 入力タブ
     // ==========================================
     const InputTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
@@ -271,7 +294,6 @@
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
       };
 
-      // 直近5件の履歴を取得
       const recentExpenses = [...expenses].reverse().slice(0, 5);
 
       return (
@@ -291,7 +313,6 @@
             
             <div className="mt-auto pt-6 pb-2"><button onClick={onSubmit} disabled={!isSubmitEnabled} className={`w-full h-12 rounded-full font-bold text-lg shadow-md transition-all ${isSubmitEnabled ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-300' : 'bg-emerald-600 text-emerald-400 cursor-not-allowed shadow-none'}`}>この内容で登録する</button></div>
 
-            {/* 🌟 最新の入力履歴エリア */}
             <div className="mt-6 pb-4">
               <h3 className="text-sm font-bold text-white mb-2 border-b border-white/30 pb-1">最近の入力履歴（タップで取り消し）</h3>
               <div className="space-y-2">
@@ -314,7 +335,7 @@
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション（🌟 削除関数の追加）
+    // 🚀 メインアプリケーション
     // ==========================================
     const App = () => {
       const [activeTab, setActiveTab] = useState('入力');
@@ -327,19 +348,25 @@
       const [expenses, setExpenses] = useLocalStorage('kakeibo_expenses', []);
 
       const handleAddData = (data) => {
+        // 🌟 口座ごとのカラールールを定義して反映
+        const accountColors = {
+          '松': 'bg-blue-700', '新': 'bg-yellow-400', 'か': 'bg-orange-500', 'P': 'bg-red-600',
+          'IC': 'bg-green-500', 'W': 'bg-blue-400', '現': 'bg-gray-400'
+        };
+        const accColor = accountColors[data.accountLabel] || 'bg-gray-500';
+
         if (data.category === '固定') {
-          setFixedCosts([...fixedCosts, { id: Date.now(), accountLabel: data.accountLabel, color: 'bg-gray-500', name: data.itemName || '未設定', date: data.day.toString(), amount: data.amount, isPaid: false }]);
+          setFixedCosts([...fixedCosts, { id: Date.now(), accountLabel: data.accountLabel, color: accColor, name: data.itemName || '未設定', date: data.day.toString(), amount: data.amount, isPaid: false }]);
         } else {
-          setExpenses([...expenses, { id: Date.now(), amount: data.amount, category: data.category, day: data.day, yearMonth: data.yearMonth }]);
+          // 🌟 変動費にも口座ラベルを保存（収支計算用）
+          setExpenses([...expenses, { id: Date.now(), amount: data.amount, category: data.category, day: data.day, yearMonth: data.yearMonth, accountLabel: data.accountLabel }]);
         }
       };
 
-      // 🌟 固定費の削除関数
       const handleDeleteFixed = (id) => {
         setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
       };
 
-      // 🌟 変動費の削除関数
       const handleDeleteExpense = (id) => {
         setExpenses(expenses.filter(expense => expense.id !== id));
       };
@@ -347,7 +374,7 @@
       const tabs = ['資産', '固定', '変動', '累計', '入力'];
       const renderContent = () => {
         switch (activeTab) {
-          case '資産': return <AssetTab />;
+          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} currentYearMonth={currentYearMonth} />;
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} />;
           case '変動': return <VariableTab expenses={expenses} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
           case '累計': return <TotalTab expenses={expenses} />;

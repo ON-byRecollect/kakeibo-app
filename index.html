@@ -29,7 +29,7 @@
     }
     .animate-pop { animation: pop 0.2s ease-out forwards; }
 
-    /* 🌟 PCブラウザの数値入力の矢印（スピンボタン）を非表示にする設定 */
+    /* PCブラウザの数値入力の矢印（スピンボタン）を非表示にする設定 */
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -130,6 +130,7 @@
       return `${y}年${m}月`;
     };
 
+    // 🌟 偶数月・奇数月の判定バグを修正しました（旧データにも対応）
     const isCostVisibleInMonth = (cost, currentYM) => {
       if (!cost.yearMonth || !cost.timing) return true;
       const parseYM = (ymStr) => {
@@ -150,8 +151,12 @@
       switch (cost.timing) {
         case '毎月': return true;
         case '毎年': return currentNum >= targetNum && (currentNum - targetNum) % 12 === 0;
-        case '偶月': return currentNum >= targetNum && currentMonthVal % 2 === 0;
-        case '奇月': return currentNum >= targetNum && currentMonthVal % 2 !== 0;
+        case '偶月':
+        case '偶数月': 
+            return currentNum >= targetNum && currentMonthVal % 2 === 0;
+        case '奇月':
+        case '奇数月': 
+            return currentNum >= targetNum && currentMonthVal % 2 !== 0;
         default: return currentNum === targetNum;
       }
     };
@@ -163,7 +168,6 @@
       const [inputVal, setInputVal] = useState('');
       const [error, setError] = useState(false);
 
-      // 🌟 パスコードを1960に変更しました
       const SECRET_PASSWORD = "1960"; 
 
       const handleSubmit = (e) => {
@@ -713,6 +717,7 @@
 
     // ==========================================
     // 5. 支出タブ
+    // 🌟 登録ボタンの名称を「偶数月」「奇数月」に変更
     // ==========================================
     const ExpenseTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
@@ -724,7 +729,9 @@
 
       const categories = ['固定', '外食', '自炊', '交通', '電気', 'ガス'];
       const accounts = ['予', '松', '新', 'か', 'P', 'IC', 'W', '現'];
-      const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶月', '奇月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+      
+      // 🌟 ここで「偶数月」「奇数月」に名称変更
+      const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
 
       const isDayDisabled = timing === '今日';
@@ -928,10 +935,8 @@
           <div className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
-          {/* 🌟 タブバーの高さを80px（約1cm拡大）に広げました */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
             <div className="flex justify-around items-center h-[80px] w-full px-1">
-              {/* 🌟 文字サイズを14pxに拡大し、きれいに中央揃えにしました */}
               {tabs.map((tab) => (
                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 h-full flex items-center justify-center text-[14px] font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-[3px] border-emerald-600' : 'text-gray-400 border-t-[3px] border-transparent'}`}>{tab}</button>
               ))}

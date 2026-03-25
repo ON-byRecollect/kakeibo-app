@@ -142,7 +142,11 @@
 
       if (currentNum < targetNum) return false;
 
-      // 🌟 【修正】単独の数字（1〜12）の場合は、ここで特別扱いせず default に落として「単発」として処理する
+      if (!isNaN(cost.timing)) {
+        const targetMonth = parseInt(cost.timing);
+        return currentMonthVal === targetMonth && currentNum >= targetNum;
+      }
+
       switch (cost.timing) {
         case '毎月': return true;
         case '毎年': return currentNum >= targetNum && (currentNum - targetNum) % 12 === 0;
@@ -152,9 +156,7 @@
         case '奇月':
         case '奇数月': 
             return currentNum >= targetNum && currentMonthVal % 2 !== 0;
-        default: 
-            // 「今日」「今月」「来月」「再来月」および「単独の月（1〜12）」はこれに該当し、1回きり（単発）になる
-            return currentNum === targetNum;
+        default: return currentNum === targetNum;
       }
     };
 
@@ -673,7 +675,8 @@
             <div className="px-2 pt-6 flex-1 overflow-x-auto">
                <div className="min-w-[440px]">
                   
-                  <div className="flex text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
+                  {/* 🌟 タイトル行のズレ修正：入力欄と同じ gap-1.5 を追加して完全中央揃えに */}
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
                     <div className="w-[40px] text-center">借入</div>
                     <div className="w-[44px] text-center">更新</div>
                     <div className="w-[74px] text-center">残債</div>
@@ -710,7 +713,8 @@
                               </div>
                               
                               <div className="flex-1 h-[30px]">
-                                 <input type="text" value={loan.memo} onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none text-center focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="メモ"/>
+                                 {/* 🌟 メモ欄を text-left px-2 に変更して左詰めに */}
+                                 <input type="text" value={loan.memo} onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none text-left focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="メモ"/>
                               </div>
                            </div>
                         )
@@ -783,7 +787,7 @@
     };
 
     // ==========================================
-    // 5. 支出タブ（🌟 単独の月ボタンを復活し、単発処理に連携）
+    // 5. 支出タブ
     // ==========================================
     const ExpenseTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
@@ -797,7 +801,6 @@
       const categories = ['固定', '外食', '自炊', '交通'];
       const accounts = ['予', '松', '新', 'か', 'P', 'IC', 'W', '現'];
       
-      // 🌟 単独の月（1〜12）を復活
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const annualMonths = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
@@ -823,7 +826,6 @@
           const d = new Date();
           targetYearMonth = `${d.getFullYear()}年${annualMonth}月`;
         } else if (!isNaN(timing)) {
-          // 🌟 単独の月（1〜12）が選ばれた場合は、その年の「単発」として年月を組み立てる
           const d = new Date();
           targetYearMonth = `${d.getFullYear()}年${timing}月`;
         }
@@ -1003,13 +1005,20 @@
          updateField('utilityPaid', { ...utilityPaid, [category]: newList });
       };
 
-      const loans = data?.loans || [
+      // 🌟 スマートマージ：保存されたローンとデフォルトのローンを結合し、常に5行（Dを含む）を確保
+      const defaultLoans = [
         { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' }
       ];
+      
+      const loans = defaultLoans.map(defaultLoan => {
+        const savedLoan = (data?.loans || []).find(l => l.id === defaultLoan.id);
+        return savedLoan ? { ...defaultLoan, ...savedLoan } : defaultLoan;
+      });
+
       const setLoans = (val) => updateField('loans', val);
 
       let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;

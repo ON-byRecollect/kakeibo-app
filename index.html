@@ -157,13 +157,13 @@
     };
 
     // ==========================================
-    // 🌟 独自のパスワードロック画面（ステルス仕様）
+    // 🌟 独自のパスワードロック画面（ステルス・テンキー仕様）
     // ==========================================
     const SimpleLoginScreen = ({ onLogin }) => {
       const [inputVal, setInputVal] = useState('');
       const [error, setError] = useState(false);
 
-      // ⚠️ ここがパスワードです！自由に書き換えてください
+      // 🌟 パスコードを1960に変更しました
       const SECRET_PASSWORD = "1960"; 
 
       const handleSubmit = (e) => {
@@ -184,6 +184,8 @@
             
             <input 
               type="password" 
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={inputVal} 
               onChange={(e) => setInputVal(e.target.value)}
               className={`w-full h-12 text-center text-xl tracking-widest bg-gray-50 border rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 ${error ? 'border-[#ea4335]' : 'border-gray-300'}`}
@@ -926,10 +928,12 @@
           <div className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
+          {/* 🌟 タブバーの高さを80px（約1cm拡大）に広げました */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-            <div className="flex justify-around items-center h-14 w-full px-1">
+            <div className="flex justify-around items-center h-[80px] w-full px-1">
+              {/* 🌟 文字サイズを14pxに拡大し、きれいに中央揃えにしました */}
               {tabs.map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 h-full text-center text-[11px] font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-2 border-emerald-600 pt-1' : 'text-gray-400 pt-[5px]'}`}>{tab}</button>
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 h-full flex items-center justify-center text-[14px] font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-[3px] border-emerald-600' : 'text-gray-400 border-t-[3px] border-transparent'}`}>{tab}</button>
               ))}
             </div>
           </nav>

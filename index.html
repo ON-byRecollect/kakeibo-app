@@ -6,6 +6,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>家計簿アプリ</title>
+  
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -267,7 +271,7 @@
             <div className="font-bold text-lg">{borrowingTotal.toLocaleString()}円</div>
           </div>
 
-          {/* 🌟 物理資産合計（2:5:5グリッド比率へ完全統一） */}
+          {/* 物理資産合計 */}
           <div className="px-4 mt-6">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600">
               <div className="col-span-2"></div>
@@ -277,7 +281,6 @@
             <div className="space-y-3">
               {physicalAssets.map((item, idx) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
-                  {/* 左端にさりげない番号を配置し、余白バランスを口座アイコンと完璧に一致させる */}
                   <div className="col-span-2 flex justify-center text-xs font-bold text-gray-400">{idx + 1}</div>
                   <div className="col-span-5">
                     <input type="text" value={item.name} onChange={(e) => handlePhysicalChange(item.id, 'name', e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="製品名" />
@@ -480,80 +483,90 @@
     };
 
     // ==========================================
-    // 🌟 ローン管理タブ（UIデザインの統一）
+    // 🌟 ローン管理タブ
     // ==========================================
     const LoanTab = () => {
       const initialLoans = [
-        { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '' },
-        { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '' },
-        { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '' },
-        { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '' },
-        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '' }
+        { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' }
       ];
       
       const [loans, setLoans] = useLocalStorage('kakeibo_loans', initialLoans);
 
+      // 🌟 【修正2】残債の手動入力＆自動計算ハイブリッドロジック
       const handleUpdate = (id, field, value) => {
         const d = new Date();
         const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+        
         setLoans(loans.map(loan => {
           if (loan.id === id) {
-            return { ...loan, [field]: value, updated: dateStr };
+            const updatedLoan = { ...loan, [field]: value, updated: dateStr };
+            
+            // 「済」「計」「月々」のいずれかが変更された場合、必要な値が揃っていれば自動で残債を計算
+            if (field === 'done' || field === 'total' || field === 'monthly') {
+               if (updatedLoan.total && updatedLoan.monthly) {
+                  const doneNum = Number(updatedLoan.done) || 0;
+                  const totalNum = Number(updatedLoan.total) || 0;
+                  const monthlyNum = Number(updatedLoan.monthly) || 0;
+                  updatedLoan.remaining = String(Math.max(0, totalNum - doneNum) * monthlyNum);
+               }
+            }
+            return updatedLoan;
           }
           return loan;
         }));
       };
 
+      // 🌟 【修正3】残債の合計を算出
+      const loansTotal = loans.reduce((sum, loan) => sum + Number(loan.remaining || 0), 0);
+
       return (
          <div className="flex flex-col h-full pb-36 w-full bg-gray-50 min-h-full">
             <div className="px-2 pt-6 flex-1 overflow-x-auto">
-               <div className="min-w-[440px]"> {/* アイコン幅拡張に伴い親要素も少し広げる */}
+               <div className="min-w-[440px]">
                   
-                  <div className="flex text-center text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
-                    <div className="w-[40px]">借入先</div>
-                    <div className="w-[44px]">更新日</div>
-                    <div className="w-[74px]">残総額</div>
-                    <div className="w-[66px]">済 / 母</div>
-                    <div className="w-[70px]">月々</div>
-                    <div className="flex-1">備考</div>
+                  <div className="flex text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
+                    <div className="w-[40px] text-center">借入</div>
+                    <div className="w-[44px] text-center">更新</div>
+                    <div className="w-[74px] text-center">残債</div>
+                    <div className="w-[66px] text-center">済 / 計</div>
+                    <div className="w-[70px] text-center">月々</div>
+                    <div className="flex-1 text-center">備考</div>
                   </div>
                   
                   <div className="space-y-3">
                      {loans.map(loan => {
-                        const done = Number(loan.done) || 0;
-                        const totalCount = Number(loan.total) || 0;
-                        const monthly = Number(loan.monthly) || 0;
-                        const remainingCount = Math.max(0, totalCount - done);
-                        const totalAmount = remainingCount * monthly;
-
                         return (
                            <div key={loan.id} className="flex items-center gap-1.5 border-b border-gray-200 pb-2">
                               <div className="w-[40px] flex justify-center">
-                                 {/* 🌟 アイコンを「rounded-sm（四角）」と「w-10 h-10」に統一 */}
                                  <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
                                     {loan.lender}
                                  </div>
                               </div>
                               <div className="w-[44px] text-[10px] text-center text-gray-500 font-bold">{loan.updated}</div>
                               
-                              {/* 🌟 すべての入力枠を「rounded-md（長方形角丸）」に統一 */}
-                              <div className="w-[74px] text-right font-bold text-gray-700 bg-gray-100 border border-gray-300 rounded-md px-2 py-1.5 truncate text-[10px]">
-                                 {totalAmount.toLocaleString()}円
+                              {/* 🌟 【修正2】残債枠を手動入力可能なinput要素に変更（白背景・編集中は枠色変化） */}
+                              <div className="w-[74px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                                 <input type="number" inputMode="numeric" value={loan.remaining || ''} onChange={e => handleUpdate(loan.id, 'remaining', e.target.value)} className="w-full text-right text-[11px] font-bold outline-none bg-transparent text-gray-700" placeholder="0"/>
+                                 <span className="text-[9px] text-gray-500 ml-0.5">円</span>
                               </div>
                               
-                              <div className="w-[66px] flex items-center justify-between bg-white border border-gray-300 rounded-md px-1.5 py-1.5">
+                              <div className="w-[66px] flex items-center justify-between bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
                                  <input type="number" inputMode="numeric" value={loan.done} onChange={e => handleUpdate(loan.id, 'done', e.target.value)} className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" placeholder="済"/>
                                  <span className="text-[10px] text-gray-400 font-bold">/</span>
-                                 <input type="number" inputMode="numeric" value={loan.total} onChange={e => handleUpdate(loan.id, 'total', e.target.value)} className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" placeholder="母"/>
+                                 <input type="number" inputMode="numeric" value={loan.total} onChange={e => handleUpdate(loan.id, 'total', e.target.value)} className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" placeholder="計"/>
                               </div>
                               
-                              <div className="w-[70px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5">
+                              <div className="w-[70px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
                                  <input type="number" inputMode="numeric" value={loan.monthly} onChange={e => handleUpdate(loan.id, 'monthly', e.target.value)} className="w-full text-right text-[11px] font-bold outline-none bg-transparent" placeholder="0"/>
                                  <span className="text-[9px] text-gray-500 ml-0.5">円</span>
                               </div>
                               
                               <div className="flex-1 h-[30px]">
-                                 <input type="text" value={loan.memo} onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none" placeholder="メモ"/>
+                                 <input type="text" value={loan.memo} onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none text-center focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="メモ"/>
                               </div>
                            </div>
                         )
@@ -561,6 +574,12 @@
                   </div>
                </div>
                <div className="text-[10px] text-gray-400 mt-4 ml-1">※このタブの数値はアプリ内の他計算には影響しません。</div>
+            </div>
+            
+            {/* 🌟 【修正3】残債合計を表示するカードを追加 */}
+            <div className="bg-emerald-500 text-white px-5 py-2 mt-auto mb-4 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
+              <span className="font-bold text-sm">残債合計</span>
+              <div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{loansTotal.toLocaleString()}円</div>
             </div>
          </div>
       )

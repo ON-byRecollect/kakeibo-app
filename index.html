@@ -40,7 +40,6 @@
       return [value, setValue];
     }
 
-    // 🌟 「現」のカラーを #999999 へ変更
     const ACCOUNT_COLORS = {
       '予': 'bg-[#000000]',
       '松': 'bg-[#4285f4]',
@@ -53,8 +52,9 @@
       'N':  'bg-[#ea4335]'
     };
 
-    const AccountIcon = ({ label, bgColor }) => (
-      <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm ${bgColor} shrink-0`}>{label}</div>
+    // 🌟 【修正1】テキストカラーを動的に変更できるよう拡張
+    const AccountIcon = ({ label, bgColor, textColor = 'text-white' }) => (
+      <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-sm ${bgColor} ${textColor} shrink-0`}>{label}</div>
     );
 
     const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
@@ -144,9 +144,23 @@
     const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents }) => {
       const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { yo: '', matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
       const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
+      
+      // 🌟 新規: 借入用と物理資産用のStateを追加
+      const [borrowingAssets, setBorrowingAssets] = useLocalStorage('kakeibo_borrowing', { p_ku: '', ka: '', ac: '', three: '' });
+      const [physicalAssets, setPhysicalAssets] = useLocalStorage('kakeibo_physical', [
+        { id: 1, name: '', value: '' },
+        { id: 2, name: '', value: '' },
+        { id: 3, name: '', value: '' },
+        { id: 4, name: '', value: '' },
+        { id: 5, name: '', value: '' }
+      ]);
 
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
+      const handleBorrowingChange = (id, value) => setBorrowingAssets({ ...borrowingAssets, [id]: value });
+      const handlePhysicalChange = (id, field, value) => {
+        setPhysicalAssets(physicalAssets.map(item => item.id === id ? { ...item, [field]: value } : item));
+      };
 
       const cashAccounts = [
         { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
@@ -159,12 +173,19 @@
         { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
       ];
       const pointAccounts = [{ id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, { id: 'nisa', label: 'N', color: ACCOUNT_COLORS['N'] }];
+      
+      // 🌟 新規: 借入用のアカウント情報
+      const borrowingAccounts = [
+        { id: 'p_ku', label: 'Pク', color: 'bg-[#00b5ff]' },
+        { id: 'ka', label: 'カ', color: 'bg-[#fbbc04]' },
+        { id: 'ac', label: 'AC', color: 'bg-[#000000]' },
+        { id: 'three', label: 'Ⅲ', color: 'bg-[#f3f3f3]', textColor: 'text-gray-800' } // 黒文字指定
+      ];
 
       const prevYM = getPrevYearMonth(displayYearMonth);
 
       const getBalance = (accLabel, currentVal) => {
         const val = Number(currentVal || 0);
-        
         const unpaidCurrent = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, displayYearMonth) && !(c.paidMonths || []).includes(displayYearMonth)).reduce((sum, c) => sum + c.amount, 0);
         const unpaidPrev = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, prevYM) && !(c.paidMonths || []).includes(prevYM)).reduce((sum, c) => sum + c.amount, 0);
         const unpaidFixed = unpaidCurrent + unpaidPrev;
@@ -182,21 +203,25 @@
 
       const cashTotal = cashAccounts.reduce((sum, acc) => sum + getBalance(acc.label, cashAssets[acc.id]), 0);
       const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+      const borrowingTotal = Object.values(borrowingAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+      const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
+      // 🌟 情報量増加に伴い、最下部の余白を pb-48 に拡張
       return (
-        <div className="flex flex-col space-y-6 pt-4 pb-36 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col space-y-6 pt-4 pb-48 w-full bg-gray-50 min-h-full">
+          {/* 現金 */}
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
               {cashAccounts.map((acc) => (
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} /></div>
                   <div className="col-span-5"><input type="number" inputMode="numeric" value={cashAssets[acc.id] || ''} onChange={(e) => handleCashChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
                   <div className="col-span-5">
                     {acc.id === 'yo' ? (
                       <div className="w-full h-10"></div>
                     ) : (
-                      <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-[#ea4335] font-bold' : 'text-gray-600'}`}>
+                      <div className="w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end text-gray-600">
                         {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
                       </div>
                     )}
@@ -205,29 +230,68 @@
               ))}
             </div>
           </div>
-          
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
             <span className="font-bold text-sm">収支合計</span>
-            <div className={`font-bold text-lg ${cashTotal < 0 ? 'text-[#ea4335]' : ''}`}>{cashTotal.toLocaleString()}円</div>
+            <div className="font-bold text-lg">{cashTotal.toLocaleString()}円</div>
           </div>
 
+          {/* ポイント */}
           <div className="px-4 mt-6">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div></div>
             <div className="space-y-3">
               {pointAccounts.map((acc) => (
                 <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} /></div>
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} /></div>
                   <div className="col-span-5"><input type="number" inputMode="numeric" value={pointAssets[acc.id] || ''} onChange={(e) => handlePointChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
                   <div className="col-span-5"></div>
                 </div>
               ))}
             </div>
           </div>
-          
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
             <span className="font-bold text-sm">金融資産合計</span>
             <div className="font-bold text-lg">{pointTotal.toLocaleString()}円分</div>
           </div>
+
+          {/* 🌟 借入可能合計 */}
+          <div className="px-4 mt-6">
+            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div></div>
+            <div className="space-y-3">
+              {borrowingAccounts.map((acc) => (
+                <div key={acc.id} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-2 flex justify-center"><AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} /></div>
+                  <div className="col-span-5"><input type="number" inputMode="numeric" value={borrowingAssets[acc.id] || ''} onChange={(e) => handleBorrowingChange(acc.id, e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" /></div>
+                  <div className="col-span-5"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit mt-4">
+            <span className="font-bold text-sm">借入可能合計</span>
+            <div className="font-bold text-lg">{borrowingTotal.toLocaleString()}円</div>
+          </div>
+
+          {/* 🌟 物理資産合計 */}
+          <div className="px-4 mt-6">
+            <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-7">製品</div><div className="col-span-5">価値</div></div>
+            <div className="space-y-3">
+              {physicalAssets.map((item) => (
+                <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-7">
+                    <input type="text" value={item.name} onChange={(e) => handlePhysicalChange(item.id, 'name', e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="製品名" />
+                  </div>
+                  <div className="col-span-5">
+                    <input type="number" inputMode="numeric" value={item.value} onChange={(e) => handlePhysicalChange(item.id, 'value', e.target.value)} className="w-full h-10 border border-gray-400 rounded-md px-2 text-right focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="0" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit mt-4">
+            <span className="font-bold text-sm">物理資産合計</span>
+            <div className="font-bold text-lg">{physicalTotal.toLocaleString()}円相当</div>
+          </div>
+
         </div>
       );
     };
@@ -321,7 +385,6 @@
                       </div>
                       <div className="col-span-2">
                         <div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">
-                          {/* 🌟 繰越の「前月」の文字色を #ea4335 に変更 */}
                           {item.isCarryOver ? <span className="text-[#ea4335] font-bold text-xs">前月</span> : displayDateStr}
                         </div>
                       </div>
@@ -376,7 +439,6 @@
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
-            {/* 🌟 曜日ヘッダーの「日」を #ea4335、「土」を #4285f4 へ変更 */}
             <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-1">
               <div className="text-[#ea4335]">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div className="text-[#4285f4]">土</div>
             </div>
@@ -387,7 +449,6 @@
                 const expense = dailyExpenses[day] || {};
                 const isToday = new Date().getFullYear() + '年' + (new Date().getMonth() + 1) + '月' === displayYearMonth && day === todayDay;
                 
-                // 🌟 日付自体の色も曜日に合わせる（日曜:赤、土曜:青、今日:別色）
                 const dayOfWeek = idx % 7;
                 let dateColor = 'text-gray-700';
                 if (isToday) dateColor = 'text-blue-600';
@@ -414,6 +475,91 @@
           </div>
         </div>
       );
+    };
+
+    // ==========================================
+    // 🌟 ローン管理タブ
+    // ==========================================
+    const LoanTab = () => {
+      const initialLoans = [
+        { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '' },
+        { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '' },
+        { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '' },
+        { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '' },
+        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '' }
+      ];
+      
+      const [loans, setLoans] = useLocalStorage('kakeibo_loans', initialLoans);
+
+      const handleUpdate = (id, field, value) => {
+        const d = new Date();
+        const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
+        setLoans(loans.map(loan => {
+          if (loan.id === id) {
+            return { ...loan, [field]: value, updated: dateStr };
+          }
+          return loan;
+        }));
+      };
+
+      return (
+         <div className="flex flex-col h-full pb-36 w-full bg-gray-50 min-h-full">
+            <div className="px-2 pt-6 flex-1 overflow-x-auto">
+               <div className="min-w-[430px]">
+                  
+                  <div className="flex text-center text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
+                    <div className="w-[36px]">借入先</div>
+                    <div className="w-[44px]">更新日</div>
+                    <div className="w-[74px]">残総額</div>
+                    <div className="w-[66px]">済 / 母</div>
+                    <div className="w-[70px]">月々</div>
+                    <div className="flex-1">備考</div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                     {loans.map(loan => {
+                        const done = Number(loan.done) || 0;
+                        const totalCount = Number(loan.total) || 0;
+                        const monthly = Number(loan.monthly) || 0;
+                        const remainingCount = Math.max(0, totalCount - done);
+                        const totalAmount = remainingCount * monthly;
+
+                        return (
+                           <div key={loan.id} className="flex items-center gap-1.5 border-b border-gray-200 pb-2">
+                              <div className="w-[36px] flex justify-center">
+                                 <div className={`w-8 h-8 flex items-center justify-center font-bold text-white rounded-full text-[9px] leading-tight text-center px-0.5 ${loan.color}`}>
+                                    {loan.lender}
+                                 </div>
+                              </div>
+                              <div className="w-[44px] text-[10px] text-center text-gray-500 font-bold">{loan.updated}</div>
+                              
+                              <div className="w-[74px] text-right font-bold text-gray-700 bg-gray-100 border border-gray-300 rounded-full px-2 py-1.5 truncate text-[10px]">
+                                 {totalAmount.toLocaleString()}円
+                              </div>
+                              
+                              <div className="w-[66px] flex items-center justify-between bg-white border border-gray-300 rounded-full px-1.5 py-1">
+                                 <input type="number" inputMode="numeric" value={loan.done} onChange={e => handleUpdate(loan.id, 'done', e.target.value)} className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" placeholder="済"/>
+                                 <span className="text-[10px] text-gray-400 font-bold">/</span>
+                                 <input type="number" inputMode="numeric" value={loan.total} onChange={e => handleUpdate(loan.id, 'total', e.target.value)} className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" placeholder="母"/>
+                              </div>
+                              
+                              <div className="w-[70px] flex items-center bg-white border border-gray-300 rounded-full px-1.5 py-1">
+                                 <input type="number" inputMode="numeric" value={loan.monthly} onChange={e => handleUpdate(loan.id, 'monthly', e.target.value)} className="w-full text-right text-[11px] font-bold outline-none bg-transparent" placeholder="0"/>
+                                 <span className="text-[9px] text-gray-500 ml-0.5">円</span>
+                              </div>
+                              
+                              <div className="flex-1">
+                                 <input type="text" value={loan.memo} onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} className="w-full text-[11px] bg-white border border-gray-300 rounded-full px-2 py-1 outline-none" placeholder="メモ"/>
+                              </div>
+                           </div>
+                        )
+                     })}
+                  </div>
+               </div>
+               <div className="text-[10px] text-gray-400 mt-4 ml-1">※このタブの数値はアプリ内の他計算には影響しません。</div>
+            </div>
+         </div>
+      )
     };
 
     // ==========================================
@@ -640,12 +786,13 @@
       const handleDeleteFixed = (id) => setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
       const handleDeleteExpense = (id) => setExpenses(expenses.filter(expense => expense.id !== id));
 
-      const tabs = ['資産', '固定', '変動', '支出', '累計'];
+      const tabs = ['資産', '固定', '変動', '支出', 'ローン', '累計'];
       const renderContent = () => {
         switch (activeTab) {
           case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} />;
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} handleBudgetChange={handleBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
+          case 'ローン': return <LoanTab />;
           case '累計': return <TotalTab expenses={expenses} />;
           case '支出': return <ExpenseTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
           default: return <AssetTab />;
@@ -658,9 +805,9 @@
             {renderContent()}
           </div>
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-            <div className="flex justify-around items-center h-14 w-full">
+            <div className="flex justify-around items-center h-14 w-full px-1">
               {tabs.map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 h-full text-center text-sm font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-2 border-emerald-600 pt-1' : 'text-gray-400 pt-1.5'}`}>{tab}</button>
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 h-full text-center text-[11px] font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-2 border-emerald-600 pt-1' : 'text-gray-400 pt-[5px]'}`}>{tab}</button>
               ))}
             </div>
           </nav>

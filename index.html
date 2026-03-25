@@ -749,7 +749,7 @@
     };
 
     // ==========================================
-    // 🌟 ログイン画面（PWA・iPhone完全対応版）
+    // 🌟 ログイン画面（エラー原因特定用）
     // ==========================================
     const LoginScreen = () => {
       const [isSignUp, setIsSignUp] = useState(false);
@@ -758,15 +758,15 @@
       const [errorMsg, setErrorMsg] = useState('');
       const [isLoading, setIsLoading] = useState(false);
 
-      // Firebaseのエラーコードを優しい日本語に変換
-      const getErrorMessage = (code) => {
-        switch (code) {
-          case 'auth/invalid-email': return 'メールアドレスの形式が正しくありません。';
-          case 'auth/user-not-found': return 'アカウントが見つかりません。新規登録してください。';
+      // 🌟 エラーコードを画面にそのまま出すように修正
+      const getErrorMessage = (err) => {
+        switch (err.code) {
+          case 'auth/invalid-email': return 'メールアドレスの形式が正しくありません。空白などが入っていませんか？';
+          case 'auth/user-not-found': return 'アカウントが見つかりません。下から新規登録してください。';
           case 'auth/wrong-password': return 'パスワードが間違っています。';
           case 'auth/email-already-in-use': return 'このメールアドレスは既に登録されています。';
           case 'auth/weak-password': return 'パスワードは6文字以上で入力してください。';
-          default: return 'エラーが発生しました。もう一度お試しください。';
+          default: return `【エラー】 ${err.code} : ${err.message}`; // 生のエラーを表示
         }
       };
 
@@ -777,11 +777,11 @@
 
         if (isSignUp) {
           auth.createUserWithEmailAndPassword(email, password)
-            .catch(err => setErrorMsg(getErrorMessage(err.code)))
+            .catch(err => setErrorMsg(getErrorMessage(err)))
             .finally(() => setIsLoading(false));
         } else {
           auth.signInWithEmailAndPassword(email, password)
-            .catch(err => setErrorMsg(getErrorMessage(err.code)))
+            .catch(err => setErrorMsg(getErrorMessage(err)))
             .finally(() => setIsLoading(false));
         }
       };
@@ -796,7 +796,7 @@
           <form onSubmit={handleAuth} className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <h2 className="text-center font-bold text-gray-700 mb-6">{isSignUp ? '新規アカウント作成' : 'ログインして開始'}</h2>
             
-            {errorMsg && <div className="bg-red-50 text-[#ea4335] text-xs font-bold p-3 rounded-lg mb-4 text-center">{errorMsg}</div>}
+            {errorMsg && <div className="bg-red-50 text-[#ea4335] text-xs font-bold p-3 rounded-lg mb-4 text-left break-all">{errorMsg}</div>}
             
             <div className="space-y-4">
               <div>
@@ -814,7 +814,7 @@
             </button>
           </form>
           
-          <button onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }} className="mt-8 text-sm font-bold text-emerald-600 underline active:text-emerald-800">
+          <button type="button" onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }} className="mt-8 text-sm font-bold text-emerald-600 underline active:text-emerald-800">
             {isSignUp ? '既にアカウントをお持ちの方（ログイン）' : '初めての方はこちら（新規アカウント作成）'}
           </button>
         </div>

@@ -142,11 +142,7 @@
 
       if (currentNum < targetNum) return false;
 
-      if (!isNaN(cost.timing)) {
-        const targetMonth = parseInt(cost.timing);
-        return currentMonthVal === targetMonth && currentNum >= targetNum;
-      }
-
+      // 🌟 【修正】単独の数字（1〜12）の場合は、ここで特別扱いせず default に落として「単発」として処理する
       switch (cost.timing) {
         case '毎月': return true;
         case '毎年': return currentNum >= targetNum && (currentNum - targetNum) % 12 === 0;
@@ -156,13 +152,12 @@
         case '奇月':
         case '奇数月': 
             return currentNum >= targetNum && currentMonthVal % 2 !== 0;
-        default: return currentNum === targetNum;
+        default: 
+            // 「今日」「今月」「来月」「再来月」および「単独の月（1〜12）」はこれに該当し、1回きり（単発）になる
+            return currentNum === targetNum;
       }
     };
 
-    // ==========================================
-    // 🌟 独自のパスワードロック画面
-    // ==========================================
     const SimpleLoginScreen = ({ onLogin }) => {
       const [inputVal, setInputVal] = useState('');
       const [error, setError] = useState(false);
@@ -252,7 +247,7 @@
     };
 
     // ==========================================
-    // 1. 資産タブ（🌟 現在地に完全にロックされたバージョン）
+    // 1. 資産タブ
     // ==========================================
     const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout }) => {
       
@@ -282,13 +277,11 @@
         { id: 'three', label: 'Ⅲ', color: 'bg-[#f3f3f3]', textColor: 'text-gray-800' }
       ];
 
-      // 現実の「今月」と「先月」だけを計算に使用する
       const prevCurrentYM = getPrevYearMonth(currentYearMonth);
 
       const getBalance = (accLabel, currentVal) => {
         const val = Number(currentVal || 0);
         
-        // 🌟 完全に「今月」と「前月」だけで固定費と未払いを計算
         const unpaidCurrent = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth)).reduce((sum, c) => sum + c.amount, 0);
         const unpaidPrev = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, prevCurrentYM) && !(c.paidMonths || []).includes(prevCurrentYM)).reduce((sum, c) => sum + c.amount, 0);
         
@@ -327,7 +320,6 @@
       return (
         <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
           
-          {/* 🌟 前月・翌月ボタンを排除し、中央にシンプルに年月のみを配置 */}
           <div className="bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10 flex justify-center items-center">
              <div className="font-bold text-gray-700 text-lg">{currentYearMonth}</div>
           </div>
@@ -791,7 +783,7 @@
     };
 
     // ==========================================
-    // 5. 支出タブ
+    // 5. 支出タブ（🌟 単独の月ボタンを復活し、単発処理に連携）
     // ==========================================
     const ExpenseTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
@@ -799,17 +791,20 @@
       const [itemName, setItemName] = useState(''); 
       const [account, setAccount] = useState('');
       const [timing, setTiming] = useState('');
+      const [annualMonth, setAnnualMonth] = useState('');
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通'];
       const accounts = ['予', '松', '新', 'か', 'P', 'IC', 'W', '現'];
       
+      // 🌟 単独の月（1〜12）を復活
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+      const annualMonths = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const days = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
 
       const isDayDisabled = timing === '今日';
       const isAccountRequired = !['外食', '自炊', '交通'].includes(category);
-      const isSubmitEnabled = amount !== '' && category !== '' && (!isAccountRequired || account !== '') && timing !== '' && (isDayDisabled || day !== '');
+      const isSubmitEnabled = amount !== '' && category !== '' && (!isAccountRequired || account !== '') && timing !== '' && (timing !== '毎年' || annualMonth !== '') && (isDayDisabled || day !== '');
 
       const onSubmit = () => {
         if (!isSubmitEnabled) return;
@@ -824,7 +819,11 @@
           const d = new Date();
           d.setMonth(d.getMonth() + (timing === '来月' ? 1 : 2));
           targetYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
+        } else if (timing === '毎年') {
+          const d = new Date();
+          targetYearMonth = `${d.getFullYear()}年${annualMonth}月`;
         } else if (!isNaN(timing)) {
+          // 🌟 単独の月（1〜12）が選ばれた場合は、その年の「単発」として年月を組み立てる
           const d = new Date();
           targetYearMonth = `${d.getFullYear()}年${timing}月`;
         }
@@ -840,7 +839,7 @@
 
         handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: targetYearMonth });
         
-        setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay('');
+        setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay(''); setAnnualMonth('');
       };
 
       const recentExpenses = [...expenses].reverse().slice(0, 5);
@@ -857,7 +856,24 @@
             <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1">{categories.map((cat) => (<button key={cat} onClick={() => setCategory(cat)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${category === cat ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{cat}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
             <div className="flex flex-wrap justify-start gap-2 mb-3 px-1">{accounts.map((acc) => (<button key={acc} onClick={() => setAccount(acc)} className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${account === acc ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{acc}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
             
-            <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1">{timings.map((time) => (<button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); }} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>))}</div><hr className="border-white/30 mb-3 mx-2" />
+            <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1">
+              {timings.map((time) => (
+                <button key={time} onClick={() => { setTiming(time); if (time === '今日') setDay(''); if (time !== '毎年') setAnnualMonth(''); }} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${timing === time ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/50'}`}>{time}</button>
+              ))}
+            </div>
+
+            {timing === '毎年' && (
+              <React.Fragment>
+                <hr className="border-white/30 mb-3 mx-2" />
+                <div className="flex flex-wrap justify-start gap-1.5 mb-3 px-1 transition-opacity duration-300">
+                  {annualMonths.map((m) => (
+                    <button key={m} onClick={() => setAnnualMonth(m)} className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${annualMonth === m ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/40 hover:bg-white/20'}`}>{m}月</button>
+                  ))}
+                </div>
+              </React.Fragment>
+            )}
+
+            <hr className="border-white/30 mb-3 mx-2" />
             
             <div className={`flex flex-wrap justify-start gap-1.5 px-1 transition-opacity ${isDayDisabled ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
               {days.map((d) => (<button key={d} onClick={() => setDay(d)} className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${day === d ? 'bg-white text-emerald-600 shadow' : 'bg-transparent text-white border border-white/40 hover:bg-white/20'}`}>{d}</button>))}
@@ -897,11 +913,9 @@
       const [activeTab, setActiveTab] = useState('資産');
 
       const d = new Date();
-      // 🌟 現在のリアルな月を保持（資産タブ用）
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
 
-      // カレンダーで操作する用の月（固定・変動タブ用）
       const [displayDate, setDisplayDate] = useState(new Date());
       const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
 
@@ -956,7 +970,6 @@
       const utilityBudgets = data?.utilityBudgets || {};
       const utilityPaid = data?.utilityPaid || { electric: [], gas: [] };
 
-      // 固定・変動タブ表示用の予算
       const currentElectricBudget = utilityBudgets[displayYearMonth]?.electric || safeBudgets.electric;
       const currentGasBudget = utilityBudgets[displayYearMonth]?.gas || safeBudgets.gas;
 
@@ -964,7 +977,6 @@
       const prevElectricBudget = utilityBudgets[prevYM]?.electric || safeBudgets.electric;
       const prevGasBudget = utilityBudgets[prevYM]?.gas || safeBudgets.gas;
 
-      // 🌟 資産タブ表示用（現実時間の今月・先月）の予算
       const prevCurrentYM = getPrevYearMonth(currentYearMonth);
       const realCurrentElectricBudget = utilityBudgets[currentYearMonth]?.electric || safeBudgets.electric;
       const realCurrentGasBudget = utilityBudgets[currentYearMonth]?.gas || safeBudgets.gas;
@@ -1000,15 +1012,12 @@
       ];
       const setLoans = (val) => updateField('loans', val);
 
-      // 固定・変動タブ表示用の支出集計
       let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
       let prevElectricSpent = 0, prevGasSpent = 0;
-      // 🌟 資産タブ表示用（現実時間の今月・先月）の支出集計
       let realCurrentFoodSpent = 0, realCurrentTransSpent = 0, realCurrentElectricSpent = 0, realCurrentGasSpent = 0;
       let prevRealCurrentElectricSpent = 0, prevRealCurrentGasSpent = 0;
 
       expenses.forEach(e => {
-        // カレンダー表示月用
         if (e.yearMonth === displayYearMonth) {
           if (e.category === '外食' || e.category === '自炊') foodSpent += e.amount;
           if (e.category === '交通') transSpent += e.amount;
@@ -1019,7 +1028,6 @@
           if (e.category === 'ガス') prevGasSpent += e.amount;
         }
 
-        // 🌟 資産タブ（現在地ロック）用
         if (e.yearMonth === currentYearMonth) {
           if (e.category === '外食' || e.category === '自炊') realCurrentFoodSpent += e.amount;
           if (e.category === '交通') realCurrentTransSpent += e.amount;
@@ -1058,7 +1066,6 @@
       const renderContent = () => {
         switch (activeTab) {
           case '資産': 
-             // 🌟 資産タブにはリアルな「今月」と「先月」のデータのみを渡して完全にロック
              return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
           case '固定': 
              return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} />;

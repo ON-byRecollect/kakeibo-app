@@ -10,6 +10,10 @@
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
   
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -33,15 +37,48 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    function useLocalStorage(key, initialValue) {
-      const [value, setValue] = useState(() => {
-        const saved = localStorage.getItem(key);
-        return saved !== null ? JSON.parse(saved) : initialValue;
-      });
+    // 🌟 いただいた設定情報でFirebaseを初期化
+    const firebaseConfig = {
+      apiKey: "AIzaSyCDoVgRYFnizB9tFz75oets2hKjtGv5Yks",
+      authDomain: "kakeibo-app-abae6.firebaseapp.com",
+      projectId: "kakeibo-app-abae6",
+      storageBucket: "kakeibo-app-abae6.firebasestorage.app",
+      messagingSenderId: "30819053598",
+      appId: "1:30819053598:web:692507db0e446ff4f1be0f"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // 🌟 クラウドデータを一元管理するカスタムフック
+    function useUserData(user) {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+
       useEffect(() => {
-        localStorage.setItem(key, JSON.stringify(value));
-      }, [key, value]);
-      return [value, setValue];
+        if (!user) return;
+        const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(doc => {
+          if (doc.exists) {
+            setData(doc.data());
+          } else {
+            setData({});
+          }
+          setLoading(false);
+        });
+        return () => unsubscribe();
+      }, [user]);
+
+      const updateField = (key, value) => {
+        setData(prev => ({ ...prev, [key]: value })); // 画面をすぐに書き換える（モッサリさせないため）
+        db.collection('users').doc(user.uid).set({
+          [key]: value
+        }, { merge: true }).catch(err => console.error("保存エラー:", err));
+      };
+
+      return { data, updateField, loading };
     }
 
     const ACCOUNT_COLORS = {
@@ -142,21 +179,10 @@
 
 
     // ==========================================
-    // 1. 資産タブ
+    // 1. 資産タブ（Propでクラウドデータを受け取るよう変更）
     // ==========================================
-    const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents }) => {
-      const [cashAssets, setCashAssets] = useLocalStorage('kakeibo_cash', { yo: '', matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' });
-      const [pointAssets, setPointAssets] = useLocalStorage('kakeibo_point', { w: '', p: '', nisa: '' });
+    const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets }) => {
       
-      const [borrowingAssets, setBorrowingAssets] = useLocalStorage('kakeibo_borrowing', { p_ku: '', ka: '', ac: '', three: '' });
-      const [physicalAssets, setPhysicalAssets] = useLocalStorage('kakeibo_physical', [
-        { id: 1, name: '', value: '' },
-        { id: 2, name: '', value: '' },
-        { id: 3, name: '', value: '' },
-        { id: 4, name: '', value: '' },
-        { id: 5, name: '', value: '' }
-      ]);
-
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
       const handleBorrowingChange = (id, value) => setBorrowingAssets({ ...borrowingAssets, [id]: value });
@@ -208,8 +234,8 @@
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       return (
-        <div className="flex flex-col space-y-6 pt-4 pb-48 w-full bg-gray-50 min-h-full">
-          {/* 現金 */}
+        <div className="flex flex-col space-y-6 pt-4 pb-48 w-full bg-gray-50 min-h-full relative">
+          
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
@@ -221,7 +247,6 @@
                     {acc.id === 'yo' ? (
                       <div className="w-full h-10"></div>
                     ) : (
-                      /* 🌟 【修正点】個別収支がマイナスの場合のみテキストカラーを #ea4335 に変更する */
                       <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-[#ea4335] font-bold' : 'text-gray-600'}`}>
                         {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
                       </div>
@@ -231,14 +256,11 @@
               ))}
             </div>
           </div>
-          
-          {/* 🌟 収支合計はマイナスでも文字色を変更せずそのまま */}
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
             <span className="font-bold text-sm">収支合計</span>
             <div className="font-bold text-lg">{cashTotal.toLocaleString()}円</div>
           </div>
 
-          {/* ポイント */}
           <div className="px-4 mt-6">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div></div>
             <div className="space-y-3">
@@ -256,7 +278,6 @@
             <div className="font-bold text-lg">{pointTotal.toLocaleString()}円分</div>
           </div>
 
-          {/* 借入可能合計 */}
           <div className="px-4 mt-6">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5"></div></div>
             <div className="space-y-3">
@@ -274,7 +295,6 @@
             <div className="font-bold text-lg">{borrowingTotal.toLocaleString()}円</div>
           </div>
 
-          {/* 物理資産合計 */}
           <div className="px-4 mt-6">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600">
               <div className="col-span-2"></div>
@@ -295,11 +315,15 @@
               ))}
             </div>
           </div>
-          <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit mt-4">
+          <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit mt-4 mb-4">
             <span className="font-bold text-sm">物理資産合計</span>
             <div className="font-bold text-lg">{physicalTotal.toLocaleString()}円相当</div>
           </div>
-
+          
+          {/* 🌟 ログアウトボタンを末尾に配置 */}
+          <div className="mt-8 mb-4 text-center">
+             <button onClick={() => firebase.auth().signOut()} className="text-gray-400 text-xs underline py-2 px-4 rounded active:text-gray-600">ログアウト</button>
+          </div>
         </div>
       );
     };
@@ -486,19 +510,10 @@
     };
 
     // ==========================================
-    // 🌟 ローン管理タブ
+    // 🌟 ローン管理タブ（Propsでクラウドデータを受け取る）
     // ==========================================
-    const LoanTab = () => {
-      const initialLoans = [
-        { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' }
-      ];
+    const LoanTab = ({ loans, setLoans }) => {
       
-      const [loans, setLoans] = useLocalStorage('kakeibo_loans', initialLoans);
-
       const handleUpdate = (id, field, value) => {
         const d = new Date();
         const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
@@ -737,9 +752,43 @@
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション
+    // 🌟 ログイン画面コンポーネント
     // ==========================================
-    const App = () => {
+    const LoginScreen = () => {
+      const signIn = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(err => {
+          console.error(err);
+          alert("ログインに失敗しました。");
+        });
+      };
+      
+      return (
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 px-6">
+          <div className="w-20 h-20 bg-emerald-500 rounded-3xl mb-6 shadow-lg flex items-center justify-center">
+             <span className="text-white text-3xl font-bold">家</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">家計簿アプリ</h1>
+          <p className="text-gray-500 text-sm mb-10 text-center leading-relaxed">
+            クラウド同期でどこからでも最新データを。<br/>お持ちのGoogleアカウントで安全にログイン。
+          </p>
+          <button onClick={signIn} className="w-full max-w-sm h-14 bg-white border border-gray-300 rounded-full shadow-sm font-bold text-gray-700 flex items-center justify-center space-x-3 active:bg-gray-50 transition-colors">
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <span>Googleでログイン</span>
+          </button>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // 🚀 メインアプリケーション（クラウド同期版）
+    // ==========================================
+    const App = ({ user }) => {
       const [activeTab, setActiveTab] = useState('資産');
 
       const d = new Date();
@@ -760,26 +809,57 @@
         setDisplayDate(newDate);
       };
 
-      const [fixedCosts, setFixedCosts] = useLocalStorage('kakeibo_fixed', []);
-      const [expenses, setExpenses] = useLocalStorage('kakeibo_expenses', []);
-      
-      const [budgets, setBudgets] = useLocalStorage('kakeibo_budgets', {
+      // 🌟 クラウドからデータを取得＆更新するロジック
+      const { data, updateField, loading } = useUserData(user);
+
+      if (loading) {
+         return (
+            <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
+               <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+            </div>
+         );
+      }
+
+      // クラウドデータが存在しない場合は初期値をセット
+      const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' };
+      const setCashAssets = (val) => updateField('cashAssets', val);
+
+      const pointAssets = data?.pointAssets || { w: '', p: '', nisa: '' };
+      const setPointAssets = (val) => updateField('pointAssets', val);
+
+      const borrowingAssets = data?.borrowingAssets || { p_ku: '', ka: '', ac: '', three: '' };
+      const setBorrowingAssets = (val) => updateField('borrowingAssets', val);
+
+      const physicalAssets = data?.physicalAssets || [
+         { id: 1, name: '', value: '' }, { id: 2, name: '', value: '' }, { id: 3, name: '', value: '' }, { id: 4, name: '', value: '' }, { id: 5, name: '', value: '' }
+      ];
+      const setPhysicalAssets = (val) => updateField('physicalAssets', val);
+
+      const fixedCosts = data?.fixedCosts || [];
+      const setFixedCosts = (val) => updateField('fixedCosts', val);
+
+      const expenses = data?.expenses || [];
+      const setExpenses = (val) => updateField('expenses', val);
+
+      const safeBudgets = data?.budgets || {
         food: { amount: 40000, account: '現', date: '-' },
         electric: { amount: 10000, account: '松', date: '25' },
         gas: { amount: 5000, account: '松', date: '25' },
         transport: { amount: 10000, account: 'IC', date: '-' }
-      });
-
-      const safeBudgets = {
-        food: typeof budgets.food === 'object' ? budgets.food : { amount: budgets.food || 0, account: '現', date: '-' },
-        electric: typeof budgets.electric === 'object' ? budgets.electric : { amount: budgets.electric || 0, account: '松', date: '25' },
-        gas: typeof budgets.gas === 'object' ? budgets.gas : { amount: budgets.gas || 0, account: '松', date: '25' },
-        transport: typeof budgets.transport === 'object' ? budgets.transport : { amount: budgets.transport || 0, account: 'IC', date: '-' }
       };
-
       const handleBudgetChange = (category, field, value) => {
-        setBudgets({ ...safeBudgets, [category]: { ...safeBudgets[category], [field]: value } });
+        updateField('budgets', { ...safeBudgets, [category]: { ...safeBudgets[category], [field]: value } });
       };
+
+      const loans = data?.loans || [
+        { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' }
+      ];
+      const setLoans = (val) => updateField('loans', val);
+
 
       let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
       expenses.filter(e => e.yearMonth === displayYearMonth).forEach(e => {
@@ -790,17 +870,16 @@
       });
       const monthlySpents = { food: foodSpent, trans: transSpent, electric: electricSpent, gas: gasSpent };
 
-      const handleAddData = (data) => {
-        const accColor = ACCOUNT_COLORS[data.accountLabel] || 'bg-gray-500';
-
-        if (data.category === '固定') {
+      const handleAddData = (newData) => {
+        const accColor = ACCOUNT_COLORS[newData.accountLabel] || 'bg-gray-500';
+        if (newData.category === '固定') {
           setFixedCosts([...fixedCosts, { 
-            id: Date.now(), accountLabel: data.accountLabel, color: accColor, 
-            name: data.itemName || '未設定', date: data.day.toString(), amount: data.amount, 
-            isPaid: false, paidMonths: [], timing: data.timing, yearMonth: data.yearMonth
+            id: Date.now(), accountLabel: newData.accountLabel, color: accColor, 
+            name: newData.itemName || '未設定', date: newData.day.toString(), amount: newData.amount, 
+            isPaid: false, paidMonths: [], timing: newData.timing, yearMonth: newData.yearMonth
           }]);
         } else {
-          setExpenses([...expenses, { id: Date.now(), amount: data.amount, category: data.category, day: data.day, yearMonth: data.yearMonth, accountLabel: data.accountLabel }]);
+          setExpenses([...expenses, { id: Date.now(), amount: newData.amount, category: newData.category, day: newData.day, yearMonth: newData.yearMonth, accountLabel: newData.accountLabel }]);
         }
       };
 
@@ -811,10 +890,10 @@
       
       const renderContent = () => {
         switch (activeTab) {
-          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} />;
+          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} />;
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} handleBudgetChange={handleBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
-          case 'ローン': return <LoanTab />;
+          case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
           case '累計': return <TotalTab expenses={expenses} />;
           case '支出': return <ExpenseTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
           default: return <AssetTab />;
@@ -837,8 +916,28 @@
       );
     };
 
+    // 🌟 ログイン状態を監視して画面を切り替えるラッパーコンポーネント
+    const AuthWrapper = () => {
+      const [user, setUser] = useState(null);
+      const [authLoading, setAuthLoading] = useState(true);
+
+      useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(u => {
+          setUser(u);
+          setAuthLoading(false);
+        });
+        return () => unsubscribe();
+      }, []);
+
+      if (authLoading) return <div className="h-screen w-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div></div>;
+      
+      if (!user) return <LoginScreen />;
+
+      return <App user={user} />;
+    };
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    root.render(<AuthWrapper />);
   </script>
 </body>
 </html>

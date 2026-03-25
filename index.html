@@ -161,7 +161,7 @@
     };
 
     // ==========================================
-    // 🌟 独自のパスワードロック画面（ステルス・テンキー仕様）
+    // 🌟 独自のパスワードロック画面
     // ==========================================
     const SimpleLoginScreen = ({ onLogin }) => {
       const [inputVal, setInputVal] = useState('');
@@ -252,9 +252,9 @@
     };
 
     // ==========================================
-    // 1. 資産タブ（🌟 上部にカレンダーを追加）
+    // 1. 資産タブ（🌟 現在地に完全にロックされたバージョン）
     // ==========================================
-    const AssetTab = ({ fixedCosts, displayYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout, prevMonth, nextMonth }) => {
+    const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout }) => {
       
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
@@ -282,18 +282,21 @@
         { id: 'three', label: 'Ⅲ', color: 'bg-[#f3f3f3]', textColor: 'text-gray-800' }
       ];
 
-      const prevYM = getPrevYearMonth(displayYearMonth);
+      // 現実の「今月」と「先月」だけを計算に使用する
+      const prevCurrentYM = getPrevYearMonth(currentYearMonth);
 
       const getBalance = (accLabel, currentVal) => {
         const val = Number(currentVal || 0);
-        const unpaidCurrent = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, displayYearMonth) && !(c.paidMonths || []).includes(displayYearMonth)).reduce((sum, c) => sum + c.amount, 0);
-        const unpaidPrev = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, prevYM) && !(c.paidMonths || []).includes(prevYM)).reduce((sum, c) => sum + c.amount, 0);
+        
+        // 🌟 完全に「今月」と「前月」だけで固定費と未払いを計算
+        const unpaidCurrent = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth)).reduce((sum, c) => sum + c.amount, 0);
+        const unpaidPrev = fixedCosts.filter(c => c.accountLabel === accLabel && isCostVisibleInMonth(c, prevCurrentYM) && !(c.paidMonths || []).includes(prevCurrentYM)).reduce((sum, c) => sum + c.amount, 0);
         
         let unpaidUtilityPrev = 0;
-        if (!utilityPaid.electric.includes(prevYM) && prevElectricBudget.account === accLabel) {
+        if (!utilityPaid.electric.includes(prevCurrentYM) && prevElectricBudget.account === accLabel) {
            unpaidUtilityPrev += Math.max(0, prevElectricBudget.amount - prevMonthlySpents.electric);
         }
-        if (!utilityPaid.gas.includes(prevYM) && prevGasBudget.account === accLabel) {
+        if (!utilityPaid.gas.includes(prevCurrentYM) && prevGasBudget.account === accLabel) {
            unpaidUtilityPrev += Math.max(0, prevGasBudget.amount - prevMonthlySpents.gas);
         }
         const unpaidFixed = unpaidCurrent + unpaidPrev + unpaidUtilityPrev;
@@ -306,10 +309,10 @@
           }
         });
         
-        if (!utilityPaid.electric.includes(displayYearMonth) && currentElectricBudget.account === accLabel) {
+        if (!utilityPaid.electric.includes(currentYearMonth) && currentElectricBudget.account === accLabel) {
            remainingBudgetForAcc += Math.max(0, currentElectricBudget.amount - monthlySpents.electric);
         }
-        if (!utilityPaid.gas.includes(displayYearMonth) && currentGasBudget.account === accLabel) {
+        if (!utilityPaid.gas.includes(currentYearMonth) && currentGasBudget.account === accLabel) {
            remainingBudgetForAcc += Math.max(0, currentGasBudget.amount - monthlySpents.gas);
         }
 
@@ -323,7 +326,11 @@
 
       return (
         <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
-          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
+          
+          {/* 🌟 前月・翌月ボタンを排除し、中央にシンプルに年月のみを配置 */}
+          <div className="bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10 flex justify-center items-center">
+             <div className="font-bold text-gray-700 text-lg">{currentYearMonth}</div>
+          </div>
           
           <div className="flex flex-col space-y-6 pt-2">
             <div className="px-4">
@@ -422,7 +429,7 @@
     // ==========================================
     // 2. 固定タブ
     // ==========================================
-    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth }) => {
+    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth }) => {
       
       const togglePaid = (id, targetYM) => {
         setFixedCosts(fixedCosts.map(cost => {
@@ -442,9 +449,29 @@
         .filter(c => isCostVisibleInMonth(c, displayYearMonth))
         .map(c => ({ ...c, isCarryOver: false, targetYM: displayYearMonth, isBudget: false }));
 
-      const carryOverItems = fixedCosts
-        .filter(c => isCostVisibleInMonth(c, prevYM) && !(c.paidMonths || []).includes(prevYM))
-        .map(c => ({ ...c, isCarryOver: true, targetYM: prevYM, isBudget: false }));
+      const parseYM = (ymStr) => {
+        const match = ymStr.match(/(\d+)年(\d+)月/);
+        return match ? parseInt(match[1]) * 12 + parseInt(match[2]) : 0;
+      };
+      const currentNum = parseYM(currentYearMonth);
+      const prevNum = parseYM(prevYM);
+
+      let carryOverItems = [];
+      
+      if (prevNum < currentNum) {
+        const fixedCarry = fixedCosts
+          .filter(c => isCostVisibleInMonth(c, prevYM) && !(c.paidMonths || []).includes(prevYM))
+          .map(c => ({ ...c, isCarryOver: true, targetYM: prevYM, isBudget: false }));
+        
+        carryOverItems.push(...fixedCarry);
+
+        if (!utilityPaid.electric.includes(prevYM)) {
+           carryOverItems.push({ id: 'carryover-electric', category: 'electric', accountLabel: prevElectricBudget.account, color: ACCOUNT_COLORS[prevElectricBudget.account] || 'bg-gray-500', name: '電気', date: prevElectricBudget.date, remaining: Math.max(0, prevElectricBudget.amount - prevMonthlySpents.electric), isBudget: false, isUtility: true, isPaid: false, targetYM: prevYM, isCarryOver: true });
+        }
+        if (!utilityPaid.gas.includes(prevYM)) {
+           carryOverItems.push({ id: 'carryover-gas', category: 'gas', accountLabel: prevGasBudget.account, color: ACCOUNT_COLORS[prevGasBudget.account] || 'bg-gray-500', name: 'ガス', date: prevGasBudget.date, remaining: Math.max(0, prevGasBudget.amount - prevMonthlySpents.gas), isBudget: false, isUtility: true, isPaid: false, targetYM: prevYM, isCarryOver: true });
+        }
+      }
 
       const budgetItems = [
         { id: 'budget-food', accountLabel: safeBudgets.food.account, color: ACCOUNT_COLORS[safeBudgets.food.account] || 'bg-gray-500', name: '食費', date: safeBudgets.food.date, remaining: Math.max(0, safeBudgets.food.amount - monthlySpents.food), isBudget: true, isUtility: false, targetYM: displayYearMonth },
@@ -455,13 +482,6 @@
         { id: 'utility-electric', category: 'electric', accountLabel: currentElectricBudget.account, color: ACCOUNT_COLORS[currentElectricBudget.account] || 'bg-gray-500', name: '電気', date: currentElectricBudget.date, remaining: Math.max(0, currentElectricBudget.amount - monthlySpents.electric), isBudget: false, isUtility: true, isPaid: utilityPaid.electric.includes(displayYearMonth), targetYM: displayYearMonth },
         { id: 'utility-gas', category: 'gas', accountLabel: currentGasBudget.account, color: ACCOUNT_COLORS[currentGasBudget.account] || 'bg-gray-500', name: 'ガス', date: currentGasBudget.date, remaining: Math.max(0, currentGasBudget.amount - monthlySpents.gas), isBudget: false, isUtility: true, isPaid: utilityPaid.gas.includes(displayYearMonth), targetYM: displayYearMonth }
       ];
-
-      if (!utilityPaid.electric.includes(prevYM)) {
-         carryOverItems.push({ id: 'carryover-electric', category: 'electric', accountLabel: prevElectricBudget.account, color: ACCOUNT_COLORS[prevElectricBudget.account] || 'bg-gray-500', name: '電気', date: prevElectricBudget.date, remaining: Math.max(0, prevElectricBudget.amount - prevMonthlySpents.electric), isBudget: false, isUtility: true, isPaid: false, targetYM: prevYM, isCarryOver: true });
-      }
-      if (!utilityPaid.gas.includes(prevYM)) {
-         carryOverItems.push({ id: 'carryover-gas', category: 'gas', accountLabel: prevGasBudget.account, color: ACCOUNT_COLORS[prevGasBudget.account] || 'bg-gray-500', name: 'ガス', date: prevGasBudget.date, remaining: Math.max(0, prevGasBudget.amount - prevMonthlySpents.gas), isBudget: false, isUtility: true, isPaid: false, targetYM: prevYM, isCarryOver: true });
-      }
 
       const allDisplayItems = [...carryOverItems, ...currentItems, ...utilityItems, ...budgetItems];
 
@@ -771,7 +791,7 @@
     };
 
     // ==========================================
-    // 5. 支出タブ（🌟 カテゴリから電気・ガスを削除）
+    // 5. 支出タブ
     // ==========================================
     const ExpenseTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
@@ -781,7 +801,6 @@
       const [timing, setTiming] = useState('');
       const [day, setDay] = useState('');
 
-      // 🌟 ここから「電気」「ガス」を削除しました
       const categories = ['固定', '外食', '自炊', '交通'];
       const accounts = ['予', '松', '新', 'か', 'P', 'IC', 'W', '現'];
       
@@ -878,9 +897,11 @@
       const [activeTab, setActiveTab] = useState('資産');
 
       const d = new Date();
+      // 🌟 現在のリアルな月を保持（資産タブ用）
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
 
+      // カレンダーで操作する用の月（固定・変動タブ用）
       const [displayDate, setDisplayDate] = useState(new Date());
       const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
 
@@ -935,12 +956,21 @@
       const utilityBudgets = data?.utilityBudgets || {};
       const utilityPaid = data?.utilityPaid || { electric: [], gas: [] };
 
+      // 固定・変動タブ表示用の予算
       const currentElectricBudget = utilityBudgets[displayYearMonth]?.electric || safeBudgets.electric;
       const currentGasBudget = utilityBudgets[displayYearMonth]?.gas || safeBudgets.gas;
 
       const prevYM = getPrevYearMonth(displayYearMonth);
       const prevElectricBudget = utilityBudgets[prevYM]?.electric || safeBudgets.electric;
       const prevGasBudget = utilityBudgets[prevYM]?.gas || safeBudgets.gas;
+
+      // 🌟 資産タブ表示用（現実時間の今月・先月）の予算
+      const prevCurrentYM = getPrevYearMonth(currentYearMonth);
+      const realCurrentElectricBudget = utilityBudgets[currentYearMonth]?.electric || safeBudgets.electric;
+      const realCurrentGasBudget = utilityBudgets[currentYearMonth]?.gas || safeBudgets.gas;
+      const prevRealCurrentElectricBudget = utilityBudgets[prevCurrentYM]?.electric || safeBudgets.electric;
+      const prevRealCurrentGasBudget = utilityBudgets[prevCurrentYM]?.gas || safeBudgets.gas;
+
 
       const handleBudgetChange = (category, field, value) => {
         updateField('budgets', { ...safeBudgets, [category]: { ...safeBudgets[category], [field]: value } });
@@ -970,9 +1000,15 @@
       ];
       const setLoans = (val) => updateField('loans', val);
 
+      // 固定・変動タブ表示用の支出集計
       let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
       let prevElectricSpent = 0, prevGasSpent = 0;
+      // 🌟 資産タブ表示用（現実時間の今月・先月）の支出集計
+      let realCurrentFoodSpent = 0, realCurrentTransSpent = 0, realCurrentElectricSpent = 0, realCurrentGasSpent = 0;
+      let prevRealCurrentElectricSpent = 0, prevRealCurrentGasSpent = 0;
+
       expenses.forEach(e => {
+        // カレンダー表示月用
         if (e.yearMonth === displayYearMonth) {
           if (e.category === '外食' || e.category === '自炊') foodSpent += e.amount;
           if (e.category === '交通') transSpent += e.amount;
@@ -982,9 +1018,24 @@
           if (e.category === '電気') prevElectricSpent += e.amount;
           if (e.category === 'ガス') prevGasSpent += e.amount;
         }
+
+        // 🌟 資産タブ（現在地ロック）用
+        if (e.yearMonth === currentYearMonth) {
+          if (e.category === '外食' || e.category === '自炊') realCurrentFoodSpent += e.amount;
+          if (e.category === '交通') realCurrentTransSpent += e.amount;
+          if (e.category === '電気') realCurrentElectricSpent += e.amount;
+          if (e.category === 'ガス') realCurrentGasSpent += e.amount;
+        } else if (e.yearMonth === prevCurrentYM) {
+          if (e.category === '電気') prevRealCurrentElectricSpent += e.amount;
+          if (e.category === 'ガス') prevRealCurrentGasSpent += e.amount;
+        }
       });
+      
       const monthlySpents = { food: foodSpent, trans: transSpent, electric: electricSpent, gas: gasSpent };
       const prevMonthlySpents = { electric: prevElectricSpent, gas: prevGasSpent };
+      
+      const realCurrentMonthlySpents = { food: realCurrentFoodSpent, trans: realCurrentTransSpent, electric: realCurrentElectricSpent, gas: realCurrentGasSpent };
+      const prevRealCurrentMonthlySpents = { electric: prevRealCurrentElectricSpent, gas: prevRealCurrentGasSpent };
 
       const handleAddData = (newData) => {
         const accColor = ACCOUNT_COLORS[newData.accountLabel] || 'bg-gray-500';
@@ -1007,9 +1058,10 @@
       const renderContent = () => {
         switch (activeTab) {
           case '資産': 
-             return <AssetTab fixedCosts={fixedCosts} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} prevMonth={prevMonth} nextMonth={nextMonth} />;
+             // 🌟 資産タブにはリアルな「今月」と「先月」のデータのみを渡して完全にロック
+             return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
           case '固定': 
-             return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} />;
+             return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case '変動': 
              return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case 'ローン': 

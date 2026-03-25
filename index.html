@@ -37,7 +37,6 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // 🌟 いただいた設定情報でFirebaseを初期化
     const firebaseConfig = {
       apiKey: "AIzaSyCDoVgRYFnizB9tFz75oets2hKjtGv5Yks",
       authDomain: "kakeibo-app-abae6.firebaseapp.com",
@@ -53,7 +52,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // 🌟 クラウドデータを一元管理するカスタムフック
     function useUserData(user) {
       const [data, setData] = useState(null);
       const [loading, setLoading] = useState(true);
@@ -72,7 +70,7 @@
       }, [user]);
 
       const updateField = (key, value) => {
-        setData(prev => ({ ...prev, [key]: value })); // 画面をすぐに書き換える（モッサリさせないため）
+        setData(prev => ({ ...prev, [key]: value }));
         db.collection('users').doc(user.uid).set({
           [key]: value
         }, { merge: true }).catch(err => console.error("保存エラー:", err));
@@ -177,9 +175,8 @@
       );
     };
 
-
     // ==========================================
-    // 1. 資産タブ（Propでクラウドデータを受け取るよう変更）
+    // 1. 資産タブ
     // ==========================================
     const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets }) => {
       
@@ -235,7 +232,6 @@
 
       return (
         <div className="flex flex-col space-y-6 pt-4 pb-48 w-full bg-gray-50 min-h-full relative">
-          
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
@@ -256,6 +252,7 @@
               ))}
             </div>
           </div>
+          
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
             <span className="font-bold text-sm">収支合計</span>
             <div className="font-bold text-lg">{cashTotal.toLocaleString()}円</div>
@@ -320,7 +317,6 @@
             <div className="font-bold text-lg">{physicalTotal.toLocaleString()}円相当</div>
           </div>
           
-          {/* 🌟 ログアウトボタンを末尾に配置 */}
           <div className="mt-8 mb-4 text-center">
              <button onClick={() => firebase.auth().signOut()} className="text-gray-400 text-xs underline py-2 px-4 rounded active:text-gray-600">ログアウト</button>
           </div>
@@ -510,7 +506,7 @@
     };
 
     // ==========================================
-    // 🌟 ローン管理タブ（Propsでクラウドデータを受け取る）
+    // 🌟 ローン管理タブ
     // ==========================================
     const LoanTab = ({ loans, setLoans }) => {
       
@@ -752,14 +748,15 @@
     };
 
     // ==========================================
-    // 🌟 ログイン画面コンポーネント
+    // 🌟 ログイン画面（iPhoneのポップアップブロック対策版）
     // ==========================================
     const LoginScreen = () => {
       const signIn = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(err => {
+        // 🌟 iPhone特有のポップアップブロックを回避するため、リダイレクト方式に変更
+        auth.signInWithRedirect(provider).catch(err => {
           console.error(err);
-          alert("ログインに失敗しました。");
+          alert("ログインエラー: " + err.message);
         });
       };
       
@@ -786,7 +783,7 @@
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション（クラウド同期版）
+    // 🚀 メインアプリケーション
     // ==========================================
     const App = ({ user }) => {
       const [activeTab, setActiveTab] = useState('資産');
@@ -809,7 +806,6 @@
         setDisplayDate(newDate);
       };
 
-      // 🌟 クラウドからデータを取得＆更新するロジック
       const { data, updateField, loading } = useUserData(user);
 
       if (loading) {
@@ -820,7 +816,6 @@
          );
       }
 
-      // クラウドデータが存在しない場合は初期値をセット
       const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 
@@ -916,12 +911,20 @@
       );
     };
 
-    // 🌟 ログイン状態を監視して画面を切り替えるラッパーコンポーネント
     const AuthWrapper = () => {
       const [user, setUser] = useState(null);
       const [authLoading, setAuthLoading] = useState(true);
 
+      // 🌟 リダイレクトから戻ってきた時のログイン状態の復元処理を強化
       useEffect(() => {
+        auth.getRedirectResult().then((result) => {
+          if (result.user) {
+            setUser(result.user);
+          }
+        }).catch((error) => {
+          console.error("Redirect Error:", error);
+        });
+
         const unsubscribe = auth.onAuthStateChanged(u => {
           setUser(u);
           setAuthLoading(false);

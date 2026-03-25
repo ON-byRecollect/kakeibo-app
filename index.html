@@ -142,11 +142,6 @@
 
       if (currentNum < targetNum) return false;
 
-      if (!isNaN(cost.timing)) {
-        const targetMonth = parseInt(cost.timing);
-        return currentMonthVal === targetMonth && currentNum >= targetNum;
-      }
-
       switch (cost.timing) {
         case '毎月': return true;
         case '毎年': return currentNum >= targetNum && (currentNum - targetNum) % 12 === 0;
@@ -156,7 +151,8 @@
         case '奇月':
         case '奇数月': 
             return currentNum >= targetNum && currentMonthVal % 2 !== 0;
-        default: return currentNum === targetNum;
+        default: 
+            return currentNum === targetNum;
       }
     };
 
@@ -675,7 +671,6 @@
             <div className="px-2 pt-6 flex-1 overflow-x-auto">
                <div className="min-w-[440px]">
                   
-                  {/* 🌟 タイトル行のズレ修正：入力欄と同じ gap-1.5 を追加して完全中央揃えに */}
                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
                     <div className="w-[40px] text-center">借入</div>
                     <div className="w-[44px] text-center">更新</div>
@@ -713,7 +708,6 @@
                               </div>
                               
                               <div className="flex-1 h-[30px]">
-                                 {/* 🌟 メモ欄を text-left px-2 に変更して左詰めに */}
                                  <input type="text" value={loan.memo} onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none text-left focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" placeholder="メモ"/>
                               </div>
                            </div>
@@ -1005,13 +999,14 @@
          updateField('utilityPaid', { ...utilityPaid, [category]: newList });
       };
 
-      // 🌟 スマートマージ：保存されたローンとデフォルトのローンを結合し、常に5行（Dを含む）を確保
+      // 🌟 【修正】Dを2つに増やし、合計6行のレイアウトにしました
       const defaultLoans = [
         { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
         { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' }
+        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
+        { id: 'd2', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' } // 🌟 追加したD
       ];
       
       const loans = defaultLoans.map(defaultLoan => {

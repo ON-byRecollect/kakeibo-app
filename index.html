@@ -12,7 +12,6 @@
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -37,9 +36,9 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // 🌟 ここが正しい鍵（APIキー）です！
+    // 🌟 Firebase設定
     const firebaseConfig = {
-      apiKey: "AIzaSyCDoVgRYFnizB9tFz750ets2hKjtGv5Yks",
+      apiKey: "AIzaSyCDoVgRYFnizB9tFz75oets2hKjtGv5Yks",
       authDomain: "kakeibo-app-abae6.firebaseapp.com",
       projectId: "kakeibo-app-abae6",
       storageBucket: "kakeibo-app-abae6.firebasestorage.app",
@@ -50,29 +49,32 @@
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    function useUserData(user) {
+    // 🌟 パスワードなしで、全員が「shared_family_account」という一つのデータを共有する設定
+    function useSharedData() {
       const [data, setData] = useState(null);
       const [loading, setLoading] = useState(true);
 
       useEffect(() => {
-        if (!user) return;
-        const unsubscribe = db.collection('users').doc(user.uid).onSnapshot(doc => {
+        const unsubscribe = db.collection('shared_data').doc('family_account').onSnapshot(doc => {
           if (doc.exists) {
             setData(doc.data());
           } else {
             setData({});
           }
           setLoading(false);
+        }, (error) => {
+          console.error("Firestore接続エラー:", error);
+          alert("データベース接続エラーが発生しました。APIキーが間違っている可能性があります。");
+          setLoading(false);
         });
         return () => unsubscribe();
-      }, [user]);
+      }, []);
 
       const updateField = (key, value) => {
         setData(prev => ({ ...prev, [key]: value }));
-        db.collection('users').doc(user.uid).set({
+        db.collection('shared_data').doc('family_account').set({
           [key]: value
         }, { merge: true }).catch(err => console.error("保存エラー:", err));
       };
@@ -232,7 +234,7 @@
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       return (
-        <div className="flex flex-col space-y-6 pt-4 pb-48 w-full bg-gray-50 min-h-full relative">
+        <div className="flex flex-col space-y-6 pt-4 pb-32 w-full bg-gray-50 min-h-full relative">
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
@@ -316,10 +318,6 @@
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit mt-4 mb-4">
             <span className="font-bold text-sm">物理資産合計</span>
             <div className="font-bold text-lg">{physicalTotal.toLocaleString()}円相当</div>
-          </div>
-          
-          <div className="mt-8 mb-4 text-center">
-             <button onClick={() => firebase.auth().signOut()} className="text-gray-400 text-xs underline py-2 px-4 rounded active:text-gray-600">ログアウト</button>
           </div>
         </div>
       );
@@ -749,81 +747,9 @@
     };
 
     // ==========================================
-    // 🌟 ログイン画面
+    // 🚀 メインアプリケーション（パスワードなし共有モード）
     // ==========================================
-    const LoginScreen = () => {
-      const [isSignUp, setIsSignUp] = useState(false);
-      const [email, setEmail] = useState('');
-      const [password, setPassword] = useState('');
-      const [errorMsg, setErrorMsg] = useState('');
-      const [isLoading, setIsLoading] = useState(false);
-
-      const getErrorMessage = (err) => {
-        switch (err.code) {
-          case 'auth/invalid-email': return 'メールアドレスの形式が正しくありません。空白などが入っていませんか？';
-          case 'auth/user-not-found': return 'アカウントが見つかりません。下から新規登録してください。';
-          case 'auth/wrong-password': return 'パスワードが間違っています。';
-          case 'auth/email-already-in-use': return 'このメールアドレスは既に登録されています。';
-          case 'auth/weak-password': return 'パスワードは6文字以上で入力してください。';
-          default: return `【エラー】 ${err.code} : ${err.message}`;
-        }
-      };
-
-      const handleAuth = (e) => {
-        e.preventDefault();
-        setErrorMsg('');
-        setIsLoading(true);
-
-        if (isSignUp) {
-          auth.createUserWithEmailAndPassword(email, password)
-            .catch(err => setErrorMsg(getErrorMessage(err)))
-            .finally(() => setIsLoading(false));
-        } else {
-          auth.signInWithEmailAndPassword(email, password)
-            .catch(err => setErrorMsg(getErrorMessage(err)))
-            .finally(() => setIsLoading(false));
-        }
-      };
-
-      return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 px-8">
-          <div className="w-20 h-20 bg-emerald-500 rounded-3xl mb-6 shadow-lg flex items-center justify-center">
-             <span className="text-white text-3xl font-bold">家</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">家計簿アプリ</h1>
-          
-          <form onSubmit={handleAuth} className="w-full max-w-sm bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 className="text-center font-bold text-gray-700 mb-6">{isSignUp ? '新規アカウント作成' : 'ログインして開始'}</h2>
-            
-            {errorMsg && <div className="bg-red-50 text-[#ea4335] text-xs font-bold p-3 rounded-lg mb-4 text-left break-all">{errorMsg}</div>}
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">メールアドレス</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full h-12 bg-gray-50 border border-gray-300 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="mail@example.com" />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 block mb-1">パスワード (6文字以上)</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full h-12 bg-gray-50 border border-gray-300 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="••••••••" />
-              </div>
-            </div>
-            
-            <button type="submit" disabled={isLoading} className={`w-full h-12 mt-8 rounded-full font-bold text-white shadow-sm transition-colors ${isLoading ? 'bg-gray-400' : 'bg-emerald-500 active:bg-emerald-600'}`}>
-              {isLoading ? '処理中...' : (isSignUp ? '登録する' : 'ログイン')}
-            </button>
-          </form>
-          
-          <button type="button" onClick={() => { setIsSignUp(!isSignUp); setErrorMsg(''); }} className="mt-8 text-sm font-bold text-emerald-600 underline active:text-emerald-800">
-            {isSignUp ? '既にアカウントをお持ちの方（ログイン）' : '初めての方はこちら（新規アカウント作成）'}
-          </button>
-        </div>
-      );
-    };
-
-    // ==========================================
-    // 🚀 メインアプリケーション
-    // ==========================================
-    const App = ({ user }) => {
+    const App = () => {
       const [activeTab, setActiveTab] = useState('資産');
 
       const d = new Date();
@@ -844,7 +770,7 @@
         setDisplayDate(newDate);
       };
 
-      const { data, updateField, loading } = useUserData(user);
+      const { data, updateField, loading } = useSharedData();
 
       if (loading) {
          return (
@@ -949,27 +875,8 @@
       );
     };
 
-    const AuthWrapper = () => {
-      const [user, setUser] = useState(null);
-      const [authLoading, setAuthLoading] = useState(true);
-
-      useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(u => {
-          setUser(u);
-          setAuthLoading(false);
-        });
-        return () => unsubscribe();
-      }, []);
-
-      if (authLoading) return <div className="h-screen w-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div></div>;
-      
-      if (!user) return <LoginScreen />;
-
-      return <App user={user} />;
-    };
-
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<AuthWrapper />);
+    root.render(<App />);
   </script>
 </body>
 </html>

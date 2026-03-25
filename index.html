@@ -36,9 +36,21 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // 🌟 Firebase設定
+    // LocalStorageを使った状態保存用フック
+    function useLocalStorage(key, initialValue) {
+      const [value, setValue] = useState(() => {
+        const saved = localStorage.getItem(key);
+        return saved !== null ? JSON.parse(saved) : initialValue;
+      });
+      useEffect(() => {
+        localStorage.setItem(key, JSON.stringify(value));
+      }, [key, value]);
+      return [value, setValue];
+    }
+
+    // 🌟 Firebase設定（先ほど通信成功した鍵です）
     const firebaseConfig = {
-      apiKey: "AIzaSyCDoVgRYFnizB9tFz75oets2hKjtGv5Yks",
+      apiKey: "AIzaSyCDoVgRYFnizB9tFz750ets2hKjtGv5Yks",
       authDomain: "kakeibo-app-abae6.firebaseapp.com",
       projectId: "kakeibo-app-abae6",
       storageBucket: "kakeibo-app-abae6.firebasestorage.app",
@@ -51,7 +63,7 @@
     }
     const db = firebase.firestore();
 
-    // 🌟 パスワードなしで、全員が「shared_family_account」という一つのデータを共有する設定
+    // 🌟 クラウドデータ共有用のフック
     function useSharedData() {
       const [data, setData] = useState(null);
       const [loading, setLoading] = useState(true);
@@ -63,10 +75,6 @@
           } else {
             setData({});
           }
-          setLoading(false);
-        }, (error) => {
-          console.error("Firestore接続エラー:", error);
-          alert("データベース接続エラーが発生しました。APIキーが間違っている可能性があります。");
           setLoading(false);
         });
         return () => unsubscribe();
@@ -141,6 +149,54 @@
       }
     };
 
+    // ==========================================
+    // 🌟 独自のパスワードロック画面
+    // ==========================================
+    const SimpleLoginScreen = ({ onLogin }) => {
+      const [inputVal, setInputVal] = useState('');
+      const [error, setError] = useState(false);
+
+      // ⚠️ ここがパスワードです！自由に書き換えてください（例："kakeibo123" など）
+      const SECRET_PASSWORD = "1960"; 
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (inputVal === SECRET_PASSWORD) {
+          setError(false);
+          onLogin();
+        } else {
+          setError(true);
+          setInputVal('');
+        }
+      };
+
+      return (
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 px-8">
+          <div className="w-20 h-20 bg-emerald-500 rounded-3xl mb-6 shadow-lg flex items-center justify-center">
+             <span className="text-white text-3xl font-bold">家</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-8">家計簿アプリ</h1>
+          
+          <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center">
+            <h2 className="font-bold text-gray-600 mb-6">パスコードを入力</h2>
+            
+            <input 
+              type="password" 
+              value={inputVal} 
+              onChange={(e) => setInputVal(e.target.value)}
+              className={`w-full h-12 text-center text-xl tracking-widest bg-gray-50 border rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 ${error ? 'border-[#ea4335]' : 'border-gray-300'}`}
+              placeholder="••••"
+            />
+            {error && <p className="text-[#ea4335] text-xs font-bold mt-2">パスコードが違います</p>}
+            
+            <button type="submit" className="w-full h-12 mt-8 rounded-full font-bold text-white shadow-sm bg-emerald-500 active:bg-emerald-600 transition-colors">
+              ロック解除
+            </button>
+          </form>
+        </div>
+      );
+    };
+
     const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, handleBudgetChange }) => {
       const remaining = Math.max(0, budgetData.amount - spent);
       const progressPercent = Math.min((spent / (budgetData.amount || 1)) * 100, 100) || 0;
@@ -181,7 +237,7 @@
     // ==========================================
     // 1. 資産タブ
     // ==========================================
-    const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets }) => {
+    const AssetTab = ({ fixedCosts, expenses, displayYearMonth, safeBudgets, monthlySpents, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout }) => {
       
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
@@ -234,7 +290,7 @@
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       return (
-        <div className="flex flex-col space-y-6 pt-4 pb-32 w-full bg-gray-50 min-h-full relative">
+        <div className="flex flex-col space-y-6 pt-4 pb-48 w-full bg-gray-50 min-h-full relative">
           <div className="px-4">
             <div className="grid grid-cols-12 gap-2 mb-2 text-center text-sm font-bold text-gray-600"><div className="col-span-2">口座</div><div className="col-span-5">現在</div><div className="col-span-5">収支</div></div>
             <div className="space-y-3">
@@ -318,6 +374,10 @@
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit mt-4 mb-4">
             <span className="font-bold text-sm">物理資産合計</span>
             <div className="font-bold text-lg">{physicalTotal.toLocaleString()}円相当</div>
+          </div>
+          
+          <div className="mt-8 mb-4 text-center">
+             <button onClick={onLogout} className="text-gray-400 text-xs underline py-2 px-4 rounded active:text-gray-600">画面をロックする</button>
           </div>
         </div>
       );
@@ -747,9 +807,9 @@
     };
 
     // ==========================================
-    // 🚀 メインアプリケーション（パスワードなし共有モード）
+    // 🚀 メインアプリケーション
     // ==========================================
-    const App = () => {
+    const App = ({ onLogout }) => {
       const [activeTab, setActiveTab] = useState('資産');
 
       const d = new Date();
@@ -849,7 +909,7 @@
       
       const renderContent = () => {
         switch (activeTab) {
-          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} />;
+          case '資産': return <AssetTab fixedCosts={fixedCosts} expenses={expenses} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} safeBudgets={safeBudgets} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} handleBudgetChange={handleBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
@@ -875,8 +935,20 @@
       );
     };
 
+    // 🌟 ログイン状態を制御する大元
+    const AuthWrapper = () => {
+      // ログイン状態をLocalStorageに保存（アプリを閉じてもログインを維持）
+      const [isLoggedIn, setIsLoggedIn] = useLocalStorage('kakeibo_app_locked_v1', false);
+
+      if (!isLoggedIn) {
+        return <SimpleLoginScreen onLogin={() => setIsLoggedIn(true)} />;
+      }
+
+      return <App onLogout={() => setIsLoggedIn(false)} />;
+    };
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    root.render(<AuthWrapper />);
   </script>
 </body>
 </html>

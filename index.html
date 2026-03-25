@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>家計簿アプリ</title>
+  <title>家計簿</title>
   
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -36,7 +36,6 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // LocalStorageを使った状態保存用フック
     function useLocalStorage(key, initialValue) {
       const [value, setValue] = useState(() => {
         const saved = localStorage.getItem(key);
@@ -48,7 +47,6 @@
       return [value, setValue];
     }
 
-    // 🌟 Firebase設定（先ほど通信成功した鍵です）
     const firebaseConfig = {
       apiKey: "AIzaSyCDoVgRYFnizB9tFz750ets2hKjtGv5Yks",
       authDomain: "kakeibo-app-abae6.firebaseapp.com",
@@ -63,7 +61,6 @@
     }
     const db = firebase.firestore();
 
-    // 🌟 クラウドデータ共有用のフック
     function useSharedData() {
       const [data, setData] = useState(null);
       const [loading, setLoading] = useState(true);
@@ -150,13 +147,13 @@
     };
 
     // ==========================================
-    // 🌟 独自のパスワードロック画面
+    // 🌟 独自のパスワードロック画面（ステルス仕様）
     // ==========================================
     const SimpleLoginScreen = ({ onLogin }) => {
       const [inputVal, setInputVal] = useState('');
       const [error, setError] = useState(false);
 
-      // ⚠️ ここがパスワードです！自由に書き換えてください（例："kakeibo123" など）
+      // ⚠️ ここがパスワードです！自由に書き換えてください
       const SECRET_PASSWORD = "1960"; 
 
       const handleSubmit = (e) => {
@@ -172,11 +169,6 @@
 
       return (
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 px-8">
-          <div className="w-20 h-20 bg-emerald-500 rounded-3xl mb-6 shadow-lg flex items-center justify-center">
-             <span className="text-white text-3xl font-bold">家</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">家計簿アプリ</h1>
-          
           <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center">
             <h2 className="font-bold text-gray-600 mb-6">パスコードを入力</h2>
             
@@ -935,10 +927,38 @@
       );
     };
 
-    // 🌟 ログイン状態を制御する大元
+    // 🌟 自動ログアウト監視機能を持たせたラッパー
     const AuthWrapper = () => {
-      // ログイン状態をLocalStorageに保存（アプリを閉じてもログインを維持）
       const [isLoggedIn, setIsLoggedIn] = useLocalStorage('kakeibo_app_locked_v1', false);
+
+      useEffect(() => {
+        if (!isLoggedIn) return;
+
+        let lastActivityTime = Date.now();
+        const TIMEOUT_MS = 15 * 60 * 1000; // 15分（900,000ミリ秒）
+
+        // 画面上で何らかの操作が行われたら、時間をリセットする
+        const updateActivity = () => {
+          lastActivityTime = Date.now();
+        };
+
+        // 監視する操作の一覧（タップ、スクロール、キー入力など）
+        const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll'];
+        events.forEach(event => window.addEventListener(event, updateActivity));
+
+        // 10秒ごとに「最後の操作から15分経っていないか」をチェック
+        const checkInactivity = setInterval(() => {
+          if (Date.now() - lastActivityTime > TIMEOUT_MS) {
+            setIsLoggedIn(false); // 15分経過でログアウト（ロック）
+          }
+        }, 10000);
+
+        // クリーンアップ処理
+        return () => {
+          events.forEach(event => window.removeEventListener(event, updateActivity));
+          clearInterval(checkInactivity);
+        };
+      }, [isLoggedIn, setIsLoggedIn]);
 
       if (!isLoggedIn) {
         return <SimpleLoginScreen onLogin={() => setIsLoggedIn(true)} />;

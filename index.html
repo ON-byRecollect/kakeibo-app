@@ -37,8 +37,9 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
+    // 🌟 【修正】apiKeyの「o（オー）」を「0（ゼロ）」に修正しました
     const firebaseConfig = {
-      apiKey: "AIzaSyCDoVgRYFnizB9tFz75oets2hKjtGv5Yks",
+      apiKey: "AIzaSyCDoVgRYFnizB9tFz750ets2hKjtGv5Yks",
       authDomain: "kakeibo-app-abae6.firebaseapp.com",
       projectId: "kakeibo-app-abae6",
       storageBucket: "kakeibo-app-abae6.firebasestorage.app",
@@ -174,7 +175,6 @@
         </div>
       );
     };
-
 
     // ==========================================
     // 1. 資産タブ
@@ -749,7 +749,7 @@
     };
 
     // ==========================================
-    // 🌟 ログイン画面（エラー原因特定用）
+    // 🌟 ログイン画面
     // ==========================================
     const LoginScreen = () => {
       const [isSignUp, setIsSignUp] = useState(false);
@@ -758,7 +758,6 @@
       const [errorMsg, setErrorMsg] = useState('');
       const [isLoading, setIsLoading] = useState(false);
 
-      // 🌟 エラーコードを画面にそのまま出すように修正
       const getErrorMessage = (err) => {
         switch (err.code) {
           case 'auth/invalid-email': return 'メールアドレスの形式が正しくありません。空白などが入っていませんか？';
@@ -766,7 +765,7 @@
           case 'auth/wrong-password': return 'パスワードが間違っています。';
           case 'auth/email-already-in-use': return 'このメールアドレスは既に登録されています。';
           case 'auth/weak-password': return 'パスワードは6文字以上で入力してください。';
-          default: return `【エラー】 ${err.code} : ${err.message}`; // 生のエラーを表示
+          default: return `【エラー】 ${err.code} : ${err.message}`;
         }
       };
 

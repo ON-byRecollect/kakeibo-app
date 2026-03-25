@@ -221,7 +221,8 @@
                     {acc.id === 'yo' ? (
                       <div className="w-full h-10"></div>
                     ) : (
-                      <div className="w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end text-gray-600">
+                      /* 🌟 【修正点】個別収支がマイナスの場合のみテキストカラーを #ea4335 に変更する */
+                      <div className={`w-full h-10 border border-gray-400 rounded-md px-2 text-right bg-transparent flex items-center justify-end ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-[#ea4335] font-bold' : 'text-gray-600'}`}>
                         {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
                       </div>
                     )}
@@ -230,6 +231,8 @@
               ))}
             </div>
           </div>
+          
+          {/* 🌟 収支合計はマイナスでも文字色を変更せずそのまま */}
           <div className="bg-emerald-500 text-white px-5 py-2 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
             <span className="font-bold text-sm">収支合計</span>
             <div className="font-bold text-lg">{cashTotal.toLocaleString()}円</div>
@@ -496,7 +499,6 @@
       
       const [loans, setLoans] = useLocalStorage('kakeibo_loans', initialLoans);
 
-      // 🌟 【修正2】残債の手動入力＆自動計算ハイブリッドロジック
       const handleUpdate = (id, field, value) => {
         const d = new Date();
         const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
@@ -505,7 +507,6 @@
           if (loan.id === id) {
             const updatedLoan = { ...loan, [field]: value, updated: dateStr };
             
-            // 「済」「計」「月々」のいずれかが変更された場合、必要な値が揃っていれば自動で残債を計算
             if (field === 'done' || field === 'total' || field === 'monthly') {
                if (updatedLoan.total && updatedLoan.monthly) {
                   const doneNum = Number(updatedLoan.done) || 0;
@@ -520,7 +521,6 @@
         }));
       };
 
-      // 🌟 【修正3】残債の合計を算出
       const loansTotal = loans.reduce((sum, loan) => sum + Number(loan.remaining || 0), 0);
 
       return (
@@ -548,7 +548,6 @@
                               </div>
                               <div className="w-[44px] text-[10px] text-center text-gray-500 font-bold">{loan.updated}</div>
                               
-                              {/* 🌟 【修正2】残債枠を手動入力可能なinput要素に変更（白背景・編集中は枠色変化） */}
                               <div className="w-[74px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
                                  <input type="number" inputMode="numeric" value={loan.remaining || ''} onChange={e => handleUpdate(loan.id, 'remaining', e.target.value)} className="w-full text-right text-[11px] font-bold outline-none bg-transparent text-gray-700" placeholder="0"/>
                                  <span className="text-[9px] text-gray-500 ml-0.5">円</span>
@@ -576,7 +575,6 @@
                <div className="text-[10px] text-gray-400 mt-4 ml-1">※このタブの数値はアプリ内の他計算には影響しません。</div>
             </div>
             
-            {/* 🌟 【修正3】残債合計を表示するカードを追加 */}
             <div className="bg-emerald-500 text-white px-5 py-2 mt-auto mb-4 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit">
               <span className="font-bold text-sm">残債合計</span>
               <div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{loansTotal.toLocaleString()}円</div>

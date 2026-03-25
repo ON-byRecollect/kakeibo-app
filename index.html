@@ -28,6 +28,16 @@
       100% { transform: scale(1); opacity: 1; }
     }
     .animate-pop { animation: pop 0.2s ease-out forwards; }
+
+    /* 🌟 PCブラウザの数値入力の矢印（スピンボタン）を非表示にする設定 */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
@@ -927,7 +937,6 @@
       );
     };
 
-    // 🌟 自動ログアウト監視機能を持たせたラッパー
     const AuthWrapper = () => {
       const [isLoggedIn, setIsLoggedIn] = useLocalStorage('kakeibo_app_locked_v1', false);
 
@@ -935,25 +944,21 @@
         if (!isLoggedIn) return;
 
         let lastActivityTime = Date.now();
-        const TIMEOUT_MS = 15 * 60 * 1000; // 15分（900,000ミリ秒）
+        const TIMEOUT_MS = 15 * 60 * 1000;
 
-        // 画面上で何らかの操作が行われたら、時間をリセットする
         const updateActivity = () => {
           lastActivityTime = Date.now();
         };
 
-        // 監視する操作の一覧（タップ、スクロール、キー入力など）
         const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll'];
         events.forEach(event => window.addEventListener(event, updateActivity));
 
-        // 10秒ごとに「最後の操作から15分経っていないか」をチェック
         const checkInactivity = setInterval(() => {
           if (Date.now() - lastActivityTime > TIMEOUT_MS) {
-            setIsLoggedIn(false); // 15分経過でログアウト（ロック）
+            setIsLoggedIn(false);
           }
         }, 10000);
 
-        // クリーンアップ処理
         return () => {
           events.forEach(event => window.removeEventListener(event, updateActivity));
           clearInterval(checkInactivity);

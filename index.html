@@ -97,11 +97,13 @@
       return { data, updateField, loading };
     }
 
+    // 🌟 新しく「Ⅲ」のカラー設定を追加
     const ACCOUNT_COLORS = {
       '予': 'bg-[#000000]',
       '松': 'bg-[#4285f4]',
       '新': 'bg-[#fbbc04]',
       'か': 'bg-[#ff6d01]',
+      'Ⅲ': 'bg-[#f3f3f3]',
       'IC': 'bg-[#34a853]',
       'W':  'bg-[#57c7e5]',
       '現': 'bg-[#999999]',
@@ -109,9 +111,13 @@
       'N':  'bg-[#ea4335]'
     };
 
-    const AccountIcon = ({ label, bgColor, textColor = 'text-white' }) => (
-      <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-sm ${bgColor} ${textColor} shrink-0`}>{label}</div>
-    );
+    // 🌟 「Ⅲ」のときは自動で黒文字（text-gray-800）になるように改良
+    const AccountIcon = ({ label, bgColor, textColor }) => {
+      const tColor = textColor ? textColor : (label === 'Ⅲ' ? 'text-gray-800' : 'text-white');
+      return (
+        <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-sm ${bgColor} ${tColor} shrink-0`}>{label}</div>
+      );
+    };
 
     const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
       <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
@@ -210,7 +216,8 @@
             </div>
             <div className="flex items-center space-x-2">
               <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700">
-                {['予','松','新','か','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
+                {/* 🌟 予算設定のプルダウンにも「Ⅲ」を追加 */}
+                {['予','松','新','か','Ⅲ','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700">
                 <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
@@ -256,11 +263,13 @@
         setPhysicalAssets(physicalAssets.map(item => item.id === id ? { ...item, [field]: value } : item));
       };
 
+      // 🌟 口座リストの「か」と「P」の間に「Ⅲ」を追加
       const cashAccounts = [
         { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
         { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] }, 
         { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
         { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] }, 
+        { id: 'three', label: 'Ⅲ', color: ACCOUNT_COLORS['Ⅲ'] }, // ここに追加！
         { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
         { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] }, 
         { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, 
@@ -672,7 +681,7 @@
     };
 
     // ==========================================
-    // 🌟 ローン管理タブ（🌟 プレースホルダー文字を完全削除）
+    // 🌟 ローン管理タブ
     // ==========================================
     const LoanTab = ({ loans, setLoans }) => {
       
@@ -738,7 +747,6 @@
                               </div>
                               
                               <div className="w-[66px] flex items-center justify-between bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
-                                 {/* 🌟 「済」の透かし文字を削除 */}
                                  <input 
                                     type="number" 
                                     inputMode="numeric" 
@@ -748,7 +756,6 @@
                                     placeholder=""
                                  />
                                  <span className="text-[10px] text-gray-400 font-bold">/</span>
-                                 {/* 🌟 「計」の透かし文字を削除 */}
                                  <input 
                                     type="number" 
                                     inputMode="numeric" 
@@ -772,7 +779,6 @@
                               </div>
                               
                               <div className="flex-1 h-[30px]">
-                                 {/* 🌟 「メモ」の透かし文字を削除 */}
                                  <input 
                                     type="text" 
                                     value={loan.memo} 
@@ -864,7 +870,9 @@
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通'];
-      const accounts = ['予', '松', '新', 'か', 'P', 'IC', 'W', '現'];
+      
+      // 🌟 支出タブの口座選択肢にも「Ⅲ」を追加
+      const accounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', 'W', '現'];
       
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const annualMonths = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -1017,7 +1025,8 @@
          );
       }
 
-      const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', p: '', ic: '', w: '', gen: '' };
+      // 🌟 cashAssetsの初期値にも three を追加
+      const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', w: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 
       const pointAssets = data?.pointAssets || { w: '', p: '', nisa: '' };

@@ -97,7 +97,6 @@
       return { data, updateField, loading };
     }
 
-    // 🌟 新しく「Ⅲ」のカラー設定を追加
     const ACCOUNT_COLORS = {
       '予': 'bg-[#000000]',
       '松': 'bg-[#4285f4]',
@@ -111,7 +110,6 @@
       'N':  'bg-[#ea4335]'
     };
 
-    // 🌟 「Ⅲ」のときは自動で黒文字（text-gray-800）になるように改良
     const AccountIcon = ({ label, bgColor, textColor }) => {
       const tColor = textColor ? textColor : (label === 'Ⅲ' ? 'text-gray-800' : 'text-white');
       return (
@@ -216,7 +214,6 @@
             </div>
             <div className="flex items-center space-x-2">
               <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700">
-                {/* 🌟 予算設定のプルダウンにも「Ⅲ」を追加 */}
                 {['予','松','新','か','Ⅲ','P','IC','W','現'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700">
@@ -263,13 +260,12 @@
         setPhysicalAssets(physicalAssets.map(item => item.id === id ? { ...item, [field]: value } : item));
       };
 
-      // 🌟 口座リストの「か」と「P」の間に「Ⅲ」を追加
       const cashAccounts = [
         { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
         { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] }, 
         { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
         { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] }, 
-        { id: 'three', label: 'Ⅲ', color: ACCOUNT_COLORS['Ⅲ'] }, // ここに追加！
+        { id: 'three', label: 'Ⅲ', color: ACCOUNT_COLORS['Ⅲ'] },
         { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
         { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] }, 
         { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, 
@@ -681,7 +677,7 @@
     };
 
     // ==========================================
-    // 🌟 ローン管理タブ
+    // 🌟 ローン管理タブ（🌟 「SB」専用計算式の実装）
     // ==========================================
     const LoanTab = ({ loans, setLoans }) => {
       
@@ -698,7 +694,15 @@
                   const doneNum = Number(updatedLoan.done) || 0;
                   const totalNum = Number(updatedLoan.total) || 0;
                   const monthlyNum = Number(updatedLoan.monthly) || 0;
-                  updatedLoan.remaining = String(Math.max(0, totalNum - doneNum) * monthlyNum);
+                  
+                  // 🌟 ここが「SB」専用の計算分岐です
+                  if (id === 'sb') {
+                      // SB専用: 月々 × 分母(計) - 4070 - 済 × 月々
+                      updatedLoan.remaining = String(Math.max(0, (monthlyNum * totalNum) - 4070 - (doneNum * monthlyNum)));
+                  } else {
+                      // それ以外: (分母 - 済) × 月々
+                      updatedLoan.remaining = String(Math.max(0, totalNum - doneNum) * monthlyNum);
+                  }
                }
             }
             return updatedLoan;
@@ -870,8 +874,6 @@
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通'];
-      
-      // 🌟 支出タブの口座選択肢にも「Ⅲ」を追加
       const accounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', 'W', '現'];
       
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -1025,7 +1027,6 @@
          );
       }
 
-      // 🌟 cashAssetsの初期値にも three を追加
       const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', w: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 

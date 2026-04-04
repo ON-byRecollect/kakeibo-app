@@ -97,6 +97,7 @@
       return { data, updateField, loading };
     }
 
+    // 🌟 「T」のカラー設定を追加
     const ACCOUNT_COLORS = {
       '予': 'bg-[#000000]',
       '松': 'bg-[#4285f4]',
@@ -104,6 +105,7 @@
       'か': 'bg-[#ff6d01]',
       'Ⅲ': 'bg-[#f3f3f3]',
       'IC': 'bg-[#34a853]',
+      'T':  'bg-[#0246A1]',
       'W':  'bg-[#57c7e5]',
       '現': 'bg-[#999999]',
       'P':  'bg-[#ea4335]',
@@ -271,7 +273,14 @@
         { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, 
         { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
       ];
-      const pointAccounts = [{ id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, { id: 'nisa', label: 'N', color: ACCOUNT_COLORS['N'] }];
+      
+      // 🌟 Wの上にTを追加
+      const pointAccounts = [
+        { id: 't', label: 'T', color: ACCOUNT_COLORS['T'] },
+        { id: 'w', label: 'W', color: ACCOUNT_COLORS['W'] }, 
+        { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, 
+        { id: 'nisa', label: 'N', color: ACCOUNT_COLORS['N'] }
+      ];
       
       const borrowingAccounts = [
         { id: 'p_ku', label: 'Pク', color: 'bg-[#00b5ff]' },
@@ -677,7 +686,7 @@
     };
 
     // ==========================================
-    // 🌟 ローン管理タブ（🌟 「SB」専用計算式の実装）
+    // 🌟 ローン管理タブ
     // ==========================================
     const LoanTab = ({ loans, setLoans }) => {
       
@@ -695,12 +704,9 @@
                   const totalNum = Number(updatedLoan.total) || 0;
                   const monthlyNum = Number(updatedLoan.monthly) || 0;
                   
-                  // 🌟 ここが「SB」専用の計算分岐です
                   if (id === 'sb') {
-                      // SB専用: 月々 × 分母(計) - 4070 - 済 × 月々
                       updatedLoan.remaining = String(Math.max(0, (monthlyNum * totalNum) - 4070 - (doneNum * monthlyNum)));
                   } else {
-                      // それ以外: (分母 - 済) × 月々
                       updatedLoan.remaining = String(Math.max(0, totalNum - doneNum) * monthlyNum);
                   }
                }
@@ -1027,10 +1033,11 @@
          );
       }
 
+      // 🌟 Tの初期値をセット
       const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', w: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 
-      const pointAssets = data?.pointAssets || { w: '', p: '', nisa: '' };
+      const pointAssets = data?.pointAssets || { t: '', w: '', p: '', nisa: '' };
       const setPointAssets = (val) => updateField('pointAssets', val);
 
       const borrowingAssets = data?.borrowingAssets || { p_ku: '', ka: '', ac: '', three: '' };

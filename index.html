@@ -328,7 +328,7 @@
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       return (
-        <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full relative">
           
           <div className="bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10 flex justify-center items-center">
              <div className="font-bold text-gray-700 text-lg">{currentYearMonth}</div>
@@ -545,7 +545,7 @@
       }, 0);
 
       return (
-        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-4 mt-2">
@@ -641,7 +641,7 @@
       });
 
       return (
-        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
@@ -718,7 +718,7 @@
       const loansTotal = loans.reduce((sum, loan) => sum + Number(loan.remaining || 0), 0);
 
       return (
-         <div className="flex flex-col h-full pb-48 w-full bg-gray-50 min-h-full">
+         <div className="flex flex-col h-full pb-44 w-full bg-gray-50 min-h-full">
             <div className="px-2 pt-6 flex-1 overflow-x-auto">
                <div className="min-w-[440px]">
                   
@@ -830,7 +830,7 @@
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
 
       return (
-        <div className="flex flex-col pt-4 pb-48 px-4 space-y-4 w-full bg-gray-100 min-h-full">
+        <div className="flex flex-col pt-4 pb-44 px-4 space-y-4 w-full bg-gray-100 min-h-full">
           {sortedMonths.length === 0 && <div className="text-center text-gray-400 mt-10">変動費データがありません</div>}
           {sortedMonths.map((data, index) => {
             const foodTotal = data.food.out + data.food.cook;
@@ -926,7 +926,7 @@
       const recentExpenses = [...expenses].reverse().slice(0, 5);
 
       return (
-        <div className="flex flex-col w-full bg-white min-h-full pb-48">
+        <div className="flex flex-col w-full bg-white min-h-full pb-44">
           <div className="px-4 py-4 shrink-0 w-full box-border mt-2">
             <div className="flex items-center space-x-2 w-full">
                <input 
@@ -1178,7 +1178,7 @@
         }
       };
 
-      // 🌟 タブのアイコン（SVG）とラベルのデータを定義
+      // 🌟 タブのアイコンデータ
       const tabsData = [
         { 
           id: '資産', 
@@ -1216,17 +1216,17 @@
           <div className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
-          {/* 🌟 アイコンと小さな文字を上下に配置した新しいタブバー */}
+          {/* 🌟 130pxの高さに最適化されたアイコン＋文字の美しいタブバー */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-            <div className="flex justify-around items-center h-[140px] w-full px-1">
+            <div className="flex justify-around items-center h-[130px] w-full px-1">
               {tabsData.map((tab) => (
                 <button 
                   key={tab.id} 
                   onClick={() => setActiveTab(tab.id)} 
-                  className={`flex-1 h-full flex flex-col items-center justify-center space-y-2 transition-colors ${activeTab === tab.id ? 'text-emerald-600 border-t-[4px] border-emerald-600' : 'text-gray-400 border-t-[4px] border-transparent'}`}
+                  className={`flex-1 h-full flex flex-col items-center justify-center space-y-1.5 transition-colors ${activeTab === tab.id ? 'text-emerald-600 border-t-[4px] border-emerald-600' : 'text-gray-400 border-t-[4px] border-transparent'}`}
                 >
-                  <tab.icon className="w-10 h-10" />
-                  <span className="text-[14px] font-bold">{tab.id}</span>
+                  <tab.icon className="w-8 h-8" />
+                  <span className="text-[12px] font-bold">{tab.id}</span>
                 </button>
               ))}
             </div>

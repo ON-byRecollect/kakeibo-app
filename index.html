@@ -161,9 +161,6 @@
       }
     };
 
-    // ==========================================
-    // 🌟 ログイン画面（キーボードバグ対策済）
-    // ==========================================
     const SimpleLoginScreen = ({ onLogin }) => {
       const [inputVal, setInputVal] = useState('');
       const [error, setError] = useState(false);
@@ -174,14 +171,14 @@
         e.preventDefault();
         if (inputVal === SECRET_PASSWORD) {
           setError(false);
-          // 🌟 対策1：明示的にフォーカスを外してキーボードを強制的に下ろす
+          
           if (document.activeElement) {
             document.activeElement.blur();
           }
-          // 🌟 対策2：キーボードが下りるのを0.15秒待ってから画面遷移する
+          // 🌟 対策：キーボードが下りるのを完全に待ってから画面を切り替える（300msに拡張し確実性を向上）
           setTimeout(() => {
             onLogin();
-          }, 150);
+          }, 300);
         } else {
           setError(true);
           setInputVal('');
@@ -555,7 +552,7 @@
       }, 0);
 
       return (
-        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-4 mt-2">
@@ -651,7 +648,7 @@
       });
 
       return (
-        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
@@ -993,294 +990,4 @@
                   <div key={e.id} onClick={() => { if(window.confirm(`「${e.category} ${e.amount}円」を取り消しますか？`)) handleDeleteExpense(e.id); }} className="flex justify-between items-center bg-white/10 rounded px-3 py-2 text-white text-sm cursor-pointer active:bg-red-500/50 transition-colors">
                     <div className="flex items-center space-x-2">
                       <span className="bg-white text-emerald-600 px-2 py-0.5 rounded text-xs font-bold">{e.category}</span>
-                      <span className="text-white/80 text-xs">{e.day}日</span>
-                    </div>
-                    <span className="font-bold">{e.amount.toLocaleString()}円</span>
-                  </div>
-                ))}
-                {recentExpenses.length === 0 && <div className="text-white/70 text-sm">履歴はありません</div>}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      );
-    };
-
-    // ==========================================
-    // 🚀 メインアプリケーション
-    // ==========================================
-    const App = ({ onLogout }) => {
-      const [activeTab, setActiveTab] = useState('資産');
-
-      const d = new Date();
-      const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
-      const todayDay = d.getDate();
-
-      const [displayDate, setDisplayDate] = useState(new Date());
-      const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
-
-      const prevMonth = () => {
-        const newDate = new Date(displayDate);
-        newDate.setMonth(newDate.getMonth() - 1);
-        setDisplayDate(newDate);
-      };
-      const nextMonth = () => {
-        const newDate = new Date(displayDate);
-        newDate.setMonth(newDate.getMonth() + 1);
-        setDisplayDate(newDate);
-      };
-
-      const { data, updateField, loading } = useSharedData();
-
-      if (loading) {
-         return (
-            <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
-               <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-            </div>
-         );
-      }
-
-      const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', w: '', gen: '' };
-      const setCashAssets = (val) => updateField('cashAssets', val);
-
-      const pointAssets = data?.pointAssets || { t: '', w: '', p: '', nisa: '' };
-      const setPointAssets = (val) => updateField('pointAssets', val);
-
-      const borrowingAssets = data?.borrowingAssets || { p_ku: '', ka: '', ac: '', three: '' };
-      const setBorrowingAssets = (val) => updateField('borrowingAssets', val);
-
-      const physicalAssets = data?.physicalAssets || [
-         { id: 1, name: '', value: '' }, { id: 2, name: '', value: '' }, { id: 3, name: '', value: '' }, { id: 4, name: '', value: '' }, { id: 5, name: '', value: '' }
-      ];
-      const setPhysicalAssets = (val) => updateField('physicalAssets', val);
-
-      const fixedCosts = data?.fixedCosts || [];
-      const setFixedCosts = (val) => updateField('fixedCosts', val);
-
-      const expenses = data?.expenses || [];
-      const setExpenses = (val) => updateField('expenses', val);
-
-      const safeBudgets = data?.budgets || {
-        food: { amount: 40000, account: '現', date: '-' },
-        electric: { amount: 10000, account: '松', date: '25' },
-        gas: { amount: 5000, account: '松', date: '25' },
-        transport: { amount: 10000, account: 'IC', date: '-' }
-      };
-      
-      const utilityBudgets = data?.utilityBudgets || {};
-      const utilityPaid = data?.utilityPaid || { electric: [], gas: [] };
-
-      const currentElectricBudget = utilityBudgets[displayYearMonth]?.electric || safeBudgets.electric;
-      const currentGasBudget = utilityBudgets[displayYearMonth]?.gas || safeBudgets.gas;
-
-      const prevYM = getPrevYearMonth(displayYearMonth);
-      const prevElectricBudget = utilityBudgets[prevYM]?.electric || safeBudgets.electric;
-      const prevGasBudget = utilityBudgets[prevYM]?.gas || safeBudgets.gas;
-
-      const prevCurrentYM = getPrevYearMonth(currentYearMonth);
-      const realCurrentElectricBudget = utilityBudgets[currentYearMonth]?.electric || safeBudgets.electric;
-      const realCurrentGasBudget = utilityBudgets[currentYearMonth]?.gas || safeBudgets.gas;
-      const prevRealCurrentElectricBudget = utilityBudgets[prevCurrentYM]?.electric || safeBudgets.electric;
-      const prevRealCurrentGasBudget = utilityBudgets[prevCurrentYM]?.gas || safeBudgets.gas;
-
-
-      const handleBudgetChange = (category, field, value) => {
-        updateField('budgets', { ...safeBudgets, [category]: { ...safeBudgets[category], [field]: value } });
-      };
-
-      const handleUtilityBudgetChange = (category, field, value) => {
-        const monthData = utilityBudgets[displayYearMonth] || { electric: safeBudgets.electric, gas: safeBudgets.gas };
-        const updatedMonthData = {
-          ...monthData,
-          [category]: { ...monthData[category], [field]: value }
-        };
-        updateField('utilityBudgets', { ...utilityBudgets, [displayYearMonth]: updatedMonthData });
-      };
-
-      const toggleUtilityPaid = (category, ym) => {
-         const currentList = utilityPaid[category] || [];
-         const newList = currentList.includes(ym) ? currentList.filter(m => m !== ym) : [...currentList, ym];
-         updateField('utilityPaid', { ...utilityPaid, [category]: newList });
-      };
-
-      const defaultLoans = [
-        { id: 'ac_c', lender: 'AC(C)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'ac_s', lender: 'AC(S)', color: 'bg-[#000000]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'ka', lender: 'カ', color: 'bg-[#fbbc04]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'sb', lender: 'SB', color: 'bg-[#999999]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'd', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' },
-        { id: 'd2', lender: 'D', color: 'bg-[#ea4335]', updated: '-', done: '', total: '', monthly: '', memo: '', remaining: '' } 
-      ];
-      
-      const loans = defaultLoans.map(defaultLoan => {
-        const savedLoan = (data?.loans || []).find(l => l.id === defaultLoan.id);
-        return savedLoan ? { ...defaultLoan, ...savedLoan } : defaultLoan;
-      });
-
-      const setLoans = (val) => updateField('loans', val);
-
-      let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
-      let prevElectricSpent = 0, prevGasSpent = 0;
-      let realCurrentFoodSpent = 0, realCurrentTransSpent = 0, realCurrentElectricSpent = 0, realCurrentGasSpent = 0;
-      let prevRealCurrentElectricSpent = 0, prevRealCurrentGasSpent = 0;
-
-      expenses.forEach(e => {
-        if (e.yearMonth === displayYearMonth) {
-          if (e.category === '外食' || e.category === '自炊') foodSpent += e.amount;
-          if (e.category === '交通') transSpent += e.amount;
-          if (e.category === '電気') electricSpent += e.amount;
-          if (e.category === 'ガス') gasSpent += e.amount;
-        } else if (e.yearMonth === prevYM) {
-          if (e.category === '電気') prevElectricSpent += e.amount;
-          if (e.category === 'ガス') prevGasSpent += e.amount;
-        }
-
-        if (e.yearMonth === currentYearMonth) {
-          if (e.category === '外食' || e.category === '自炊') realCurrentFoodSpent += e.amount;
-          if (e.category === '交通') realCurrentTransSpent += e.amount;
-          if (e.category === '電気') realCurrentElectricSpent += e.amount;
-          if (e.category === 'ガス') realCurrentGasSpent += e.amount;
-        } else if (e.yearMonth === prevCurrentYM) {
-          if (e.category === '電気') prevRealCurrentElectricSpent += e.amount;
-          if (e.category === 'ガス') prevRealCurrentGasSpent += e.amount;
-        }
-      });
-      
-      const monthlySpents = { food: foodSpent, trans: transSpent, electric: electricSpent, gas: gasSpent };
-      const prevMonthlySpents = { electric: prevElectricSpent, gas: prevGasSpent };
-      
-      const realCurrentMonthlySpents = { food: realCurrentFoodSpent, trans: realCurrentTransSpent, electric: realCurrentElectricSpent, gas: realCurrentGasSpent };
-      const prevRealCurrentMonthlySpents = { electric: prevRealCurrentElectricSpent, gas: prevRealCurrentGasSpent };
-
-      const handleAddData = (newData) => {
-        const accColor = ACCOUNT_COLORS[newData.accountLabel] || 'bg-gray-500';
-        if (newData.category === '固定') {
-          setFixedCosts([...fixedCosts, { 
-            id: Date.now(), accountLabel: newData.accountLabel, color: accColor, 
-            name: newData.itemName || '未設定', date: newData.day.toString(), amount: newData.amount, 
-            isPaid: false, paidMonths: [], timing: newData.timing, yearMonth: newData.yearMonth
-          }]);
-        } else {
-          setExpenses([...expenses, { id: Date.now(), amount: newData.amount, category: newData.category, day: newData.day, yearMonth: newData.yearMonth, accountLabel: newData.accountLabel }]);
-        }
-      };
-
-      const handleDeleteFixed = (id) => setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
-      const handleDeleteExpense = (id) => setExpenses(expenses.filter(expense => expense.id !== id));
-
-      const renderContent = () => {
-        switch (activeTab) {
-          case '資産': 
-             return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
-          case '固定': 
-             return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} />;
-          case '変動': 
-             return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
-          case 'ローン': 
-             return <LoanTab loans={loans} setLoans={setLoans} />;
-          case '累計': 
-             return <TotalTab expenses={expenses} />;
-          case '支出': 
-             return <ExpenseTab handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} expenses={expenses} handleDeleteExpense={handleDeleteExpense} />;
-          default: 
-             return <AssetTab />;
-        }
-      };
-
-      const tabsData = [
-        { 
-          id: '資産', 
-          icon: (props) => <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> 
-        },
-        { 
-          id: '固定', 
-          icon: (props) => <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> 
-        },
-        { 
-          id: '変動', 
-          icon: (props) => <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> 
-        },
-        { 
-          id: '支出', 
-          icon: (props) => <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> 
-        },
-        { 
-          id: 'ローン', 
-          icon: (props) => <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> 
-        },
-        { 
-          id: '累計', 
-          icon: (props) => (
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-            </svg>
-          ) 
-        }
-      ];
-
-      return (
-        // 🌟 スマホのアドレスバーやキーボード挙動に強い h-[100dvh] を採用
-        <div className="flex flex-col h-[100dvh] w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
-          <div className="flex-1 overflow-y-auto w-full">
-            {renderContent()}
-          </div>
-          <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-            <div className="flex justify-around items-center h-[130px] w-full px-1">
-              {tabsData.map((tab) => (
-                <button 
-                  key={tab.id} 
-                  onClick={() => setActiveTab(tab.id)} 
-                  className={`flex-1 h-full flex flex-col items-center justify-center space-y-1.5 transition-colors ${activeTab === tab.id ? 'text-emerald-600 border-t-[4px] border-emerald-600' : 'text-gray-400 border-t-[4px] border-transparent'}`}
-                >
-                  <tab.icon className="w-8 h-8" />
-                  <span className="text-[12px] font-bold">{tab.id}</span>
-                </button>
-              ))}
-            </div>
-          </nav>
-        </div>
-      );
-    };
-
-    const AuthWrapper = () => {
-      const [isLoggedIn, setIsLoggedIn] = useLocalStorage('kakeibo_app_locked_v1', false);
-
-      useEffect(() => {
-        if (!isLoggedIn) return;
-
-        let lastActivityTime = Date.now();
-        const TIMEOUT_MS = 15 * 60 * 1000;
-
-        const updateActivity = () => {
-          lastActivityTime = Date.now();
-        };
-
-        const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll'];
-        events.forEach(event => window.addEventListener(event, updateActivity));
-
-        const checkInactivity = setInterval(() => {
-          if (Date.now() - lastActivityTime > TIMEOUT_MS) {
-            setIsLoggedIn(false);
-          }
-        }, 10000);
-
-        return () => {
-          events.forEach(event => window.removeEventListener(event, updateActivity));
-          clearInterval(checkInactivity);
-        };
-      }, [isLoggedIn, setIsLoggedIn]);
-
-      if (!isLoggedIn) {
-        return <SimpleLoginScreen onLogin={() => setIsLoggedIn(true)} />;
-      }
-
-      return <App onLogout={() => setIsLoggedIn(false)} />;
-    };
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<AuthWrapper />);
-  </script>
-</body>
-</html>
+                      <span className="text-white/

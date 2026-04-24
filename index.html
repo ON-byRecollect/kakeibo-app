@@ -29,7 +29,6 @@
     }
     .animate-pop { animation: pop 0.2s ease-out forwards; }
 
-    /* PCブラウザの数値入力の矢印（スピンボタン）を非表示にする設定 */
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -171,7 +170,7 @@
         e.preventDefault();
         if (inputVal === SECRET_PASSWORD) {
           setError(false);
-          onLogin(); // 🌟 浮き対策（フォーカス解除等）をカットしダイレクトに遷移
+          onLogin();
         } else {
           setError(true);
           setInputVal('');
@@ -182,7 +181,6 @@
         <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 px-8">
           <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center">
             <h2 className="font-bold text-gray-600 mb-6">パスコードを入力</h2>
-            
             <input 
               type="password" 
               inputMode="numeric"
@@ -193,7 +191,6 @@
               placeholder="••••"
             />
             {error && <p className="text-[#ea4335] text-xs font-bold mt-2">パスコードが違います</p>}
-            
             <button type="submit" className="w-full h-12 mt-8 rounded-full font-bold text-white shadow-sm bg-emerald-500 active:bg-emerald-600 transition-colors">
               ロック解除
             </button>
@@ -249,9 +246,6 @@
       );
     };
 
-    // ==========================================
-    // 1. 資産タブ
-    // ==========================================
     const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout }) => {
       
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
@@ -328,8 +322,7 @@
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       return (
-        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full relative">
-          
+        <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
           <div className="bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10 flex justify-center items-center">
              <div className="font-bold text-gray-700 text-lg">{currentYearMonth}</div>
           </div>
@@ -462,9 +455,6 @@
       );
     };
 
-    // ==========================================
-    // 2. 固定タブ
-    // ==========================================
     const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth }) => {
       
       const togglePaid = (id, targetYM) => {
@@ -545,7 +535,7 @@
       }, 0);
 
       return (
-        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-4 mt-2">
@@ -611,9 +601,6 @@
       );
     };
 
-    // ==========================================
-    // 3. 変動タブ
-    // ==========================================
     const VariableTab = ({ expenses, displayYearMonth, todayDay, safeBudgets, currentElectricBudget, currentGasBudget, handleBudgetChange, handleUtilityBudgetChange, monthlySpents, prevMonth, nextMonth }) => {
       
       const getCalendarCells = (ymStr) => {
@@ -641,7 +628,7 @@
       });
 
       return (
-        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
@@ -683,9 +670,6 @@
       );
     };
 
-    // ==========================================
-    // 🌟 ローン管理タブ
-    // ==========================================
     const LoanTab = ({ loans, setLoans }) => {
       
       const handleUpdate = (id, field, value) => {
@@ -811,9 +795,6 @@
       )
     };
 
-    // ==========================================
-    // 4. 累計タブ
-    // ==========================================
     const TotalTab = ({ expenses }) => {
       const monthlyDataMap = {};
       expenses.forEach(e => {
@@ -865,9 +846,6 @@
       );
     };
 
-    // ==========================================
-    // 5. 支出タブ
-    // ==========================================
     const ExpenseTab = ({ handleAddData, currentYearMonth, todayDay, expenses, handleDeleteExpense }) => {
       const [amount, setAmount] = useState('');
       const [category, setCategory] = useState('');
@@ -997,9 +975,6 @@
       );
     };
 
-    // ==========================================
-    // 🚀 メインアプリケーション
-    // ==========================================
     const App = ({ onLogout }) => {
       const [activeTab, setActiveTab] = useState('資産');
 
@@ -1178,17 +1153,15 @@
         }
       };
 
-      // 🌟 正常に動いていたテキストのみのタブ配列に戻しました
+      // 🌟 安全なテキストのみのタブ配列（フリーズ原因の排除）
       const tabs = ['資産', '固定', '変動', '支出', 'ローン', '累計'];
 
-      // 🌟 高さ100dvh等の設定も削除し、過去の正常なコード（h-screen）に戻して安全化
+      // 🌟 過去の正常なコード（h-screen）ベースに、タブバー高さ130pxと文字サイズ14pxを適用
       return (
         <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
           <div className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
-          
-          {/* 🌟 130pxの高さ・文字サイズ14pxで美しく中央揃えに配置 */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
             <div className="flex justify-around items-center h-[130px] w-full px-1">
               {tabs.map((tab) => (
@@ -1202,7 +1175,6 @@
               ))}
             </div>
           </nav>
-
         </div>
       );
     };

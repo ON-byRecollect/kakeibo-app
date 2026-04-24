@@ -171,14 +171,7 @@
         e.preventDefault();
         if (inputVal === SECRET_PASSWORD) {
           setError(false);
-          // 🌟 キーボード浮き上がり対策（安全にフォーカスを外す）
-          if (document.activeElement) {
-            document.activeElement.blur();
-          }
-          // 少し待ってからログイン処理へ
-          setTimeout(() => {
-            onLogin();
-          }, 150);
+          onLogin(); // 🌟 浮き対策（フォーカス解除等）をカットしダイレクトに遷移
         } else {
           setError(true);
           setInputVal('');
@@ -335,7 +328,7 @@
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       return (
-        <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full relative">
           
           <div className="bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10 flex justify-center items-center">
              <div className="font-bold text-gray-700 text-lg">{currentYearMonth}</div>
@@ -552,7 +545,7 @@
       }, 0);
 
       return (
-        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-4 mt-2">
@@ -648,7 +641,7 @@
       });
 
       return (
-        <div className="flex flex-col pb-36 w-full bg-gray-50 min-h-full">
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
           <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
@@ -1185,36 +1178,26 @@
         }
       };
 
-      // 🌟 安全に隔離されたタブデータ配列
+      // 🌟 正常に動いていたテキストのみのタブ配列に戻しました
       const tabs = ['資産', '固定', '変動', '支出', 'ローン', '累計'];
 
+      // 🌟 高さ100dvh等の設定も削除し、過去の正常なコード（h-screen）に戻して安全化
       return (
         <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
           <div className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
           
-          {/* 🌟 アイコンをJSXに直接記述して完全にクラッシュを防ぐ */}
+          {/* 🌟 130pxの高さ・文字サイズ14pxで美しく中央揃えに配置 */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
             <div className="flex justify-around items-center h-[130px] w-full px-1">
               {tabs.map((tab) => (
                 <button 
                   key={tab} 
                   onClick={() => setActiveTab(tab)} 
-                  className={`flex-1 h-full flex flex-col items-center justify-center space-y-1.5 transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-[4px] border-emerald-600' : 'text-gray-400 border-t-[4px] border-transparent'}`}
+                  className={`flex-1 h-full flex items-center justify-center text-[14px] font-bold transition-colors ${activeTab === tab ? 'text-emerald-600 border-t-[4px] border-emerald-600' : 'text-gray-400 border-t-[4px] border-transparent'}`}
                 >
-                  {tab === '資産' && <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
-                  {tab === '固定' && <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
-                  {tab === '変動' && <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>}
-                  {tab === '支出' && <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
-                  {tab === 'ローン' && <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
-                  {tab === '累計' && (
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                    </svg>
-                  )}
-                  <span className="text-[12px] font-bold">{tab}</span>
+                  {tab}
                 </button>
               ))}
             </div>

@@ -439,41 +439,41 @@
           {/* ── ヘッダーエリア ── */}
           <div className="px-5 pt-20 pb-2">
 
-            {/* 行1: 日付 + ゴミ（中央揃え） */}
-            <div className="flex items-center justify-center gap-3 w-full mb-2 flex-wrap">
-              <div className="flex items-baseline gap-1">
+            {/* 行1: 日付 + ゴミ（常に同じ位置・中央揃え） */}
+            <div className="flex items-center justify-center gap-3 w-full mb-2">
+              <div className="flex items-baseline gap-1 shrink-0">
                 <span className="text-[1.6rem] font-bold text-slate-900 leading-none">
                   {displayDate.getMonth()+1}月{displayDate.getDate()}日
                 </span>
                 <span className="text-base font-bold" style={{color: getDayColor(displayDate)}}>({dayNamesShort[displayDate.getDay()]})</span>
               </div>
-              <div className="flex gap-2 flex-wrap justify-center">
+              {/* ゴミがない日も高さを維持するためminHeightを設定 */}
+              <div className="flex gap-2 flex-wrap" style={{minHeight: '2rem'}}>
                 {garbages.map(g => (
                   <span key={g.id} className={`${g.bg} text-white text-sm font-bold px-4 py-1.5 rounded-full`}>{g.name}</span>
                 ))}
               </div>
             </div>
 
-            {/* 行2: 今日の固定支出（固定費のみ） */}
-            {todayExpenses.length > 0 && (
-              <div className="flex flex-col gap-1 mb-2">
-                {todayExpenses.map(e => {
-                  const isCompleted = completedExpenses.includes(e.id);
-                  const acc = e.accountLabel;
-                  const ACCOUNT_COLORS_LOCAL = { '予': '#f97316', '松': '#8b5cf6', '新': '#3b82f6', 'か': '#f59e0b', 'Ⅲ': '#10b981', 'P': '#ec4899', 'IC': '#6366f1', '現': '#64748b' };
-                  const bgColor = ACCOUNT_COLORS_LOCAL[acc] || '#8cd2e6';
-                  return (
-                    <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60 ${isCompleted ? 'completed-item' : ''}`}>
-                      {acc && (
-                        <span className="w-7 h-7 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor}}>{acc}</span>
-                      )}
-                      <span className="text-base font-bold text-slate-800">{e.itemName || e.name || e.category}</span>
-                      <span className="text-base font-bold text-slate-800 ml-1">{e.amount.toLocaleString()}円</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {/* 行2: 今日の固定支出（時計の真上・左寄せ） */}
+            <div className="flex flex-col gap-1 mb-2 px-4" style={{minHeight: '1.5rem'}}>
+              {todayExpenses.map(e => {
+                const isCompleted = completedExpenses.includes(e.id);
+                const acc = e.accountLabel;
+                const ACC_COLORS_MAP = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
+                const bgColor = ACC_COLORS_MAP[acc] || '#8cd2e6';
+                const txtColor = acc === 'Ⅲ' ? '#333333' : '#ffffff';
+                return (
+                  <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60 ${isCompleted ? 'completed-item' : ''}`}>
+                    {acc && (
+                      <span className="w-7 h-7 rounded-full text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
+                    )}
+                    <span className="text-base font-bold text-slate-800">{e.itemName || e.name || e.category}</span>
+                    <span className="text-base font-bold text-slate-800 ml-1">{e.amount.toLocaleString()}円</span>
+                  </div>
+                );
+              })}
+            </div>
 
             {/* 行3: 時計（大・中央配置） */}
             <div className="flex justify-center items-baseline leading-none mb-1">
@@ -859,8 +859,8 @@
       };
 
       return (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm pt-[10vh] px-4">
-          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-5 modal-enter shadow-2xl max-h-[80vh] overflow-y-auto box-border">
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto box-border">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">{editDelivery ? '荷物の編集' : '荷物の登録'}</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">
@@ -1063,8 +1063,8 @@
       const dayLabels = ['日','月','火','水','木','金','土'];
 
       return (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm pt-[5vh] px-4">
-          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-5 modal-enter shadow-2xl max-h-[88vh] overflow-y-auto box-border">
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm pt-[12vh] px-4">
+          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 pt-7 modal-enter shadow-2xl max-h-[82vh] overflow-y-auto box-border">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">スケジュール設定</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">

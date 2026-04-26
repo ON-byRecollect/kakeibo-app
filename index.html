@@ -865,7 +865,7 @@
             </div>
             <div className="space-y-3.5">
               <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
-              <select value={carrier} onChange={e => { setCarrier(e.target.value); setTimeSlot('指定なし'); }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
+              <select value={carrier} onChange={e => { const c = e.target.value; setCarrier(c); setTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setRemark('食料品'); else setRemark(''); }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 <option value="yamato">ヤマト運輸</option>
                 <option value="post">日本郵便</option>
                 <option value="sagawa">佐川急便</option>
@@ -877,7 +877,19 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <input type="text" value={remark} onChange={e => setRemark(e.target.value)} placeholder="備考（例：Amazonの本）" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
+              <select value={remark} onChange={e => setRemark(e.target.value)} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+                <option value="">備考（選択）</option>
+                <option value="セカンドストリート">セカンドストリート</option>
+                <option value="GEO">GEO</option>
+                <option value="オフモール">オフモール</option>
+                <option value="じゃんぱら">じゃんぱら</option>
+                <option value="ノジマ">ノジマ</option>
+                <option value="トレジャーファクトリー">トレジャーファクトリー</option>
+                <option value="Ali Express">Ali Express</option>
+                <option value="ELECOM">ELECOM</option>
+                <option value="ヨドバシカメラ">ヨドバシカメラ</option>
+                <option value="その他">その他</option>
+              </select>
               <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value)} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
             </div>
             <div className="mt-5 flex gap-3">

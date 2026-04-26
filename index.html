@@ -54,6 +54,14 @@
     .text-trial { color: #0246A1; }
     .text-aeon { color: #57C7E5; }
 
+    /* 配送業者背景色 */
+    .bg-post { background-color: #ef4444; }
+    .bg-yamato { background-color: #eab308; }
+    .bg-sagawa { background-color: #3b82f6; }
+    .bg-amazon { background-color: #f97316; }
+    .bg-yodobashi { background-color: #1e1b4b; }
+    .bg-trial { background-color: #0246A1; }
+    .bg-aeon { background-color: #57C7E5; }
     /* 完了アイテムのスタイル */
     .completed-item {
       text-decoration: line-through;
@@ -61,7 +69,7 @@
     }
   </style>
 </head>
-<body class="font-sans text-slate-800">
+<body class="text-slate-800" style='font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;'>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -281,7 +289,7 @@
     // ==========================================
     // 予定タブ（スケジュール統合）
     // ==========================================
-    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay }) => {
+    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose }) => {
       const [displayDate, setDisplayDate] = useState(() => {
         const now = new Date();
         if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
@@ -305,6 +313,19 @@
       const animes = scheduleData?.animes || getDefaultAnimes();
       const baseballs = scheduleData?.baseballs || getDefaultBaseballs();
       const garbageRules = scheduleData?.garbageRules || getDefaultGarbageRules();
+
+      // 外部からの日付変更（タブバーの矢印）
+      useEffect(() => {
+        if (scheduleDatePrev > 0) setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()-1); return n; });
+      }, [scheduleDatePrev]);
+      useEffect(() => {
+        if (scheduleDateNext > 0) setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()+1); return n; });
+      }, [scheduleDateNext]);
+
+      // 外部からの荷物登録モーダル表示
+      useEffect(() => {
+        if (showDeliveryModalGlobal) { setEditDelivery(null); setShowDeliveryModal(true); }
+      }, [showDeliveryModalGlobal]);
 
       // 時刻更新
       useEffect(() => {
@@ -387,139 +408,175 @@
         setCompletedExpenses(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
       };
 
+      // 配送業者の略称マッピング
+      const carrierShort = { post: 'J', yamato: 'Y', sagawa: 'S', amazon: 'A', yodobashi: 'Y', trial: 'T', aeon: 'I' };
+      const carrierBg = { post: 'bg-post', yamato: 'bg-yamato', sagawa: 'bg-sagawa', amazon: 'bg-amazon', yodobashi: 'bg-yodobashi', trial: 'bg-trial', aeon: 'bg-aeon' };
+      const carrierTextColor = { post: 'text-white', yamato: 'text-white', sagawa: 'text-white', amazon: 'text-white', yodobashi: 'text-white', trial: 'text-white', aeon: 'text-white' };
+
+      const showCopyToast = () => {
+        const popup = document.createElement('div');
+        popup.textContent = 'コピーしました';
+        popup.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+        document.body.appendChild(popup);
+        setTimeout(() => { popup.style.opacity = '0'; }, 900);
+        setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 1300);
+      };
+
+      const deleteDelivery = (id) => {
+        const updated = deliveries.filter(d => d.id !== id);
+        updateScheduleField('deliveries', updated);
+      };
+
       return (
-        <div className="flex flex-col pb-44 w-full min-h-full" style={{backgroundColor: '#f2f2f2'}}>
-          {/* ヘッダー：日付・時刻（日付変更ボタン内包） */}
-          <div className="flex justify-center items-center gap-3 px-4 pt-14 pb-4 shrink-0">
-            {/* 戻るボタン（日付カードの左隣） */}
-            <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()-1); return n; })} className="w-11 h-11 shrink-0 text-white rounded-[1rem] flex items-center justify-center shadow-md active:scale-95 transition-transform" style={{backgroundColor: THEME}}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path></svg>
-            </button>
-            <div className="relative w-[140px] h-[140px] bg-white rounded-[2rem] shadow-sm flex items-center justify-center">
-              <div className="flex items-center pl-1">
-                <span className="text-[4.5rem] font-black leading-none tracking-tighter">{displayDate.getDate()}</span>
-                <span className="ml-1 text-lg font-black tracking-widest text-slate-800" style={{writingMode: 'vertical-rl', textOrientation: 'upright'}}>{dayNames[displayDate.getDay()]}</span>
+        <div className="flex flex-col w-full min-h-full pb-[100px]" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+
+          {/* ── ヘッダーエリア ── */}
+          <div className="px-5 pt-14 pb-2">
+
+            {/* 行1: 日付 + ゴミ */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-baseline gap-1">
+                <span className="text-[1.6rem] font-bold text-slate-900 leading-none">
+                  {displayDate.getMonth()+1}月{displayDate.getDate()}日
+                </span>
+                <span className="text-base font-bold text-slate-500">({dayNamesShort[displayDate.getDay()]})</span>
               </div>
-            </div>
-            <div className="w-[140px] h-[140px] bg-white rounded-[2rem] shadow-sm flex items-center justify-center">
-              <span className="text-[3rem] font-black leading-none tracking-tighter">{currentTime}</span>
-            </div>
-            {/* 進むボタン（時刻カードの右隣） */}
-            <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()+1); return n; })} className="w-11 h-11 shrink-0 text-white rounded-[1rem] flex items-center justify-center shadow-md active:scale-95 transition-transform" style={{backgroundColor: THEME}}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7"></path></svg>
-            </button>
-          </div>
-
-          {/* アクションボタン行 */}
-          <div className="flex items-center gap-3 px-4 mb-4">
-            <button onClick={() => setShowDeliveryModal(true)} className="flex-1 text-white font-black text-base py-3 rounded-[2rem] shadow-md active:scale-95 transition-transform tracking-wider" style={{backgroundColor: THEME}}>
-              荷物を登録
-            </button>
-            <button onClick={() => setShowExpenseModal(true)} className="flex-1 text-white font-black text-base py-3 rounded-[2rem] shadow-md active:scale-95 transition-transform tracking-wider" style={{backgroundColor: THEME}}>支出を入力</button>
-          </div>
-
-          {/* コンテンツエリア */}
-          <div className="px-4 space-y-4">
-
-            {/* ゴミ・野球 */}
-            {(garbages.length > 0 || todaysBaseballs.length > 0) && (
-              <div className="flex gap-3 w-full">
+              <div className="flex gap-2 flex-wrap">
                 {garbages.map(g => (
-                  <div key={g.id} className={`flex-1 ${g.bg} text-white rounded-[2rem] py-3.5 font-black text-base shadow-sm tracking-widest text-center flex items-center justify-center min-w-0 px-2 truncate`}>{g.name}</div>
-                ))}
-                {todaysBaseballs.map(b => (
-                  <div key={b.id} className="flex-1 relative bg-[#1d7eb8] text-white rounded-[2rem] py-3.5 font-black text-base shadow-sm tracking-widest text-center flex items-center justify-center min-w-0 px-2 truncate">
-                    <div className="absolute top-1/2 -translate-y-1/2 left-2 w-7 h-7 border-[2px] border-slate-800 rounded-full bg-white text-[#1d7eb8] flex items-center justify-center font-black text-xs shrink-0">F</div>
-                    <span className="ml-6 truncate">{b.time} {b.title}</span>
-                  </div>
+                  <span key={g.id} className={`${g.bg} text-white text-sm font-bold px-4 py-1.5 rounded-full`}>{g.name}</span>
                 ))}
               </div>
-            )}
+            </div>
 
-            {/* 荷物 */}
-            {todaysDeliveries.length > 0 && (
-              <div className="bg-white rounded-[2rem] p-5 shadow-sm space-y-4">
-                {todaysDeliveries.map(d => {
-                  const cName = carrierDisplayNames[d.carrier] || d.carrier;
-                  const btnText = ['amazon','yodobashi','trial','aeon'].includes(d.carrier) ? 'HP' : '追跡';
-                  const isCompleted = completedDeliveries.includes(d.id);
+            {/* 行2: 今日の固定支出（固定費のみ） */}
+            {todayExpenses.length > 0 && (
+              <div className="flex flex-col gap-1 mb-2">
+                {todayExpenses.map(e => {
+                  const isCompleted = completedExpenses.includes(e.id);
+                  const acc = e.accountLabel;
+                  const ACCOUNT_COLORS_LOCAL = { '予': '#f97316', '松': '#8b5cf6', '新': '#3b82f6', 'か': '#f59e0b', 'Ⅲ': '#10b981', 'P': '#ec4899', 'IC': '#6366f1', '現': '#64748b' };
+                  const bgColor = ACCOUNT_COLORS_LOCAL[acc] || '#8cd2e6';
                   return (
-                    <div key={d.id} className="flex items-center justify-between">
-                      <div className="flex flex-col flex-1 min-w-0 pr-2 cursor-pointer active:opacity-70" onClick={() => toggleDeliveryComplete(d.id)}>
-                        <span className={`${carrierColors[d.carrier] || ''} font-black text-xl tracking-tight truncate ${isCompleted ? 'completed-item' : ''}`}>{cName}</span>
-                        <span className={`text-[11px] font-bold text-slate-500 mt-0.5 truncate ${isCompleted ? 'completed-item' : ''}`}>{d.remark || '荷物'}</span>
-                      </div>
-                      <div className={`${carrierColors[d.carrier] || ''} font-black text-[1.2rem] tracking-tighter shrink-0 mx-2 ${isCompleted ? 'completed-item' : ''}`}>{d.timeSlot}</div>
-                      <div className="flex gap-2 shrink-0">
-                        <button onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }} className="bg-slate-100 text-slate-600 rounded-[1rem] px-3 py-2 font-black text-xs active:opacity-70">編集</button>
-                        <a href={d.carrier === 'yamato' ? `${urls.yamato}${d.num}` : `${urls[d.carrier]}${btnText==='HP'?'':d.num}`} target="_blank" className="bg-[#c8c8c8] text-slate-800 rounded-[1rem] px-4 py-2 font-black text-sm active:opacity-70">{btnText}</a>
-                      </div>
+                    <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60 ${isCompleted ? 'completed-item' : ''}`}>
+                      {acc && (
+                        <span className="w-7 h-7 rounded-full text-white text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor}}>{acc}</span>
+                      )}
+                      <span className="text-base font-bold text-slate-800">{e.itemName || e.name || e.category}</span>
+                      <span className="text-base font-bold text-slate-800 ml-1">{e.amount.toLocaleString()}円</span>
                     </div>
                   );
                 })}
               </div>
             )}
 
-            {/* 今日の支出（固定費のみ・アニメの上） */}
-            {todayExpenses.length > 0 && (
-              <div className="bg-white rounded-[2rem] px-5 py-5 shadow-sm">
-                <div className="space-y-2">
-                  {todayExpenses.map(e => {
-                    const isCompleted = completedExpenses.includes(e.id);
-                    return (
-                      <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex justify-between items-center cursor-pointer active:opacity-70 ${isCompleted ? 'completed-item' : ''}`}>
-                        <span className="font-bold text-slate-700 text-sm">{e.itemName || e.name || e.category}</span>
-                        <span className="font-black text-slate-900">{e.amount.toLocaleString()}円</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            {/* 行3: 時計（大） */}
+            <div className="flex items-baseline leading-none mb-1">
+              <span className="font-black text-slate-900 leading-none" style={{fontSize: '5.5rem', letterSpacing: '-0.04em'}}>{currentTime}</span>
+            </div>
 
-            {/* アニメ */}
-            {todaysAnimes.length > 0 && (
-              <div className="bg-white rounded-[2rem] px-5 py-5 shadow-sm">
-                <div className="space-y-3">
-                  {todaysAnimes.map(a => {
-                    const isCompleted = completedAnimes.includes(a.id);
-                    return (
-                      <div key={a.id} className="flex items-center justify-between gap-2">
-                        <p onClick={() => toggleAnimeComplete(a.id)} className={`flex-1 text-[15px] font-black text-slate-900 tracking-tight truncate cursor-pointer active:opacity-70 ${isCompleted ? 'completed-item' : ''}`}>{a.title}</p>
-                        <button
-                          onClick={(ev) => {
-                            ev.stopPropagation();
-                            if (!navigator.clipboard) return;
-                            navigator.clipboard.writeText(a.title).then(() => {
-                              const el = ev.currentTarget;
-                              el.textContent = '✓';
-                              el.style.backgroundColor = '#8cd2e6';
-                              el.style.color = '#fff';
-                              // ポップアップ表示
-                              const popup = document.createElement('div');
-                              popup.textContent = 'コピーしました';
-                              popup.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
-                              document.body.appendChild(popup);
-                              setTimeout(() => { popup.style.opacity = '0'; }, 900);
-                              setTimeout(() => { document.body.removeChild(popup); }, 1300);
-                              setTimeout(() => { el.textContent = 'コピー'; el.style.backgroundColor = ''; el.style.color = ''; }, 1200);
-                            });
-                          }}
-                          className="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-100 rounded-full px-2 py-1 active:bg-slate-200 transition-colors"
-                        >コピー</button>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* 行4: プロ野球 or 時計アイコン */}
+            {todaysBaseballs.length > 0 ? (
+              <div className="flex flex-col gap-1 mb-3">
+                {todaysBaseballs.map(b => (
+                  <div key={b.id} className="flex items-center gap-3">
+                    <span className="text-[1.4rem] font-black" style={{color: '#1d7eb8'}}>vs{b.title}</span>
+                    <span className="text-[1.4rem] font-black" style={{color: '#1d7eb8'}}>{b.time}</span>
+                  </div>
+                ))}
               </div>
-            )}
-
-            {garbages.length === 0 && todaysBaseballs.length === 0 && todaysDeliveries.length === 0 && todaysAnimes.length === 0 && todayExpenses.length === 0 && (
-              <div className="text-center py-20">
-                <p className="text-slate-400 font-bold text-sm tracking-widest">予定はありません</p>
+            ) : (
+              <div className="mb-3">
+                <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2"/>
+                </svg>
               </div>
             )}
           </div>
+
+          {/* ── 配達予定カード ── */}
+          {todaysDeliveries.length > 0 && (
+            <div className="px-5 space-y-2 mb-3">
+              {todaysDeliveries.map(d => {
+                const isCompleted = completedDeliveries.includes(d.id);
+                const short = carrierShort[d.carrier] || d.carrier.charAt(0).toUpperCase();
+                const bgCls = carrierBg[d.carrier] || 'bg-gray-400';
+                const trackUrl = d.carrier === 'yamato' ? `${urls.yamato}${d.num}` : (['amazon','yodobashi','trial','aeon'].includes(d.carrier) ? urls[d.carrier] : `${urls[d.carrier]}${d.num}`);
+                return (
+                  <div key={d.id} className="bg-white rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3">
+                    {/* 業者アイコン */}
+                    <a href={trackUrl} target="_blank" className={`w-12 h-12 rounded-full ${bgCls} text-white font-black text-xl flex items-center justify-center shrink-0 active:opacity-70`} onClick={(ev) => ev.stopPropagation()}>
+                      {short}
+                    </a>
+                    {/* 情報 */}
+                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60" onClick={() => toggleDeliveryComplete(d.id)}>
+                      <div className={`text-base font-bold text-slate-900 leading-tight ${isCompleted ? 'completed-item' : ''}`}>{d.timeSlot || '時間帯未定'}</div>
+                      <div className={`text-sm text-slate-400 font-medium truncate ${isCompleted ? 'completed-item' : ''}`}>{d.num || d.remark || '追跡番号なし'}</div>
+                    </div>
+                    {/* コピーアイコン */}
+                    {d.num && (
+                      <button
+                        onClick={() => { navigator.clipboard && navigator.clipboard.writeText(d.num).then(showCopyToast); }}
+                        className="w-9 h-9 flex items-center justify-center text-slate-400 active:text-slate-600 shrink-0"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                      </button>
+                    )}
+                    {/* 削除アイコン */}
+                    <button
+                      onClick={() => { if (window.confirm('この荷物を削除しますか？')) deleteDelivery(d.id); }}
+                      className="w-9 h-9 flex items-center justify-center text-red-400 active:text-red-600 shrink-0"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                        <polyline points="3 6 5 6 21 6" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 11v6M14 11v6"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── アニメ放映日 ── */}
+          {todaysAnimes.length > 0 && (
+            <div className="px-5 mb-3">
+              <div className="bg-white rounded-2xl px-4 py-3 shadow-sm space-y-2">
+                {todaysAnimes.map(a => {
+                  const isCompleted = completedAnimes.includes(a.id);
+                  return (
+                    <div key={a.id} className="flex items-center gap-2">
+                      <span
+                        onClick={() => toggleAnimeComplete(a.id)}
+                        className={`flex-1 text-[15px] font-bold text-slate-900 cursor-pointer active:opacity-60 ${isCompleted ? 'completed-item' : ''}`}
+                      >{a.title}</span>
+                      <button
+                        onClick={() => { navigator.clipboard && navigator.clipboard.writeText(a.title).then(showCopyToast); }}
+                        className="w-8 h-8 flex items-center justify-center text-slate-400 active:text-slate-600 shrink-0"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 何もない日 */}
+          {garbages.length === 0 && todaysBaseballs.length === 0 && todaysDeliveries.length === 0 && todaysAnimes.length === 0 && todayExpenses.length === 0 && (
+            <div className="px-5">
+              <p className="text-slate-400 font-bold text-sm tracking-widest text-center py-4">予定はありません</p>
+            </div>
+          )}
 
           {/* 荷物登録モーダル */}
           {showDeliveryModal && (
@@ -528,7 +585,7 @@
               defaultDate={getYYYYMMDD(displayDate)}
               deliveries={deliveries}
               onSave={(newDeliveries) => { updateScheduleField('deliveries', newDeliveries); }}
-              onClose={() => { setShowDeliveryModal(false); setEditDelivery(null); }}
+              onClose={() => { setShowDeliveryModal(false); setEditDelivery(null); if (onDeliveryModalClose) onDeliveryModalClose(); }}
             />
           )}
 
@@ -724,6 +781,33 @@
     };
 
     // 支出入力モーダル（予定タブから呼び出し）
+    // 簡易支出フォーム（タブバーの支出ボタン用）
+    const QuickExpenseForm = ({ handleAddData, currentYearMonth, todayDay, onClose }) => {
+      const [amount, setAmount] = React.useState('');
+      const [category, setCategory] = React.useState('外食');
+      const categories = ['外食', '自炊', '交通'];
+      const isOk = amount !== '' && Number(amount) > 0;
+      const onSubmit = () => {
+        if (!isOk) return;
+        handleAddData({ amount: Number(amount), category, itemName: '', accountLabel: '', timing: '今日', day: todayDay, yearMonth: currentYearMonth });
+        onClose();
+      };
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input type="number" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-14 text-3xl font-bold border border-gray-300 rounded-2xl px-4 text-right focus:outline-none focus:ring-2 focus:ring-sky-300" />
+            <span className="text-xl font-bold text-gray-700 shrink-0">円</span>
+          </div>
+          <div className="flex gap-3">
+            {categories.map(cat => (
+              <button key={cat} onClick={() => setCategory(cat)} className={`flex-1 py-3 rounded-2xl text-base font-bold transition-colors ${category === cat ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={category === cat ? {backgroundColor: THEME} : {}}>{cat}</button>
+            ))}
+          </div>
+          <button onClick={onSubmit} disabled={!isOk} className={`w-full h-14 rounded-2xl font-bold text-lg shadow-sm transition-all ${isOk ? 'text-white' : 'bg-gray-100 text-gray-400'}`} style={isOk ? {backgroundColor: THEME} : {}}>登録</button>
+        </div>
+      );
+    };
+
     const ExpenseModal = ({ handleAddData, currentYearMonth, todayDay, onClose }) => {
       const [amount, setAmount] = useState('');
       const [category, setCategory] = useState('外食');
@@ -1920,6 +2004,12 @@
       const scrollPositions = useRef({});
       const scrollContainerRef = useRef(null);
       const [showScheduleSettings, setShowScheduleSettings] = React.useState(false);
+      const [showSettingsMenu, setShowSettingsMenu] = React.useState(false);
+      const [showQuickExpense, setShowQuickExpense] = React.useState(false);
+      const [showKakeiboPage, setShowKakeiboPage] = React.useState(false);
+      const [showDeliveryModalGlobal, setShowDeliveryModalGlobal] = React.useState(false);
+      const [scheduleDatePrev, setScheduleDatePrev] = React.useState(0);
+      const [scheduleDateNext, setScheduleDateNext] = React.useState(0);
 
       useEffect(() => {
         const container = scrollContainerRef.current;
@@ -2099,22 +2189,43 @@
       const handleDeleteFixed = (id) => setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
       const handleDeleteExpense = (id) => setExpenses(expenses.filter(expense => expense.id !== id));
 
+      // 家計簿ページ（フルページ遷移）
+      if (showKakeiboPage) {
+        return (
+          <div className="flex flex-col h-screen w-full bg-gray-50">
+            {/* ヘッダー */}
+            <div className="bg-white px-4 py-4 border-b border-gray-200 flex items-center gap-3 sticky top-0 z-10">
+              <button onClick={() => setShowKakeiboPage(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <span className="text-lg font-black text-slate-800">家計簿</span>
+              {/* 家計簿内タブ */}
+              <div className="flex gap-1 ml-auto overflow-x-auto">
+                {['資産','固定','変動','ローン','累計'].map(t => (
+                  <button key={t} onClick={() => setActiveTab(t)} className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors ${activeTab === t ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={activeTab === t ? {backgroundColor: THEME} : {}}>{t}</button>
+                ))}
+              </div>
+            </div>
+            {/* コンテンツ */}
+            <div className="flex-1 overflow-y-auto">
+              {renderKakeiboContent()}
+            </div>
+          </div>
+        );
+      }
+
       const renderContent = () => {
-        switch (activeTab) {
-          case '予定':
-             return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
-          case '資産': 
-             return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
-          case '固定': 
-             return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} />;
-          case '変動': 
-             return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
-          case 'ローン': 
-             return <LoanTab loans={loans} setLoans={setLoans} />;
-          case '累計': 
-             return <TotalTab expenses={expenses} />;
-          default: 
-             return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} />;
+        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} />;
+      };
+
+      const renderKakeiboContent = () => {
+        switch(activeTab) {
+          case '資産': return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
+          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} />;
+          case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
+          case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
+          case '累計': return <TotalTab expenses={expenses} />;
+          default: return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
         }
       };
 
@@ -2125,39 +2236,72 @@
           <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
-          <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-200 safe-area-pb shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-            <div className="flex justify-around items-center h-[130px] w-full px-1">
-              {tabs.map((tab) => {
-                let icon;
-                if (tab === '予定') icon = <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round"></rect><line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" strokeLinejoin="round"></line><line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" strokeLinejoin="round"></line><line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" strokeLinejoin="round"></line></svg>;
-                if (tab === '資産') icon = <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
-                if (tab === '固定') icon = <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
-                if (tab === '変動') icon = <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>;
-                if (tab === 'ローン') icon = <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>;
-                if (tab === '累計') icon = <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>;
-                
-                const isActive = activeTab === tab;
-                return (
-                  <button 
-                    key={tab} 
-                    onClick={() => setActiveTab(tab)} 
-                    className={`flex-1 h-full flex flex-col items-center justify-center space-y-1.5 transition-colors border-t-[4px] ${isActive ? 'border-t-[4px]' : 'border-transparent text-gray-400'}`}
-                    style={isActive ? {color: THEME_DARK, borderColor: THEME} : {}}
-                  >
-                    {icon}
-                    <span className="text-[12px] font-bold">{tab}</span>
-                  </button>
-                );
-              })}
-              {/* 設定ボタン（タブバー最右部） */}
+          {/* ── 新タブバー: ‹ 設定 支出 家計簿 › ── */}
+          <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-100 safe-area-pb shadow-[0_-1px_8px_rgba(0,0,0,0.08)] z-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+            <div className="flex items-center justify-between px-4 h-[80px]">
+
+              {/* 左矢印: 前日 */}
               <button
-                onClick={() => setShowScheduleSettings(true)}
-                className="flex-1 h-full flex flex-col items-center justify-center space-y-1.5 transition-colors border-t-[4px] border-transparent text-gray-400 active:opacity-70"
+                onClick={() => { if (activeTab === '予定') { setScheduleDatePrev(p => p + 1); } }}
+                className="w-11 h-11 flex items-center justify-center text-slate-700 active:opacity-50 rounded-full"
               >
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span className="text-[12px] font-bold">設定</span>
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+
+              {/* 設定ボタン（歯車） */}
+              <button
+                onClick={() => setShowSettingsMenu(v => !v)}
+                className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+
+              {/* 支出ボタン（ペン） */}
+              <button
+                onClick={() => setShowQuickExpense(true)}
+                className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path strokeLinecap="round" strokeLinejoin="round" d="M17.586 3.586a2 2 0 112.828 2.828L12 15l-4 1 1-4 8.586-8.414z"/></svg>
+              </button>
+
+              {/* 家計簿ボタン（袋） */}
+              <button
+                onClick={() => setShowKakeiboPage(true)}
+                className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 2C9.5 2 8 4 8 6H4l1 15h14l1-15h-4c0-2-1.5-4-4-4z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 10c0 1.657 1.343 3 3 3s3-1.343 3-3"/></svg>
+              </button>
+
+              {/* 右矢印: 翌日 */}
+              <button
+                onClick={() => { if (activeTab === '予定') { setScheduleDateNext(p => p + 1); } }}
+                className="w-11 h-11 flex items-center justify-center text-slate-700 active:opacity-50 rounded-full"
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
               </button>
             </div>
+
+            {/* 設定メニュー（ポップアップ） */}
+            {showSettingsMenu && (
+              <div className="fixed inset-0 z-[60]" onClick={() => setShowSettingsMenu(false)}>
+                <div className="absolute bottom-[90px] left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden w-56" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => { setShowSettingsMenu(false); setShowDeliveryModalGlobal(true); }}
+                    className="w-full px-5 py-4 text-left text-base font-bold text-slate-800 border-b border-gray-100 active:bg-gray-50 flex items-center gap-3"
+                  >
+                    <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+                    荷物を登録
+                  </button>
+                  <button
+                    onClick={() => { setShowSettingsMenu(false); setShowScheduleSettings(true); }}
+                    className="w-full px-5 py-4 text-left text-base font-bold text-slate-800 active:bg-gray-50 flex items-center gap-3"
+                  >
+                    <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    設定を編集
+                  </button>
+                </div>
+              </div>
+            )}
           </nav>
           {/* スケジュール設定モーダル（タブバーから呼び出し） */}
           {showScheduleSettings && (
@@ -2166,6 +2310,16 @@
               updateScheduleField={updateScheduleField}
               onClose={() => setShowScheduleSettings(false)}
             />
+          )}
+          {/* 簡易支出入力モーダル（タブバーの支出ボタンから） */}
+          {showQuickExpense && (
+            <div className="fixed inset-0 bg-black/40 z-[70] flex items-end justify-center" onClick={() => setShowQuickExpense(false)}>
+              <div className="bg-white w-full rounded-t-3xl p-6 pb-10 modal-enter" onClick={e => e.stopPropagation()}>
+                <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5"></div>
+                <h3 className="text-lg font-black text-slate-800 mb-4">今日の支出を入力</h3>
+                <QuickExpenseForm handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} onClose={() => setShowQuickExpense(false)} />
+              </div>
+            </div>
           )}
         </div>
       );

@@ -141,8 +141,8 @@
       'N':  'bg-[#ea4335]'
     };
 
-    const THEME = '#8cd2e6';
-    const THEME_DARK = '#5bb8d4';
+    const THEME = '#009BE5';
+    const THEME_DARK = '#007bbf';
 
     const AccountIcon = ({ label, bgColor, textColor }) => {
       const tColor = textColor ? textColor : (label === 'Ⅲ' ? 'text-gray-800' : 'text-white');
@@ -247,19 +247,20 @@
       const progressColor = progressPercent >= 90 ? 'bg-[#ea4335]' : progressPercent >= 70 ? 'bg-[#fbbc04]' : '';
 
       return (
-        <div className="bg-white p-4 mx-2 mt-4 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex flex-col border-b border-gray-100 pb-3 mb-3">
-            <div className="font-bold text-gray-700 text-sm flex items-center mb-2">
-              <span className={`w-2 h-2 rounded-full ${iconColor} mr-2`}></span>{title}
+        <div className="bg-white p-3 rounded-xl shadow-sm" style={{border: '1.5px solid #ff4d4d'}}>
+          <div className="flex flex-col border-b border-gray-100 pb-2 mb-2">
+            <div className="font-bold text-gray-700 text-xs flex items-center mb-2">
+              <span className={`w-2 h-2 rounded-full ${iconColor} mr-1.5`}></span>{title}
             </div>
-            <div className="flex items-center space-x-2">
-              <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white text-gray-700" style={{focusBorderColor: THEME}}>
-                {['予','松','新','か','Ⅲ','P','IC','現'].map(a => <option key={a} value={a}>{a}</option>)}
+            <div className="flex items-center gap-1">
+              <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-10" style={{focusBorderColor: THEME}}>
+                {['松','新','か','Ⅲ','P','IC'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
-              <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white text-gray-700">
+              <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-12">
                 <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
               </select>
-              <div className="flex-1 flex items-center h-10 border border-gray-300 rounded-md px-2 bg-white">
+              <div className="flex-1 flex items-center h-8 border border-gray-300 rounded-md px-2 bg-white focus-within:ring-1 focus-within:ring-sky-400">
+                <span className="text-xs text-gray-400 mr-0.5 shrink-0">¥</span>
                 <input 
                   type="number" 
                   inputMode="numeric" 
@@ -269,19 +270,19 @@
                     handleBudgetChange(categoryKey, 'amount', val === '' ? 0 : Number(val));
                   }}
                   placeholder="0"
-                  className="w-full text-right outline-none text-sm font-bold text-gray-700"
+                  className="w-full text-right outline-none text-xs font-bold text-gray-700"
+                  style={{WebkitAppearance:'none'}}
                 />
-                <span className="text-xs text-gray-500 ml-1">¥</span>
               </div>
             </div>
           </div>
           <div>
-            <div className="flex justify-between text-xs font-bold mb-1 text-gray-600">
-              <span>残額: {remaining.toLocaleString()}円</span>
-              <span>{spent.toLocaleString()} / {budgetData.amount.toLocaleString()}円</span>
+            <div className="flex justify-between text-[10px] font-bold mb-1 text-gray-500">
+              <span>残 {remaining.toLocaleString()}</span>
+              <span>{spent.toLocaleString()}/{budgetData.amount.toLocaleString()}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className={`h-2 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div className={`h-1.5 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
             </div>
           </div>
         </div>
@@ -932,7 +933,7 @@
       const [account, setAccount] = useState('');
 
       const categories = ['外食', '自炊', '交通'];
-      const accounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', '現'];
+      const accounts = ['松', '新', 'か', 'Ⅲ', 'P'];
       const isSubmitEnabled = amount !== '' && category !== '';
 
       const onSubmit = () => {
@@ -1361,15 +1362,18 @@
                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: '#ffffff'}}>
                         {acc.label}
                       </div>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]}
-                        onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
-                        placeholder="0"
-                        className="w-1/2 h-9 rounded-xl px-3 text-left text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
-                        style={{border: '1px solid #e2e8f0'}}
-                      />
+                      <div className="w-1/2 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
+                        <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]}
+                          onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
+                          placeholder="0"
+                          className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
+                          style={{WebkitAppearance:'none'}}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1390,15 +1394,18 @@
                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.textColor || '#ffffff'}}>
                         {acc.label}
                       </div>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]}
-                        onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
-                        placeholder="0"
-                        className="w-1/2 h-9 rounded-xl px-3 text-left text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
-                        style={{border: '1px solid #e2e8f0'}}
-                      />
+                      <div className="w-1/2 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
+                        <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]}
+                          onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
+                          placeholder="0"
+                          className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
+                          style={{WebkitAppearance:'none'}}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1427,15 +1434,18 @@
                         className="w-0 flex-1 h-9 rounded-xl px-3 text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
                         style={{border: '1px solid #e2e8f0'}}
                       />
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={item.value == 0 ? '' : item.value}
-                        onChange={(e) => handlePhysicalChange(item.id, 'value', e.target.value.replace(/^0+(?=\d)/, ''))}
-                        placeholder="0"
-                        className="w-0 flex-1 h-9 rounded-xl px-3 text-right text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
-                        style={{border: '1px solid #e2e8f0'}}
-                      />
+                      <div className="w-0 flex-1 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
+                        <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={item.value == 0 ? '' : item.value}
+                          onChange={(e) => handlePhysicalChange(item.id, 'value', e.target.value.replace(/^0+(?=\d)/, ''))}
+                          placeholder="0"
+                          className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
+                          style={{WebkitAppearance:'none'}}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1470,7 +1480,7 @@
       const [editFixedAnnualMonth, setEditFixedAnnualMonth] = useState('');
 
       const expCategories = ['固定', '外食', '自炊', '交通'];
-      const expAccounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', '現'];
+      const expAccounts = ['松', '新', 'か', 'Ⅲ', 'P'];
       const expTimings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const expAnnualMonths = ['1','2','3','4','5','6','7','8','9','10','11','12'];
       const expDays = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
@@ -1594,7 +1604,6 @@
           {subSection === 'fixed_input' ? (
             <div className="px-4 pt-5 pb-10">
               <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
-                <h2 className="font-black text-lg text-gray-800">固定費・支出を入力</h2>
 
                 {/* 金額 */}
                 <div>
@@ -1735,8 +1744,8 @@
 
           {/* 固定費編集モーダル */}
           {editFixedItem && (
-            <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center px-0" onClick={e => { if(e.target === e.currentTarget) setEditFixedItem(null); }}>
-              <div className="bg-white rounded-t-2xl p-5 w-full max-w-lg shadow-2xl space-y-4 pb-8">
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={e => { if(e.target === e.currentTarget) setEditFixedItem(null); }}>
+              <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex justify-between items-center">
                   <h3 className="font-black text-lg text-gray-800">固定費を編集</h3>
                   <button onClick={() => setEditFixedItem(null)} className="text-gray-400 text-2xl leading-none">×</button>
@@ -1868,7 +1877,6 @@
 
       return (
         <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
-          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
             {/* カレンダー */}
@@ -1925,11 +1933,13 @@
               </div>
             )}
 
-            {/* 予算ブロック */}
-            <IntegratedBudgetBlock title="食費（外食＋自炊）" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" handleBudgetChange={handleBudgetChange} />
-            <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" handleBudgetChange={handleBudgetChange} />
-            <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" handleBudgetChange={handleUtilityBudgetChange} />
-            <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" handleBudgetChange={handleUtilityBudgetChange} />
+            {/* 予算ブロック（2列グリッド） */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <IntegratedBudgetBlock title="食費" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" handleBudgetChange={handleBudgetChange} />
+              <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" handleBudgetChange={handleBudgetChange} />
+              <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" handleBudgetChange={handleUtilityBudgetChange} />
+              <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" handleBudgetChange={handleUtilityBudgetChange} />
+            </div>
           </div>
         </div>
       );
@@ -1972,80 +1982,80 @@
       return (
          <div className="flex flex-col h-full pb-48 w-full bg-gray-50 min-h-full">
             <div className="px-4 pt-6 flex-1">
-               <div className="bg-white rounded-2xl p-4 shadow-sm" style={{border: '3px solid #009BE5'}}>
+               <div className="bg-white rounded-2xl p-4 shadow-sm" style={{border: '3px solid #ff4d4d'}}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-bold text-slate-600">ローン残債総合計</span>
                     <span className="text-xs font-bold text-slate-400"></span>
                   </div>
-                  <div className="text-3xl font-black mb-4" style={{color: '#009BE5'}}>¥{loansTotal.toLocaleString()}</div>
+                  <div className="text-3xl font-black mb-4" style={{color: '#ff4d4d'}}>¥{loansTotal.toLocaleString()}</div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                      {loans.map(loan => {
                         return (
-                           <div key={loan.id} className="flex items-center gap-3 border-b border-gray-100 pb-3">
-                              <div className="shrink-0">
+                           <div key={loan.id} className="border-b border-gray-100 pb-4">
+                              {/* 1行目: アイコン + 残債入力 */}
+                              <div className="flex items-center gap-3 mb-2">
                                  <div className={`w-9 h-9 flex items-center justify-center font-bold text-white rounded-full text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
                                     {loan.lender}
                                  </div>
+                                 <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 h-11 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                                    <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
+                                    <input 
+                                       type="number" 
+                                       inputMode="numeric" 
+                                       value={loan.remaining == 0 ? '' : loan.remaining} 
+                                       onChange={e => handleUpdate(loan.id, 'remaining', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                       className="w-full text-right text-base font-bold outline-none bg-transparent text-gray-800" 
+                                       placeholder="残債"
+                                       style={{WebkitAppearance:'none'}}
+                                    />
+                                 </div>
                               </div>
-                              
-                              
-                              <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 min-h-[44px] focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
-                                 <span className="text-sm text-gray-500 mr-1 shrink-0">¥</span>
-                                 <input 
-                                    type="number" 
-                                    inputMode="numeric" 
-                                    value={loan.remaining == 0 ? '' : loan.remaining} 
-                                    onChange={e => handleUpdate(loan.id, 'remaining', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                    className="w-full text-right text-sm font-bold outline-none bg-transparent text-gray-700" 
-                                    placeholder="残債"
-                                    style={{WebkitAppearance:'none'}}
-                                 />
-                              </div>
-                              
-                              <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-2 min-h-[44px] focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400" style={{minWidth:"80px"}}>
-                                 <input 
-                                    type="number" 
-                                    inputMode="numeric" 
-                                    value={loan.done == 0 ? '' : loan.done} 
-                                    onChange={e => handleUpdate(loan.id, 'done', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                    className="w-7 text-center text-[11px] font-bold outline-none bg-transparent" 
-                                    placeholder="-"
-                                    style={{WebkitAppearance:'none'}}
-                                 />
-                                 <span className="text-[10px] text-gray-400 font-bold">/</span>
-                                 <input 
-                                    type="number" 
-                                    inputMode="numeric" 
-                                    value={loan.total == 0 ? '' : loan.total} 
-                                    onChange={e => handleUpdate(loan.id, 'total', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                    className="w-7 text-center text-[11px] font-bold outline-none bg-transparent" 
-                                    placeholder="-"
-                                    style={{WebkitAppearance:'none'}}
-                                 />
-                              </div>
-                              
-                              <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2 min-h-[44px] focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400" style={{minWidth:"72px"}}>
-                                 <span className="text-[10px] text-gray-500 mr-0.5 shrink-0">¥</span>
-                                 <input 
-                                    type="number" 
-                                    inputMode="numeric" 
-                                    value={loan.monthly == 0 ? '' : loan.monthly} 
-                                    onChange={e => handleUpdate(loan.id, 'monthly', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                    className="w-full text-right text-[11px] font-bold outline-none bg-transparent" 
-                                    placeholder="月々"
-                                    style={{WebkitAppearance:'none'}}
-                                 />
-                              </div>
-                              
-                              <div className="flex-1">
-                                 <input 
-                                    type="text" 
-                                    value={loan.memo} 
-                                    onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} 
-                                    className="w-full text-[11px] bg-gray-50 border border-gray-200 rounded-xl px-2 min-h-[44px] outline-none text-left focus:border-sky-400 focus:ring-1 focus:ring-sky-400" 
-                                    placeholder=""
-                                 />
+                              {/* 2行目: 済/総 + 月々 + メモ */}
+                              <div className="flex items-center gap-2 pl-12">
+                                 <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl px-2 h-9 gap-1" style={{minWidth:'88px'}}>
+                                    <input 
+                                       type="number" 
+                                       inputMode="numeric" 
+                                       value={loan.done == 0 ? '' : loan.done} 
+                                       onChange={e => handleUpdate(loan.id, 'done', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                       className="w-8 text-center text-xs font-bold outline-none bg-transparent" 
+                                       placeholder="-"
+                                       style={{WebkitAppearance:'none'}}
+                                    />
+                                    <span className="text-[10px] text-gray-400 font-bold">/</span>
+                                    <input 
+                                       type="number" 
+                                       inputMode="numeric" 
+                                       value={loan.total == 0 ? '' : loan.total} 
+                                       onChange={e => handleUpdate(loan.id, 'total', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                       className="w-8 text-center text-xs font-bold outline-none bg-transparent" 
+                                       placeholder="-"
+                                       style={{WebkitAppearance:'none'}}
+                                    />
+                                    <span className="text-[9px] text-gray-400">回</span>
+                                 </div>
+                                 <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2 h-9" style={{minWidth:'80px'}}>
+                                    <span className="text-[10px] text-gray-400 mr-0.5 shrink-0">¥</span>
+                                    <input 
+                                       type="number" 
+                                       inputMode="numeric" 
+                                       value={loan.monthly == 0 ? '' : loan.monthly} 
+                                       onChange={e => handleUpdate(loan.id, 'monthly', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                       className="w-full text-right text-xs font-bold outline-none bg-transparent" 
+                                       placeholder="月々"
+                                       style={{WebkitAppearance:'none'}}
+                                    />
+                                 </div>
+                                 <div className="flex-1">
+                                    <input 
+                                       type="text" 
+                                       value={loan.memo} 
+                                       onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} 
+                                       className="w-full text-xs bg-gray-50 border border-gray-200 rounded-xl px-2 h-9 outline-none text-left focus:border-sky-400 focus:ring-1 focus:ring-sky-400" 
+                                       placeholder="メモ"
+                                    />
+                                 </div>
                               </div>
                            </div>
                         )
@@ -2084,28 +2094,46 @@
             const utilityTotal = data.utility.electric + data.utility.gas;
             const total = foodTotal + utilityTotal + data.transport;
             return (
-              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <div className="flex justify-between items-end border-b border-gray-100 pb-2 mb-3">
-                  <h2 className="text-lg font-bold" style={{color: THEME_DARK}}>{data.month}</h2>
-                  <div className="text-sm text-gray-500">変動費合計 <span className="text-lg font-bold text-gray-800 ml-1">{total.toLocaleString()}円</span></div>
+              <div key={index} className="bg-white rounded-3xl shadow-sm p-5" style={{border: '2px solid #ff4d4d'}}>
+                {/* ヘッダー: 年月 + 合計 */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0" style={{backgroundColor: '#ff4d4d'}}>月</div>
+                    <span className="text-base font-black" style={{color: '#ff4d4d'}}>{data.month}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-400">変動費合計</div>
+                    <div className="text-xl font-black" style={{color: '#ff4d4d'}}>¥{total.toLocaleString()}</div>
+                  </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#fbbc04] mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
-                    <div className="flex text-xs text-gray-500 pl-4">
-                      <span className="w-28">外食: {data.food.out.toLocaleString()}円</span>
-                      <span>自炊: {data.food.cook.toLocaleString()}円</span>
+                {/* 明細 */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#fbbc04'}}>食</div>
+                      <span className="text-sm font-bold text-gray-700">食費</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-gray-800">¥{foodTotal.toLocaleString()}</div>
+                      <div className="text-[10px] text-gray-400">外食 {data.food.out.toLocaleString()} / 自炊 {data.food.cook.toLocaleString()}</div>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#4285f4] mr-2"></span>光熱費</span><span className="text-sm font-bold">{utilityTotal.toLocaleString()}円</span></div>
-                    <div className="flex text-xs text-gray-500 pl-4">
-                      <span className="w-28">電気: {data.utility.electric.toLocaleString()}円</span>
-                      <span>ガス: {data.utility.gas.toLocaleString()}円</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#4285f4'}}>光</div>
+                      <span className="text-sm font-bold text-gray-700">光熱費</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-gray-800">¥{utilityTotal.toLocaleString()}</div>
+                      <div className="text-[10px] text-gray-400">電気 {data.utility.electric.toLocaleString()} / ガス {data.utility.gas.toLocaleString()}</div>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#34a853] mr-2"></span>交通費</span><span className="text-sm font-bold">{data.transport.toLocaleString()}円</span></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#34a853'}}>交</div>
+                      <span className="text-sm font-bold text-gray-700">交通費</span>
+                    </div>
+                    <div className="text-sm font-bold text-gray-800">¥{data.transport.toLocaleString()}</div>
                   </div>
                 </div>
               </div>
@@ -2128,7 +2156,7 @@
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通'];
-      const accounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', '現'];
+      const accounts = ['松', '新', 'か', 'Ⅲ', 'P', 'IC'];
       
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const annualMonths = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -2521,13 +2549,15 @@
         if (kakeiboSubPage) {
           return (
             <div className="flex flex-col h-screen w-full bg-gray-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
-              {kakeiboSubPage === 'fixed_all' ? (
+              {(kakeiboSubPage === 'fixed_all' || kakeiboSubPage === 'variable') ? (
                 <div className="bg-white px-4 pt-14 pb-3 border-b border-gray-100 sticky top-0 z-10">
                   <div className="flex items-center gap-2">
                     <button onClick={() => setKakeiboSubPage(null)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
                     </button>
-                    <span className="text-lg font-black text-slate-800 flex-1">すべての固定費用</span>
+                    <span className="text-lg font-black text-slate-800 flex-1">
+                      {kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' : '変動費を入力'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between mt-2 px-1">
                     <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
@@ -2545,7 +2575,6 @@
                     kakeiboSubPage === 'borrow' ? '借入可能額' :
                     kakeiboSubPage === 'physical' ? '物理資産' :
                     kakeiboSubPage === 'fixed_input' ? '固定費を入力' :
-                    kakeiboSubPage === 'variable' ? '変動費を入力' :
                     kakeiboSubPage === 'loan' ? 'ローンを入力' :
                     kakeiboSubPage === 'total' ? '月ごとの収支' : ''
                   }</span>
@@ -2597,15 +2626,18 @@
                         <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {acc.label}
                         </div>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={cashAssets[acc.id] == 0 ? '' : cashAssets[acc.id]}
-                          onChange={(e) => setCashAssets({ ...cashAssets, [acc.id]: e.target.value.replace(/^0+(?=\d)/, '') })}
-                          placeholder="0"
-                          className="w-0 flex-1 h-9 rounded-xl px-3 text-right text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
-                          style={{border: '1px solid #e2e8f0'}}
-                        />
+                        <div className="w-0 flex-1 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
+                          <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={cashAssets[acc.id] == 0 ? '' : cashAssets[acc.id]}
+                            onChange={(e) => setCashAssets({ ...cashAssets, [acc.id]: e.target.value.replace(/^0+(?=\d)/, '') })}
+                            placeholder="0"
+                            className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
+                            style={{WebkitAppearance:'none'}}
+                          />
+                        </div>
                         <div className={`w-0 flex-1 h-9 rounded-xl px-3 flex items-center justify-end text-sm font-bold shrink-0 ${hasBalance ? (balance < 0 ? 'text-red-500' : 'text-slate-700') : ''}`}
                           style={{backgroundColor: hasBalance ? '#f1f5f9' : 'transparent', visibility: hasBalance ? 'visible' : 'hidden'}}>
                           {hasBalance ? balance.toLocaleString() : ''}
@@ -2642,12 +2674,12 @@
               </div>
 
               {/* ── 未払い総合計カード（オレンジ） ── */}
-              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #ff6d4d'}}>
+              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #ff4d4d'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-slate-500">未払い総合計</span>
                   <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : todayStr + "時点"}</span>
                 </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#ff6d4d'}}>
+                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#ff4d4d'}}>
                   ¥{unpaidTotal.toLocaleString()}
                 </div>
                 {/* 上位3件 */}

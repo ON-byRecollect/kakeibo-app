@@ -465,7 +465,7 @@
                 return (
                   <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60 ${isCompleted ? 'completed-item' : ''}`}>
                     {acc && (
-                      <span className="w-7 h-7 rounded-full text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
+                      <span className="w-7 h-7 rounded-xl text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
                     )}
                     <span className="text-[1.2rem] font-bold text-slate-800 flex-1">{e.name || e.category}</span>
                     <span className="text-[1.2rem] font-bold text-slate-800">¥{e.amount.toLocaleString()}</span>
@@ -911,8 +911,8 @@
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2 w-full">
-            <input type="number" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="w-0 flex-1 min-w-0 h-14 text-3xl font-bold border border-gray-300 rounded-2xl px-4 text-right focus:outline-none focus:ring-2 focus:ring-sky-300" />
             <span className="text-xl font-bold text-gray-700 shrink-0">¥</span>
+            <input type="number" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="w-0 flex-1 min-w-0 h-14 text-3xl font-bold border border-gray-300 rounded-2xl px-4 text-right focus:outline-none focus:ring-2 focus:ring-sky-300" />
           </div>
           <div className="flex gap-3">
             {categories.map(cat => (
@@ -950,8 +950,8 @@
             </div>
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <input type="number" inputMode="numeric" value={amount == 0 ? '' : amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none" />
                 <span className="text-xl font-bold text-gray-700 shrink-0">¥</span>
+                <input type="number" inputMode="numeric" value={amount == 0 ? '' : amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none" />
               </div>
               <div className="flex gap-2">
                 {categories.map(cat => (
@@ -999,7 +999,7 @@
       return (
         <div className="space-y-3">
           <div className="bg-slate-50 rounded-xl p-3 space-y-2">
-            <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+            <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
             <select value={dCarrier} onChange={e => { const c = e.target.value; setDCarrier(c); setDTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark(''); }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               <option value="yamato">ヤマト運輸</option>
               <option value="post">日本郵便</option>
@@ -2373,15 +2373,16 @@
       // ============================================================
 
       // 現金総収支の計算（AssetTabと同じロジック）
+      const ACC_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
       const cashAccountsForHome = [
-        { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
-        { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] },
-        { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
-        { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] },
-        { id: 'three', label: 'Ⅲ', color: ACCOUNT_COLORS['Ⅲ'] },
-        { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
-        { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] },
-        { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
+        { id: 'yo', label: '予', color: ACC_HEX['予'] },
+        { id: 'matsu', label: '松', color: ACC_HEX['松'] },
+        { id: 'shin', label: '新', color: ACC_HEX['新'] },
+        { id: 'ka', label: 'か', color: ACC_HEX['か'] },
+        { id: 'three', label: 'Ⅲ', color: ACC_HEX['Ⅲ'] },
+        { id: 'p', label: 'P', color: ACC_HEX['P'] },
+        { id: 'ic', label: 'IC', color: ACC_HEX['IC'] },
+        { id: 'gen', label: '現', color: ACC_HEX['現'] }
       ];
 
       const prevCurrentYMForHome = getPrevYearMonth(currentYearMonth);
@@ -2488,7 +2489,7 @@
             <div className="px-4 pt-5 space-y-4">
 
               {/* ── 現金総収支カード（水色） ── */}
-              <div className="rounded-3xl p-5" style={{backgroundColor: '#8cd2e6'}}>
+              <div className="rounded-3xl p-5" style={{backgroundColor: '#009BE5'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-white/80">現金総収支</span>
                   <span className="text-xs font-bold text-white/70">{todayStr}時点</span>
@@ -2503,7 +2504,7 @@
                     const hasBalance = acc.id !== 'yo';
                     return (
                       <div key={acc.id} className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0" style={{backgroundColor: acc.color}}>
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {acc.label}
                         </div>
                         <input
@@ -2533,21 +2534,21 @@
               <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                 {/* ポイント・金融資産 */}
                 <button onClick={() => setKakeiboSubPage('point')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#8cd2e6'}}>P</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>P</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">ポイント・金融資産</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{pointTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
                 {/* 借入可能額 */}
                 <button onClick={() => setKakeiboSubPage('borrow')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#8cd2e6'}}>借</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>借</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">借入可能額</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{borrowingTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
                 {/* 物理資産 */}
                 <button onClick={() => setKakeiboSubPage('physical')} className="w-full flex items-center px-4 py-4 active:bg-gray-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#8cd2e6'}}>物</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>物</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">物理資産</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{physicalTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -2555,7 +2556,7 @@
               </div>
 
               {/* ── 未払い総合計カード（オレンジ） ── */}
-              <div className="rounded-3xl p-5" style={{backgroundColor: '#f97316'}}>
+              <div className="rounded-3xl p-5" style={{backgroundColor: '#ff6d4d'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-white/80">未払い総合計</span>
                   <span className="text-xs font-bold text-white/70">{todayStr}時点</span>
@@ -2569,11 +2570,11 @@
                     <p className="text-white/70 text-sm font-bold text-center py-2">未払いの固定費はありません</p>
                   )}
                   {unpaidFixedCosts.map(c => {
-                    const ACCOUNT_COLORS_LOCAL = { '予': '#f97316', '松': '#8b5cf6', '新': '#3b82f6', 'か': '#f59e0b', 'Ⅲ': '#10b981', 'P': '#ec4899', 'IC': '#6366f1', '現': '#64748b' };
+                    const ACCOUNT_COLORS_LOCAL = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
                     const bgColor = ACCOUNT_COLORS_LOCAL[c.accountLabel] || '#888';
                     return (
                       <div key={c.id} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0" style={{backgroundColor: bgColor}}>
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: bgColor, color: c.accountLabel === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {c.accountLabel}
                         </div>
                         <span className="flex-1 text-white font-bold text-sm">{c.name}</span>

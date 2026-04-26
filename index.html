@@ -855,7 +855,7 @@
               </button>
             </div>
             <div className="space-y-3.5">
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]" style={{WebkitAppearance:'none', appearance:'none'}} />
               <select value={carrier} onChange={e => { const c = e.target.value; setCarrier(c); setTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setRemark('食料品'); else setRemark(''); }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 <option value="yamato">ヤマト運輸</option>
                 <option value="post">日本郵便</option>
@@ -999,7 +999,7 @@
       return (
         <div className="space-y-3">
           <div className="bg-slate-50 rounded-xl p-3 space-y-2">
-            <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
+            <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
             <select value={dCarrier} onChange={e => { const c = e.target.value; setDCarrier(c); setDTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark(''); }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               <option value="yamato">ヤマト運輸</option>
               <option value="post">日本郵便</option>
@@ -1145,7 +1145,7 @@
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newAnimeTitle} onChange={e => setNewAnimeTitle(e.target.value)} placeholder="タイトル" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-                  <input type="date" value={newAnimeDate} onChange={e => setNewAnimeDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
+                  <input type="date" value={newAnimeDate} onChange={e => setNewAnimeDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
                   <div className="flex gap-2 items-center">
                     <label className="flex items-center gap-1 text-sm font-bold">
                       <input type="checkbox" checked={newAnimeWeekly} onChange={e => setNewAnimeWeekly(e.target.checked)} className="w-4 h-4" />毎週
@@ -1184,7 +1184,7 @@
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newBaseballTitle} onChange={e => setNewBaseballTitle(e.target.value)} placeholder="対戦相手" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-                  <input type="date" value={newBaseballDate} onChange={e => setNewBaseballDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
+                  <input type="date" value={newBaseballDate} onChange={e => setNewBaseballDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
                   <input type="time" value={newBaseballTime} onChange={e => setNewBaseballTime(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
                   <button onClick={saveBaseball} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
                     {editBaseball ? '更新する' : '追加する'}
@@ -2494,7 +2494,7 @@
                   <span className="text-sm font-bold text-slate-500">現金資産総合計</span>
                   <span className="text-xs font-bold text-slate-400">{todayStr}時点</span>
                 </div>
-                <div className="text-[2.2rem] font-black text-slate-800 leading-none mb-4">
+                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
                   ¥{cashTotalForHome.toLocaleString()}
                 </div>
                 {/* 各口座の入力欄 */}
@@ -2561,7 +2561,7 @@
                   <span className="text-sm font-bold text-slate-500">未払い総合計</span>
                   <span className="text-xs font-bold text-slate-400">{todayStr}時点</span>
                 </div>
-                <div className="text-[2.2rem] font-black text-slate-800 leading-none mb-4">
+                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#ff6d4d'}}>
                   ¥{unpaidTotal.toLocaleString()}
                 </div>
                 {/* 上位3件 */}

@@ -292,13 +292,7 @@
     // ==========================================
     // 予定タブ（スケジュール統合）
     // ==========================================
-    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid }) => {
-      const [displayDate, setDisplayDate] = useState(() => {
-        const now = new Date();
-        if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
-        now.setHours(0,0,0,0);
-        return now;
-      });
+    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate }) => {
       const [currentTime, setCurrentTime] = useState('');
       const [showDeliveryModal, setShowDeliveryModal] = useState(false);
       const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -2362,6 +2356,13 @@
       const [scheduleDatePrev, setScheduleDatePrev] = React.useState(0);
       const [scheduleDateNext, setScheduleDateNext] = React.useState(0);
 
+      const [displayDate, setDisplayDate] = useState(() => {
+        const now = new Date();
+        if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
+        now.setHours(0,0,0,0);
+        return now;
+      });
+
       useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -2379,8 +2380,6 @@
       const d = new Date();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
-
-      const [displayDate, setDisplayDate] = useState(new Date());
       const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
 
       const prevMonth = () => {
@@ -2809,7 +2808,7 @@
       }
 
       const renderContent = () => {
-        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} />;
+        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} displayDate={displayDate} setDisplayDate={setDisplayDate} />;
       };
 
       const renderKakeiboContent = () => {

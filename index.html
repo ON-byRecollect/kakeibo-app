@@ -1185,7 +1185,7 @@
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newBaseballTitle} onChange={e => setNewBaseballTitle(e.target.value)} placeholder="対戦相手" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
                   <input type="date" value={newBaseballDate} onChange={e => setNewBaseballDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-                  <input type="time" value={newBaseballTime} onChange={e => setNewBaseballTime(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+                  <input type="time" value={newBaseballTime} onChange={e => setNewBaseballTime(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
                   <button onClick={saveBaseball} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
                     {editBaseball ? '更新する' : '追加する'}
                   </button>
@@ -2516,14 +2516,10 @@
                           className="w-0 flex-1 h-9 rounded-xl px-3 text-right text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
                           style={{border: '1px solid #e2e8f0'}}
                         />
-                        {hasBalance ? (
-                          <div className={`w-0 flex-1 h-9 rounded-xl px-3 flex items-center justify-end text-sm font-bold shrink-0 ${balance < 0 ? 'text-red-500' : 'text-slate-700'}`}
-                            style={{backgroundColor: '#f1f5f9'}}>
-                            {balance.toLocaleString()}
-                          </div>
-                        ) : (
-                          <div className="w-0 flex-1 h-9 shrink-0"></div>
-                        )}
+                        <div className={`w-0 flex-1 h-9 rounded-xl px-3 flex items-center justify-end text-sm font-bold shrink-0 ${hasBalance ? (balance < 0 ? 'text-red-500' : 'text-slate-700') : ''}`}
+                          style={{backgroundColor: hasBalance ? '#f1f5f9' : 'transparent', visibility: hasBalance ? 'visible' : 'hidden'}}>
+                          {hasBalance ? balance.toLocaleString() : ''}
+                        </div>
                       </div>
                     );
                   })}

@@ -522,7 +522,7 @@
                     )}
                     {/* 削除アイコン */}
                     <button
-                      onClick={() => { if (window.confirm('この荷物を削除しますか？')) deleteDelivery(d.id); }}
+                      onClick={() => deleteDelivery(d.id)}
                       className="w-9 h-9 flex items-center justify-center text-red-400 active:text-red-600 shrink-0"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
@@ -841,10 +841,8 @@
       };
 
       const handleDelete = () => {
-        if (window.confirm('この荷物を削除しますか？')) {
-          onSave(deliveries.filter(d => d.id !== editDelivery.id));
-          onClose();
-        }
+        onSave(deliveries.filter(d => d.id !== editDelivery.id));
+        onClose();
       };
 
       return (
@@ -871,7 +869,7 @@
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
               <select value={remark} onChange={e => setRemark(e.target.value)} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                <option value="">備考（選択）</option>
+                <option value=""></option>
                 <option value="セカンドストリート">セカンドストリート</option>
                 <option value="GEO">GEO</option>
                 <option value="オフモール">オフモール</option>
@@ -1083,19 +1081,93 @@
             </div>
 
             {/* 荷物登録 */}
-            {tab === 'delivery' && (
-              <div className="space-y-3">
-                <p className="text-xs text-slate-400 font-bold px-1">荷物の配達情報を登録します</p>
-                <button
-                  onClick={() => { if (onRequestDelivery) { onRequestDelivery(); onClose(); } }}
-                  className="w-full py-3 rounded-2xl font-black text-sm text-white active:opacity-80 flex items-center justify-center gap-2"
-                  style={{backgroundColor: THEME}}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
-                  荷物を登録する
-                </button>
-              </div>
-            )}
+            {tab === 'delivery' && (() => {
+              const deliveries = scheduleData?.deliveries || [];
+              const [dCarrier, setDCarrier] = useState(editDeliveryInSettings?.carrier || 'yamato');
+              const [dDate, setDDate] = useState(editDeliveryInSettings?.deliveryDateRaw || new Date().toISOString().slice(0,10));
+              const [dTimeSlot, setDTimeSlot] = useState(editDeliveryInSettings?.timeSlot || '指定なし');
+              const [dRemark, setDRemark] = useState(editDeliveryInSettings?.remark || '');
+              const [dNum, setDNum] = useState(editDeliveryInSettings?.num || '');
+              const timeOptionSets = {
+                default: ["指定なし","8:00〜12:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
+                trial: ["指定なし","10:00〜12:00","12:00〜14:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","20:00〜22:00"],
+                aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"]
+              };
+              const getTimeOpts = (c) => c === 'trial' ? timeOptionSets.trial : c === 'aeon' ? timeOptionSets.aeon : timeOptionSets.default;
+              const saveDelivery = () => {
+                const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
+                let updated;
+                if (editDeliveryInSettings) {
+                  updated = deliveries.map(d => d.id === editDeliveryInSettings.id ? { ...d, ...newData } : d);
+                } else {
+                  updated = [...deliveries, { ...newData, id: Date.now() }];
+                }
+                updateScheduleField('deliveries', updated);
+                setEditDeliveryInSettings(null);
+                setDCarrier('yamato'); setDDate(new Date().toISOString().slice(0,10)); setDTimeSlot('指定なし'); setDRemark(''); setDNum('');
+              };
+              const startEditDelivery = (d) => {
+                setEditDeliveryInSettings(d);
+                setDCarrier(d.carrier); setDDate(d.deliveryDateRaw); setDTimeSlot(d.timeSlot); setDRemark(d.remark || ''); setDNum(d.num || '');
+              };
+              const deleteDeliveryInSettings = (id) => {
+                updateScheduleField('deliveries', deliveries.filter(d => d.id !== id));
+                if (editDeliveryInSettings?.id === id) { setEditDeliveryInSettings(null); setDCarrier('yamato'); setDDate(new Date().toISOString().slice(0,10)); setDTimeSlot('指定なし'); setDRemark(''); setDNum(''); }
+              };
+              const carrierNames = { yamato: 'ヤマト運輸', post: '日本郵便', sagawa: '佐川急便', amazon: 'Amazon', yodobashi: 'ヨドバシ', trial: 'トライアル', aeon: 'イオン' };
+              return (
+                <div className="space-y-3">
+                  <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+                    <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+                    <select value={dCarrier} onChange={e => { const c = e.target.value; setDCarrier(c); setDTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark(''); }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
+                      <option value="yamato">ヤマト運輸</option>
+                      <option value="post">日本郵便</option>
+                      <option value="sagawa">佐川急便</option>
+                      <option value="amazon">Amazon</option>
+                      <option value="yodobashi">ヨドバシ</option>
+                      <option value="trial">トライアル</option>
+                      <option value="aeon">イオン</option>
+                    </select>
+                    <select value={dTimeSlot} onChange={e => setDTimeSlot(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
+                      {getTimeOpts(dCarrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <select value={dRemark} onChange={e => setDRemark(e.target.value)} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
+                      <option value=""></option>
+                      <option value="セカンドストリート">セカンドストリート</option>
+                      <option value="GEO">GEO</option>
+                      <option value="オフモール">オフモール</option>
+                      <option value="じゃんぱら">じゃんぱら</option>
+                      <option value="ノジマ">ノジマ</option>
+                      <option value="トレジャーファクトリー">トレジャーファクトリー</option>
+                      <option value="Ali Express">Ali Express</option>
+                      <option value="ELECOM">ELECOM</option>
+                      <option value="ヨドバシカメラ">ヨドバシカメラ</option>
+                      <option value="食料品">食料品</option>
+                      <option value="その他">その他</option>
+                    </select>
+                    <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value)} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+                    <button onClick={saveDelivery} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
+                      {editDeliveryInSettings ? '更新する' : '追加する'}
+                    </button>
+                    {editDeliveryInSettings && <button onClick={() => { setEditDeliveryInSettings(null); setDCarrier('yamato'); setDDate(new Date().toISOString().slice(0,10)); setDTimeSlot('指定なし'); setDRemark(''); setDNum(''); }} className="w-full py-2 rounded-xl font-black text-sm text-slate-500 bg-slate-100 active:opacity-80">キャンセル</button>}
+                  </div>
+                  <div className="space-y-1 max-h-60 overflow-y-auto">
+                    {[...deliveries].sort((a,b) => (a.deliveryDateRaw||'').localeCompare(b.deliveryDateRaw||'')).map(d => (
+                      <div key={d.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+                        <div className="flex-1 min-w-0 mr-2">
+                          <p className="text-sm font-bold text-slate-800">{d.deliveryDateRaw} {d.timeSlot}</p>
+                          <p className="text-xs text-slate-400 truncate">{carrierNames[d.carrier] || d.carrier}{d.remark ? ' / ' + d.remark : ''}{d.num ? ' / ' + d.num : ''}</p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <button onClick={() => startEditDelivery(d)} className="text-xs bg-white border border-slate-200 px-2 py-1 rounded-lg font-bold text-slate-600 active:opacity-70">編集</button>
+                          <button onClick={() => deleteDeliveryInSettings(d.id)} className="text-xs bg-[#ea4335] px-2 py-1 rounded-lg font-bold text-white active:opacity-70">削除</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* アニメ設定 */}
             {tab === 'anime' && (

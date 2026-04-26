@@ -289,7 +289,7 @@
     // ==========================================
     // 予定タブ（スケジュール統合）
     // ==========================================
-    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose }) => {
+    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, isCostVisibleInMonth, utilityPaid }) => {
       const [displayDate, setDisplayDate] = useState(() => {
         const now = new Date();
         if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
@@ -389,10 +389,15 @@
       const todaysDeliveries = deliveries.filter(d => d.deliveryDateRaw === targetDateStr);
       const todaysAnimes = getAnimesForDate(targetDateStr);
 
-      // 今日の支出（固定費のみ表示）
+      // 今日の固定費（fixedCostsから当日分を取得）
       const todayYM = `${new Date().getFullYear()}年${new Date().getMonth()+1}月`;
       const todayDayNum = new Date().getDate();
-      const todayExpenses = expenses.filter(e => e.yearMonth === todayYM && e.day === todayDayNum && e.category === '固定');
+      const todayExpenses = (fixedCosts || []).filter(c => {
+        if (!isCostVisibleInMonth || !isCostVisibleInMonth(c, todayYM)) return false;
+        if ((c.paidMonths || []).includes(todayYM)) return false;
+        const dateNum = c.date === '月末' ? new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate() : Number(c.date);
+        return dateNum === todayDayNum;
+      }).map(c => ({ id: c.id, accountLabel: c.accountLabel, name: c.name, amount: c.amount }));
 
       const carrierDisplayNames = { post: '日本郵便', yamato: 'ヤマト運輸', sagawa: '佐川急便', amazon: 'Amazon', yodobashi: 'ヨドバシ', trial: 'トライアル', aeon: 'イオン' };
       const carrierColors = { post: 'text-post', yamato: 'text-yamato', sagawa: 'text-sagawa', amazon: 'text-amazon', yodobashi: 'text-yodobashi', trial: 'text-trial', aeon: 'text-aeon' };
@@ -431,17 +436,17 @@
         <div className="flex flex-col w-full min-h-full pb-[100px]" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
 
           {/* ── ヘッダーエリア ── */}
-          <div className="px-5 pt-14 pb-2">
+          <div className="px-5 pt-20 pb-2">
 
-            {/* 行1: 日付 + ゴミ（画面幅いっぱい・両端揃え） */}
-            <div className="flex items-center justify-between w-full mb-2">
+            {/* 行1: 日付 + ゴミ（中央揃え） */}
+            <div className="flex items-center justify-center gap-3 w-full mb-2 flex-wrap">
               <div className="flex items-baseline gap-1">
                 <span className="text-[1.6rem] font-bold text-slate-900 leading-none">
                   {displayDate.getMonth()+1}月{displayDate.getDate()}日
                 </span>
                 <span className="text-base font-bold text-slate-500">({dayNamesShort[displayDate.getDay()]})</span>
               </div>
-              <div className="flex gap-2 flex-wrap justify-end">
+              <div className="flex gap-2 flex-wrap justify-center">
                 {garbages.map(g => (
                   <span key={g.id} className={`${g.bg} text-white text-sm font-bold px-4 py-1.5 rounded-full`}>{g.name}</span>
                 ))}
@@ -479,8 +484,8 @@
               <div className="flex flex-col items-center gap-1 mb-3">
                 {todaysBaseballs.map(b => (
                   <div key={b.id} className="flex items-center gap-3">
-                    <span className="text-[1.4rem] font-black" style={{color: '#1d7eb8'}}>vs{b.title}</span>
-                    <span className="text-[1.4rem] font-black" style={{color: '#1d7eb8'}}>{b.time}</span>
+                    <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>vs{b.title}</span>
+                    <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>{b.time}</span>
                   </div>
                 ))}
               </div>
@@ -863,7 +868,9 @@
 
     // スケジュール設定モーダル
     const ScheduleSettingsModal = ({ scheduleData, updateScheduleField, onClose }) => {
-      const [tab, setTab] = useState('anime');
+      const [tab, setTab] = useState('delivery');
+      const [showDeliveryInSettings, setShowDeliveryInSettings] = useState(false);
+      const [editDeliveryInSettings, setEditDeliveryInSettings] = useState(null);
       const animes = scheduleData?.animes || getDefaultAnimes();
       const baseballs = scheduleData?.baseballs || getDefaultBaseballs();
       const garbageRules = scheduleData?.garbageRules || getDefaultGarbageRules();
@@ -956,12 +963,44 @@
 
             {/* タブ */}
             <div className="flex gap-2 mb-4">
-              {[['anime','アニメ'],['baseball','野球'],['garbage','ゴミ']].map(([key, label]) => (
+              {[['delivery','荷物'],['anime','アニメ'],['baseball','野球'],['garbage','ゴミ']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`flex-1 py-2 rounded-full text-sm font-bold transition-colors ${tab === key ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={tab === key ? {backgroundColor: THEME} : {}}>
                   {label}
                 </button>
               ))}
             </div>
+
+            {/* 荷物登録 */}
+            {tab === 'delivery' && (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-400 font-bold px-1">設定モーダルから荷物を登録できます</p>
+                <button
+                  onClick={() => { setEditDeliveryInSettings(null); setShowDeliveryInSettings(true); }}
+                  className="w-full py-3 rounded-2xl font-black text-sm text-white active:opacity-80 flex items-center justify-center gap-2"
+                  style={{backgroundColor: THEME}}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  荷物を登録する
+                </button>
+                {showDeliveryInSettings && (
+                  <DeliveryModal
+                    editDelivery={editDeliveryInSettings}
+                    defaultDate={null}
+                    deliveries={scheduleData?.deliveries || []}
+                    onSave={(d) => {
+                      const current = scheduleData?.deliveries || [];
+                      const updated = editDeliveryInSettings
+                        ? current.map(x => x.id === editDeliveryInSettings.id ? d : x)
+                        : [...current, d];
+                      updateScheduleField('deliveries', updated);
+                      setShowDeliveryInSettings(false);
+                      setEditDeliveryInSettings(null);
+                    }}
+                    onClose={() => { setShowDeliveryInSettings(false); setEditDeliveryInSettings(null); }}
+                  />
+                )}
+              </div>
+            )}
 
             {/* アニメ設定 */}
             {tab === 'anime' && (
@@ -2442,7 +2481,7 @@
       }
 
       const renderContent = () => {
-        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} />;
+        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} isCostVisibleInMonth={isCostVisibleInMonth} utilityPaid={utilityPaid} />;
       };
 
       const renderKakeiboContent = () => {
@@ -2475,9 +2514,9 @@
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
               </button>
 
-              {/* 設定ボタン（歯車） */}
+              {/* 設定ボタン（歯車）: 1タップでScheduleSettingsModalを直接開く */}
               <button
-                onClick={() => setShowSettingsMenu(v => !v)}
+                onClick={() => { setShowScheduleSettings(true); setShowSettingsMenu(false); }}
                 className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
               >
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -2548,12 +2587,16 @@
               onClose={() => setShowScheduleSettings(false)}
             />
           )}
-          {/* 簡易支出入力モーダル（タブバーの支出ボタンから） */}
+          {/* 簡易支出入力モーダル（中央ポップアップ） */}
           {showQuickExpense && (
-            <div className="fixed inset-0 bg-black/40 z-[70] flex items-end justify-center" onClick={() => setShowQuickExpense(false)}>
-              <div className="bg-white w-full rounded-t-3xl p-6 pb-10 modal-enter" onClick={e => e.stopPropagation()}>
-                <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5"></div>
-                <h3 className="text-lg font-black text-slate-800 mb-4">今日の支出を入力</h3>
+            <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={() => setShowQuickExpense(false)}>
+              <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-black text-slate-800">今日の支出を入力</h3>
+                  <button onClick={() => setShowQuickExpense(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
                 <QuickExpenseForm handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} onClose={() => setShowQuickExpense(false)} />
               </div>
             </div>

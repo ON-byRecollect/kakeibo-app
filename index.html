@@ -117,9 +117,11 @@
       }, []);
 
       const updateField = (key, value) => {
-        setData(prev => ({ ...prev, [key]: value }));
+        const today = new Date();
+        const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
+        setData(prev => ({ ...prev, [key]: value, lastEditedDate: dateStr }));
         db.collection('shared_data').doc('family_account').set({
-          [key]: value
+          [key]: value, lastEditedDate: dateStr
         }, { merge: true }).catch(err => console.error("保存エラー:", err));
       };
 
@@ -151,9 +153,9 @@
 
     const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
       <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <button onClick={prevMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>＜ 前月</button>
+        <button onClick={prevMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
         <div key={displayYearMonth} className="font-bold text-gray-700 text-lg animate-pop">{displayYearMonth}</div>
-        <button onClick={nextMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>翌月 ＞</button>
+        <button onClick={nextMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>＞</button>
       </div>
     );
 
@@ -1268,7 +1270,7 @@
     // ==========================================
     // 1. 資産タブ
     // ==========================================
-    const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout, subSection }) => {
+    const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout, subSection, lastEditedDate }) => {
       
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
@@ -1348,7 +1350,7 @@
               <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-slate-500">ポイント・金融資産総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{currentYearMonth}時点</span>
+                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : ""}</span>
                 </div>
                 <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
                   ¥{pointTotal.toLocaleString()}
@@ -1365,7 +1367,7 @@
                         value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]}
                         onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
                         placeholder="0"
-                        className="w-0 flex-1 h-9 rounded-xl px-3 text-right text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
+                        className="w-0 flex-1 h-9 rounded-xl px-3 text-left text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
                         style={{border: '1px solid #e2e8f0'}}
                       />
                     </div>
@@ -1377,7 +1379,7 @@
               <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-slate-500">借入可能額総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{currentYearMonth}時点</span>
+                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : ""}</span>
                 </div>
                 <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
                   ¥{borrowingTotal.toLocaleString()}
@@ -1394,7 +1396,7 @@
                         value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]}
                         onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
                         placeholder="0"
-                        className="w-0 flex-1 h-9 rounded-xl px-3 text-right text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
+                        className="w-0 flex-1 h-9 rounded-xl px-3 text-left text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
                         style={{border: '1px solid #e2e8f0'}}
                       />
                     </div>
@@ -1406,7 +1408,7 @@
               <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-slate-500">物理資産総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{currentYearMonth}時点</span>
+                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : ""}</span>
                 </div>
                 <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
                   ¥{physicalTotal.toLocaleString()}
@@ -1414,7 +1416,7 @@
                 <div className="space-y-2">
                   {physicalAssets.map((item, idx) => (
                     <div key={item.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white" style={{backgroundColor: '#94a3b8'}}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white" style={{backgroundColor: '#009BE5'}}>
                         {idx + 1}
                       </div>
                       <input
@@ -1641,12 +1643,13 @@
           <><MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-4 mt-2">
-            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600 border-b border-gray-300 pb-1"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
+            
             
             <div className="space-y-0">
               {allDisplayItems.map((item) => {
                 let displayDateStr = item.date;
-                if (item.date === '月末') displayDateStr = getEndOfMonthDate(item.targetYM).toString();
+                if (item.date === '月末') displayDateStr = getEndOfMonthDate(item.targetYM).toString() + '日';
+                else if (!isNaN(Number(item.date))) displayDateStr = item.date + '日';
 
                 if (item.isBudget) {
                   return (
@@ -1654,7 +1657,7 @@
                       <div className="col-span-2 flex justify-center"><AccountIcon label={item.accountLabel} bgColor={item.color} /></div>
                       <div className="col-span-4 w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap text-gray-800 font-normal">{item.name}</div>
                       <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">{displayDateStr}</div></div>
-                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.remaining.toLocaleString()}円</div></div>
+                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.remaining.toLocaleString()}</div></div>
                       <div className="col-span-1 flex justify-center text-gray-400 text-sm font-normal">-</div>
                     </div>
                   );
@@ -1669,7 +1672,7 @@
                           {item.isCarryOver ? <span className="text-[#ea4335] font-bold text-xs">前月</span> : displayDateStr}
                         </div>
                       </div>
-                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.remaining.toLocaleString()}円</div></div>
+                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.remaining.toLocaleString()}</div></div>
                       <div className="col-span-1 flex justify-center"><input type="checkbox" checked={isPaid} onChange={() => toggleUtilityPaid(item.category, item.targetYM)} className="w-6 h-6 border-gray-400 rounded focus:ring-sky-400" style={{accentColor: THEME}} /></div>
                     </div>
                   );
@@ -1686,7 +1689,7 @@
                           {item.isCarryOver ? <span className="text-[#ea4335] font-bold text-xs">前月</span> : displayDateStr}
                         </div>
                       </div>
-                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.amount.toLocaleString()}円</div></div>
+                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.amount.toLocaleString()}</div></div>
                       <div className="col-span-1 flex justify-center"><input type="checkbox" checked={isPaid} onChange={() => togglePaid(item.id, item.targetYM)} className="w-6 h-6 border-gray-400 rounded focus:ring-sky-400" style={{accentColor: THEME}} /></div>
                     </div>
                   );
@@ -1871,42 +1874,40 @@
 
       return (
          <div className="flex flex-col h-full pb-48 w-full bg-gray-50 min-h-full">
-            <div className="px-2 pt-6 flex-1 overflow-x-auto">
-               <div className="min-w-[440px]">
-                  
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
-                    <div className="w-[40px] text-center">借入</div>
-                    <div className="w-[44px] text-center">更新</div>
-                    <div className="w-[74px] text-center">残債</div>
-                    <div className="w-[66px] text-center">済 / 計</div>
-                    <div className="w-[70px] text-center">月々</div>
-                    <div className="flex-1 text-center">備考</div>
+            <div className="px-4 pt-6 flex-1">
+               <div className="bg-white rounded-2xl p-4 shadow-sm" style={{border: '3px solid #009BE5'}}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-bold text-slate-600">ローン残債総合計</span>
+                    <span className="text-xs font-bold text-slate-400"></span>
                   </div>
+                  <div className="text-3xl font-black mb-4" style={{color: '#009BE5'}}>¥{loansTotal.toLocaleString()}</div>
+                  
+                  <div className="space-y-3">
                   
                   <div className="space-y-3">
                      {loans.map(loan => {
                         return (
-                           <div key={loan.id} className="flex items-center gap-1.5 border-b border-gray-200 pb-2">
-                              <div className="w-[40px] flex justify-center">
-                                 <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
+                           <div key={loan.id} className="flex items-center gap-3 border-b border-gray-100 pb-3">
+                              <div className="shrink-0">
+                                 <div className={`w-9 h-9 flex items-center justify-center font-bold text-white rounded-full text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
                                     {loan.lender}
                                  </div>
                               </div>
-                              <div className="w-[44px] text-[10px] text-center text-gray-500 font-bold">{loan.updated}</div>
                               
-                              <div className="w-[74px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                              
+                              <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                                 <span className="text-sm text-gray-500 mr-1 shrink-0">¥</span>
                                  <input 
                                     type="number" 
                                     inputMode="numeric" 
                                     value={loan.remaining == 0 ? '' : loan.remaining} 
                                     onChange={e => handleUpdate(loan.id, 'remaining', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                    className="w-full text-right text-[11px] font-bold outline-none bg-transparent text-gray-700" 
-                                    placeholder=""
+                                    className="w-full text-right text-sm font-bold outline-none bg-transparent text-gray-700" 
+                                    placeholder="残債"
                                  />
-                                 <span className="text-[9px] text-gray-500 ml-0.5">¥</span>
                               </div>
                               
-                              <div className="w-[66px] flex items-center justify-between bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                              <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400" style={{minWidth:"60px"}}>
                                  <input 
                                     type="number" 
                                     inputMode="numeric" 
@@ -1926,24 +1927,24 @@
                                  />
                               </div>
                               
-                              <div className="w-[70px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                              <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400" style={{minWidth:"64px"}}>
+                                 <span className="text-[10px] text-gray-500 mr-0.5 shrink-0">¥</span>
                                  <input 
                                     type="number" 
                                     inputMode="numeric" 
                                     value={loan.monthly == 0 ? '' : loan.monthly} 
                                     onChange={e => handleUpdate(loan.id, 'monthly', e.target.value.replace(/^0+(?=\d)/, ''))} 
                                     className="w-full text-right text-[11px] font-bold outline-none bg-transparent" 
-                                    placeholder=""
+                                    placeholder="月々"
                                  />
-                                 <span className="text-[9px] text-gray-500 ml-0.5">¥</span>
                               </div>
                               
-                              <div className="flex-1 h-[30px]">
+                              <div className="flex-1">
                                  <input 
                                     type="text" 
                                     value={loan.memo} 
                                     onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} 
-                                    className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none text-left focus:border-sky-400 focus:ring-1 focus:ring-sky-400" 
+                                    className="w-full text-[11px] bg-gray-50 border border-gray-200 rounded-xl px-2 py-2 outline-none text-left focus:border-sky-400 focus:ring-1 focus:ring-sky-400" 
                                     placeholder=""
                                  />
                               </div>
@@ -1951,13 +1952,8 @@
                         )
                      })}
                   </div>
+                  <div className="text-[10px] text-gray-400 mt-3">※このタブの数値はアプリ内の他計算には影響しません。</div>
                </div>
-               <div className="text-[10px] text-gray-400 mt-4 ml-1">※このタブの数値はアプリ内の他計算には影響しません。</div>
-            </div>
-            
-            <div className="text-white px-5 py-2 mt-auto mb-4 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit" style={{backgroundColor: THEME}}>
-              <span className="font-bold text-sm">残債合計</span>
-              <div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{loansTotal.toLocaleString()}円</div>
             </div>
          </div>
       )
@@ -2211,6 +2207,7 @@
          );
       }
 
+      const lastEditedDate = data?.lastEditedDate || '';
       const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 
@@ -2441,11 +2438,11 @@
                 }</span>
               </div>
               <div className="flex-1 overflow-y-auto">
-                {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" />}
-                {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" />}
-                {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" />}
+                {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" lastEditedDate={lastEditedDate} />}
+                {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" lastEditedDate={lastEditedDate} />}
+                {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'fixed_all' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_all" />}
-                {kakeiboSubPage === 'fixed_input' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} />}
+                {kakeiboSubPage === 'fixed_input' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_input" />}
                 {kakeiboSubPage === 'variable' && <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />}
                 {kakeiboSubPage === 'loan' && <LoanTab loans={loans} setLoans={setLoans} />}
                 {kakeiboSubPage === 'total' && <TotalTab expenses={expenses} />}
@@ -2471,7 +2468,7 @@
               <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-slate-500">現金資産総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{todayStr}時点</span>
+                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : todayStr + "時点"}</span>
                 </div>
                 <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
                   ¥{cashTotalForHome.toLocaleString()}
@@ -2534,7 +2531,7 @@
               <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #ff6d4d'}}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-bold text-slate-500">未払い総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{todayStr}時点</span>
+                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : todayStr + "時点"}</span>
                 </div>
                 <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#ff6d4d'}}>
                   ¥{unpaidTotal.toLocaleString()}

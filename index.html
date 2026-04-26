@@ -1717,7 +1717,7 @@
                         </div>
                       </div>
                       <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.remaining.toLocaleString()}</div></div>
-                      <div className="col-span-1 flex justify-center"><button onClick={() => toggleUtilityPaid(item.category, item.targetYM)} className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isPaid ? 'bg-green-100 active:bg-green-200' : 'bg-slate-100 active:bg-slate-200'}`}><svg className={`w-4 h-4 ${isPaid ? 'text-green-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg></button></div>
+                      <div className="col-span-1 flex justify-center"><button onClick={() => toggleUtilityPaid(item.category, item.targetYM)} className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isPaid ? 'bg-[#009BE5]/20 active:bg-[#009BE5]/30' : 'bg-slate-100 active:bg-slate-200'}`}><svg className={`w-4 h-4 ${isPaid ? 'text-[#009BE5]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg></button></div>
                     </div>
                   );
                 } else {
@@ -1734,7 +1734,7 @@
                         </div>
                       </div>
                       <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.amount.toLocaleString()}</div></div>
-                      <div className="col-span-1 flex justify-center"><button onClick={() => togglePaid(item.id, item.targetYM)} className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isPaid ? 'bg-green-100 active:bg-green-200' : 'bg-slate-100 active:bg-slate-200'}`}><svg className={`w-4 h-4 ${isPaid ? 'text-green-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg></button></div>
+                      <div className="col-span-1 flex justify-center"><button onClick={() => togglePaid(item.id, item.targetYM)} className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isPaid ? 'bg-[#009BE5]/20 active:bg-[#009BE5]/30' : 'bg-slate-100 active:bg-slate-200'}`}><svg className={`w-4 h-4 ${isPaid ? 'text-[#009BE5]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg></button></div>
                     </div>
                   );
                 }
@@ -2587,7 +2587,7 @@
                     kakeiboSubPage === 'borrow' ? '借入可能額' :
                     kakeiboSubPage === 'physical' ? '物理資産' :
                     kakeiboSubPage === 'fixed_input' ? '固定費を入力' :
-                    kakeiboSubPage === 'loan' ? 'ローンを入力' :
+                    kakeiboSubPage === 'loan' ? 'ローン残債' :
                     kakeiboSubPage === 'total' ? '月ごとの収支' : ''
                   }</span>
                 </div>
@@ -2730,7 +2730,7 @@
               <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                 {[
                   { key: 'fixed_all', icon: 'す', label: 'すべての固定費用', color: '#f97316' },
-                  { key: 'fixed_input', icon: '固', label: '固定費・支出を入力', color: '#f97316' },
+                  { key: 'fixed_input', icon: '固', label: '固定費用を入力', color: '#f97316' },
                   { key: 'variable', icon: '変', label: '変動費', color: '#f97316' },
                   { key: 'loan', icon: 'ロ', label: 'ローン残債', color: '#f97316' },
                   { key: 'total', icon: '月', label: '月ごとの収支', color: '#f97316' },

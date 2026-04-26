@@ -510,8 +510,8 @@
                     <a href={trackUrl} target="_blank" className={`w-12 h-12 rounded-full ${bgCls} text-white font-black text-xl flex items-center justify-center shrink-0 active:opacity-70`} onClick={(ev) => ev.stopPropagation()}>
                       {short}
                     </a>
-                    {/* 情報 */}
-                    <div className="flex-1 min-w-0">
+                    {/* 情報（タップで編集） */}
+                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
                       <div className="text-base font-bold text-slate-900 leading-tight">{d.timeSlot || '時間帯未定'}</div>
                       <div className="text-sm text-slate-400 font-medium truncate">{d.num || d.remark || '追跡番号なし'}</div>
                     </div>
@@ -855,8 +855,8 @@
       };
 
       return (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center backdrop-blur-sm px-4">
-          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto box-border">
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm px-4 pt-[8vh] pb-[140px]">
+          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-full overflow-y-auto box-border">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">{editDelivery ? '荷物の編集' : '荷物の登録'}</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">
@@ -2722,7 +2722,7 @@
           events.forEach(event => window.removeEventListener(event, updateActivity));
           clearInterval(checkInactivity);
         };
-      }, [isLoggedIn, setIsLoggedIn]);
+      }, [isLoggedIn]);
 
       if (!isLoggedIn) {
         return <SimpleLoginScreen onLogin={() => setIsLoggedIn(true)} />;

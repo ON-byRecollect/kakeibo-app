@@ -152,10 +152,10 @@
     };
 
     const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
-      <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <button onClick={prevMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
+      <div className="flex justify-center items-center gap-3 bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
         <div key={displayYearMonth} className="font-bold text-gray-700 text-lg animate-pop">{displayYearMonth}</div>
-        <button onClick={nextMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>＞</button>
+        <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＞</button>
       </div>
     );
 
@@ -2288,6 +2288,18 @@
       const [showQuickExpense, setShowQuickExpense] = React.useState(false);
       const [showKakeiboPage, setShowKakeiboPage] = React.useState(false);
       const [kakeiboSubPage, setKakeiboSubPage] = React.useState(null);
+      const walletScrollRef = useRef(null);
+      const walletScrollPos = useRef(0);
+      const goToWalletSubPage = (page) => {
+        if (walletScrollRef.current) walletScrollPos.current = walletScrollRef.current.scrollTop;
+        setKakeiboSubPage(page);
+      };
+      const goBackFromWalletSubPage = () => {
+        setKakeiboSubPage(null);
+        setTimeout(() => {
+          if (walletScrollRef.current) walletScrollRef.current.scrollTop = walletScrollPos.current;
+        }, 0);
+      };
       const [showDeliveryModalGlobal, setShowDeliveryModalGlobal] = React.useState(false);
       const [scheduleDatePrev, setScheduleDatePrev] = React.useState(0);
       const [scheduleDateNext, setScheduleDateNext] = React.useState(0);
@@ -2552,14 +2564,14 @@
               {(kakeiboSubPage === 'fixed_all' || kakeiboSubPage === 'variable') ? (
                 <div className="bg-white px-4 pt-20 pb-3 border-b border-gray-100 sticky top-0 z-10 shrink-0">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => setKakeiboSubPage(null)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
+                    <button onClick={goBackFromWalletSubPage} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
                     </button>
                     <span className="text-lg font-black text-slate-800 flex-1">
                       {kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' : '変動費を入力'}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between mt-2 px-1">
+                  <div className="flex items-center justify-center gap-3 mt-2 px-1">
                     <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
                     <span key={displayYearMonth} className="text-base font-black text-slate-700 animate-pop">{displayYearMonth}</span>
                     <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＞</button>
@@ -2567,7 +2579,7 @@
                 </div>
               ) : (
                 <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
-                  <button onClick={() => setKakeiboSubPage(null)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
+                  <button onClick={goBackFromWalletSubPage} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
                   </button>
                   <span className="text-lg font-black text-slate-800">{
@@ -2596,7 +2608,7 @@
 
         // 家計簿ホーム
         return (
-          <div className="flex flex-col h-screen w-full overflow-y-auto" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
+          <div ref={walletScrollRef} className="flex flex-col h-screen w-full overflow-y-auto" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
             {/* ヘッダー */}
             <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
               <button onClick={() => setShowKakeiboPage(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
@@ -2652,21 +2664,21 @@
               {/* ── ポイント・金融資産 / 借入可能額 / 物理資産（リスト行） ── */}
               <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                 {/* ポイント・金融資産 */}
-                <button onClick={() => setKakeiboSubPage('point')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
+                <button onClick={() => goToWalletSubPage('point')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>P</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">ポイント・金融資産</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{pointTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
                 {/* 借入可能額 */}
-                <button onClick={() => setKakeiboSubPage('borrow')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
+                <button onClick={() => goToWalletSubPage('borrow')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>借</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">借入可能額</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{borrowingTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
                 {/* 物理資産 */}
-                <button onClick={() => setKakeiboSubPage('physical')} className="w-full flex items-center px-4 py-4 active:bg-gray-50">
+                <button onClick={() => goToWalletSubPage('physical')} className="w-full flex items-center px-4 py-4 active:bg-gray-50">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>物</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">物理資産</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{physicalTotalForHome.toLocaleString()}</span>
@@ -2723,7 +2735,7 @@
                   { key: 'loan', icon: 'ロ', label: 'ローン残債', color: '#f97316' },
                   { key: 'total', icon: '月', label: '月ごとの収支', color: '#f97316' },
                 ].map((item, idx, arr) => (
-                  <button key={item.key} onClick={() => setKakeiboSubPage(item.key)} className={`w-full flex items-center px-4 py-4 active:bg-gray-50 ${idx < arr.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <button key={item.key} onClick={() => goToWalletSubPage(item.key)} className={`w-full flex items-center px-4 py-4 active:bg-gray-50 ${idx < arr.length - 1 ? 'border-b border-gray-100' : ''}`}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: item.color}}>
                       {item.icon}
                     </div>

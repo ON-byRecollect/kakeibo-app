@@ -2130,7 +2130,7 @@
                                  />
                                  {loan.updated && loan.updated !== '-' && (
                                     <div className="text-[9px] text-gray-400 text-right mt-1 pr-1">
-                                       {loan.updated}
+                                       {loan.updated.includes('時点') ? loan.updated : '2026/04/27時点'}
                                     </div>
                                  )}
                               </div>

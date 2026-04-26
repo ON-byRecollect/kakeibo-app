@@ -390,9 +390,9 @@
       return (
         <div className="flex flex-col pb-44 w-full min-h-full" style={{backgroundColor: '#f2f2f2'}}>
           {/* ヘッダー：日付・時刻（日付変更ボタン内包） */}
-          <div className="flex justify-center items-center gap-3 px-4 pt-6 pb-4 shrink-0">
+          <div className="flex justify-center items-center gap-3 px-4 pt-14 pb-4 shrink-0">
             {/* 戻るボタン（日付カードの左隣） */}
-            <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()-1); return n; })} className="w-11 h-11 shrink-0 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform" style={{backgroundColor: THEME}}>
+            <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()-1); return n; })} className="w-11 h-11 shrink-0 text-white rounded-[1rem] flex items-center justify-center shadow-md active:scale-95 transition-transform" style={{backgroundColor: THEME}}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7"></path></svg>
             </button>
             <div className="relative w-[140px] h-[140px] bg-white rounded-[2rem] shadow-sm flex items-center justify-center">
@@ -405,20 +405,17 @@
               <span className="text-[3rem] font-black leading-none tracking-tighter">{currentTime}</span>
             </div>
             {/* 進むボタン（時刻カードの右隣） */}
-            <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()+1); return n; })} className="w-11 h-11 shrink-0 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform" style={{backgroundColor: THEME}}>
+            <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()+1); return n; })} className="w-11 h-11 shrink-0 text-white rounded-[1rem] flex items-center justify-center shadow-md active:scale-95 transition-transform" style={{backgroundColor: THEME}}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7"></path></svg>
             </button>
           </div>
 
           {/* アクションボタン行 */}
           <div className="flex items-center gap-3 px-4 mb-4">
-            <button onClick={() => setShowDeliveryModal(true)} className="flex-1 text-white font-black text-base py-3 rounded-full shadow-md active:scale-95 transition-transform tracking-wider" style={{backgroundColor: THEME}}>
+            <button onClick={() => setShowDeliveryModal(true)} className="flex-1 text-white font-black text-base py-3 rounded-[2rem] shadow-md active:scale-95 transition-transform tracking-wider" style={{backgroundColor: THEME}}>
               荷物を登録
             </button>
-            <button onClick={() => setShowExpenseModal(true)} className="flex-1 text-white font-black text-base py-3 rounded-full shadow-md active:scale-95 transition-transform tracking-wider" style={{backgroundColor: THEME}}>支出を入力</button>
-            <button onClick={() => setShowSettingsModal(true)} className="w-11 h-11 shrink-0 bg-white text-slate-500 rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform border border-gray-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            </button>
+            <button onClick={() => setShowExpenseModal(true)} className="flex-1 text-white font-black text-base py-3 rounded-[2rem] shadow-md active:scale-95 transition-transform tracking-wider" style={{backgroundColor: THEME}}>支出を入力</button>
           </div>
 
           {/* コンテンツエリア */}
@@ -428,10 +425,10 @@
             {(garbages.length > 0 || todaysBaseballs.length > 0) && (
               <div className="flex gap-3 w-full">
                 {garbages.map(g => (
-                  <div key={g.id} className={`flex-1 ${g.bg} text-white rounded-full py-3.5 font-black text-base shadow-sm tracking-widest text-center flex items-center justify-center min-w-0 px-2 truncate`}>{g.name}</div>
+                  <div key={g.id} className={`flex-1 ${g.bg} text-white rounded-[2rem] py-3.5 font-black text-base shadow-sm tracking-widest text-center flex items-center justify-center min-w-0 px-2 truncate`}>{g.name}</div>
                 ))}
                 {todaysBaseballs.map(b => (
-                  <div key={b.id} className="flex-1 relative bg-[#1d7eb8] text-white rounded-full py-3.5 font-black text-base shadow-sm tracking-widest text-center flex items-center justify-center min-w-0 px-2 truncate">
+                  <div key={b.id} className="flex-1 relative bg-[#1d7eb8] text-white rounded-[2rem] py-3.5 font-black text-base shadow-sm tracking-widest text-center flex items-center justify-center min-w-0 px-2 truncate">
                     <div className="absolute top-1/2 -translate-y-1/2 left-2 w-7 h-7 border-[2px] border-slate-800 rounded-full bg-white text-[#1d7eb8] flex items-center justify-center font-black text-xs shrink-0">F</div>
                     <span className="ml-6 truncate">{b.time} {b.title}</span>
                   </div>
@@ -454,8 +451,8 @@
                       </div>
                       <div className={`${carrierColors[d.carrier] || ''} font-black text-[1.2rem] tracking-tighter shrink-0 mx-2 ${isCompleted ? 'completed-item' : ''}`}>{d.timeSlot}</div>
                       <div className="flex gap-2 shrink-0">
-                        <button onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }} className="bg-slate-100 text-slate-600 rounded-full px-3 py-2 font-black text-xs active:opacity-70">編集</button>
-                        <a href={`${urls[d.carrier]}${btnText==='HP'?'':d.num}`} target="_blank" className="bg-[#c8c8c8] text-slate-800 rounded-full px-4 py-2 font-black text-sm active:opacity-70">{btnText}</a>
+                        <button onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }} className="bg-slate-100 text-slate-600 rounded-[1rem] px-3 py-2 font-black text-xs active:opacity-70">編集</button>
+                        <a href={d.carrier === 'yamato' ? `${urls.yamato}${d.num}` : `${urls[d.carrier]}${btnText==='HP'?'':d.num}`} target="_blank" className="bg-[#c8c8c8] text-slate-800 rounded-[1rem] px-4 py-2 font-black text-sm active:opacity-70">{btnText}</a>
                       </div>
                     </div>
                   );
@@ -490,8 +487,25 @@
                       <div key={a.id} className="flex items-center justify-between gap-2">
                         <p onClick={() => toggleAnimeComplete(a.id)} className={`flex-1 text-[15px] font-black text-slate-900 tracking-tight truncate cursor-pointer active:opacity-70 ${isCompleted ? 'completed-item' : ''}`}>{a.title}</p>
                         <button
-                          onClick={(ev) => { ev.stopPropagation(); navigator.clipboard && navigator.clipboard.writeText(a.title).then(() => { const el = ev.currentTarget; el.textContent = '✓'; setTimeout(() => { el.textContent = 'コピー'; }, 1200); }); }}
-                          className="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-100 rounded-full px-2 py-1 active:bg-slate-200"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            if (!navigator.clipboard) return;
+                            navigator.clipboard.writeText(a.title).then(() => {
+                              const el = ev.currentTarget;
+                              el.textContent = '✓';
+                              el.style.backgroundColor = '#8cd2e6';
+                              el.style.color = '#fff';
+                              // ポップアップ表示
+                              const popup = document.createElement('div');
+                              popup.textContent = 'コピーしました';
+                              popup.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+                              document.body.appendChild(popup);
+                              setTimeout(() => { popup.style.opacity = '0'; }, 900);
+                              setTimeout(() => { document.body.removeChild(popup); }, 1300);
+                              setTimeout(() => { el.textContent = 'コピー'; el.style.backgroundColor = ''; el.style.color = ''; }, 1200);
+                            });
+                          }}
+                          className="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-100 rounded-full px-2 py-1 active:bg-slate-200 transition-colors"
                         >コピー</button>
                       </div>
                     );
@@ -1078,13 +1092,13 @@
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500 tracking-widest">現金口座</span>
-                <span className="text-xs font-bold" style={{color: cashTotal < 0 ? '#ea4335' : '#8cd2e6'}}>収支 {cashTotal.toLocaleString()}円</span>
+                <span className="text-base font-black" style={{color: cashTotal < 0 ? '#ea4335' : '#8cd2e6'}}>収支 {cashTotal.toLocaleString()}円</span>
               </div>
               <div className="divide-y divide-gray-100">
                 {cashAccounts.map((acc) => (
                   <div key={acc.id} className="flex items-center gap-3 px-4 py-3">
                     <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
-                    <div className="flex-1">
+                    <div className="w-[45%] shrink-0">
                       <input 
                         type="number" 
                         inputMode="numeric" 
@@ -1094,63 +1108,63 @@
                         className="w-full h-12 border border-gray-200 rounded-xl px-3 text-right text-base font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
                       />
                     </div>
-                    {acc.id !== 'yo' && (
-                      <div className={`w-28 h-12 border border-gray-200 rounded-xl px-3 text-right bg-gray-50 flex items-center justify-end text-sm font-bold shrink-0 ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-[#ea4335]' : 'text-gray-600'}`}>
-                        {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
-                      </div>
-                    )}
+                    <div className="w-[45%] shrink-0">
+                      {acc.id !== 'yo' ? (
+                        <div className={`w-full h-12 border border-gray-200 rounded-xl px-3 text-right bg-gray-50 flex items-center justify-end text-base font-bold ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-[#ea4335]' : 'text-gray-600'}`}>
+                          {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
+                        </div>
+                      ) : <div className="w-full h-12"></div>}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* ポイント・金融資産セクション */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500 tracking-widest">ポイント・金融資産</span>
-                <span className="text-xs font-bold" style={{color: '#8cd2e6'}}>合計 {pointTotal.toLocaleString()}円分</span>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {pointAccounts.map((acc) => (
-                  <div key={acc.id} className="flex items-center gap-3 px-4 py-3">
-                    <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
-                    <div className="flex-1">
+            {/* ポイント・金融資産 & 借入可能額 - 同列配置 */}
+            <div className="flex gap-3">
+              {/* ポイント・金融資産セクション */}
+              <div className="flex-1 bg-white rounded-2xl shadow-sm overflow-hidden min-w-0">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <div className="text-[10px] font-bold text-gray-500 tracking-widest">ポイント・金融資産</div>
+                  <div className="text-xs font-bold mt-0.5" style={{color: '#8cd2e6'}}>{pointTotal.toLocaleString()}円分</div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {pointAccounts.map((acc) => (
+                    <div key={acc.id} className="flex items-center gap-2 px-3 py-2">
+                      <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
                       <input 
                         type="number" 
                         inputMode="numeric" 
                         value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]} 
                         onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))} 
                         placeholder="0"
-                        className="w-full h-12 border border-gray-200 rounded-xl px-3 text-right text-base font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
+                        className="flex-1 min-w-0 h-9 border border-gray-200 rounded-lg px-2 text-right text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
                       />
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* 借入可能額セクション */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500 tracking-widest">借入可能額</span>
-                <span className="text-xs font-bold" style={{color: '#8cd2e6'}}>合計 {borrowingTotal.toLocaleString()}円</span>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {borrowingAccounts.map((acc) => (
-                  <div key={acc.id} className="flex items-center gap-3 px-4 py-3">
-                    <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
-                    <div className="flex-1">
+              {/* 借入可能額セクション */}
+              <div className="flex-1 bg-white rounded-2xl shadow-sm overflow-hidden min-w-0">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <div className="text-[10px] font-bold text-gray-500 tracking-widest">借入可能額</div>
+                  <div className="text-xs font-bold mt-0.5" style={{color: '#8cd2e6'}}>{borrowingTotal.toLocaleString()}円</div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {borrowingAccounts.map((acc) => (
+                    <div key={acc.id} className="flex items-center gap-2 px-3 py-2">
+                      <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
                       <input 
                         type="number" 
                         inputMode="numeric" 
                         value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]} 
                         onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))} 
                         placeholder="0"
-                        className="w-full h-12 border border-gray-200 rounded-xl px-3 text-right text-base font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
+                        className="flex-1 min-w-0 h-9 border border-gray-200 rounded-lg px-2 text-right text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
                       />
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -1158,7 +1172,7 @@
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-500 tracking-widest">物理資産</span>
-                <span className="text-xs font-bold" style={{color: '#8cd2e6'}}>合計 {physicalTotal.toLocaleString()}円相当</span>
+                <span className="text-base font-black" style={{color: '#8cd2e6'}}>合計 {physicalTotal.toLocaleString()}円相当</span>
               </div>
               <div className="divide-y divide-gray-100">
                 {physicalAssets.map((item, idx) => (
@@ -1178,9 +1192,7 @@
               </div>
             </div>
             
-            <div className="mt-4 mb-4 text-center">
-               <button onClick={onLogout} className="text-gray-400 text-xs underline py-2 px-4 rounded active:text-gray-600">画面をロックする</button>
-            </div>
+            <div className="mt-4 mb-4"></div>
           </div>
         </div>
       );
@@ -1374,10 +1386,7 @@
                     <div key={`${item.id}-${item.targetYM}`} className={`grid grid-cols-12 gap-1 items-center transition-opacity duration-200 border-b border-gray-200 py-2 ${isPaid ? 'opacity-50' : 'opacity-100'}`}>
                       <div className="col-span-2 flex justify-center"><AccountIcon label={item.accountLabel} bgColor={item.color} /></div>
                       <div className="col-span-4 flex items-center gap-1">
-                        <div className="flex-1 text-sm overflow-hidden whitespace-nowrap text-gray-800 font-normal px-1">{item.name}</div>
-                        {!item.isCarryOver && (
-                          <button onClick={() => openEditFixed(item)} className="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-100 rounded px-1.5 py-0.5 active:bg-slate-200">編</button>
-                        )}
+                        <div onClick={!item.isCarryOver ? () => openEditFixed(item) : undefined} className={`flex-1 text-sm overflow-hidden whitespace-nowrap text-gray-800 font-normal px-1 ${!item.isCarryOver ? 'cursor-pointer active:opacity-60' : ''}`}>{item.name}</div>
                       </div>
                       <div className="col-span-2">
                         <div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">
@@ -1910,6 +1919,7 @@
       const [activeTab, setActiveTab] = useState('予定');
       const scrollPositions = useRef({});
       const scrollContainerRef = useRef(null);
+      const [showScheduleSettings, setShowScheduleSettings] = React.useState(false);
 
       useEffect(() => {
         const container = scrollContainerRef.current;
@@ -2139,8 +2149,24 @@
                   </button>
                 );
               })}
+              {/* 設定ボタン（タブバー最右部） */}
+              <button
+                onClick={() => setShowScheduleSettings(true)}
+                className="flex-1 h-full flex flex-col items-center justify-center space-y-1.5 transition-colors border-t-[4px] border-transparent text-gray-400 active:opacity-70"
+              >
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span className="text-[12px] font-bold">設定</span>
+              </button>
             </div>
           </nav>
+          {/* スケジュール設定モーダル（タブバーから呼び出し） */}
+          {showScheduleSettings && (
+            <ScheduleSettingsModal
+              scheduleData={scheduleData}
+              updateScheduleField={updateScheduleField}
+              onClose={() => setShowScheduleSettings(false)}
+            />
+          )}
         </div>
       );
     };

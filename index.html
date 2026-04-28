@@ -295,6 +295,10 @@
     // 予定タブ（スケジュール統合）
     // ==========================================
     const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate }) => {
+      React.useEffect(() => {
+        window.showAddToast = showAddToast;
+        return () => { delete window.showAddToast; };
+      }, []);
       const [currentTime, setCurrentTime] = useState('');
       const [showDeliveryModal, setShowDeliveryModal] = useState(false);
       const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -418,14 +422,16 @@
       const carrierBg = { post: 'bg-post', yamato: 'bg-yamato', sagawa: 'bg-sagawa', amazon: 'bg-amazon', yodobashi: 'bg-yodobashi', trial: 'bg-trial', aeon: 'bg-aeon' };
       const carrierTextColor = { post: 'text-white', yamato: 'text-white', sagawa: 'text-white', amazon: 'text-white', yodobashi: 'text-white', trial: 'text-white', aeon: 'text-white' };
 
-      const showCopyToast = () => {
+      const showMiniToast = (text) => {
         const popup = document.createElement('div');
-        popup.textContent = 'コピーしました';
+        popup.textContent = text;
         popup.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
         document.body.appendChild(popup);
         setTimeout(() => { popup.style.opacity = '0'; }, 900);
         setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 1300);
       };
+      const showCopyToast = () => showMiniToast('コピーしました');
+      const showAddToast = () => showMiniToast('追加しました');
 
       const deleteDelivery = (id) => {
         const updated = deliveries.filter(d => d.id !== id);
@@ -839,6 +845,7 @@
           updated = deliveries.map(d => d.id === editDelivery.id ? { ...d, ...newData } : d);
         } else {
           updated = [...deliveries, { ...newData, id: Date.now() }];
+          if (window.showAddToast) window.showAddToast();
         }
         onSave(updated);
         onClose();
@@ -996,14 +1003,13 @@
         trial: ["指定なし","10:00〜12:00","12:00〜14:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","20:00〜22:00"],
         aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"]
       };
-      const getTimeOpts = (c) => c === 'trial' ? timeOptionSets.trial : c === 'aeon' ? timeOptionSets.aeon : timeOptionSets.default;
-      const saveDelivery = () => {
+      const getTimeOpts = (c) => c === 'trial' ? timeOptionSets.trial : c === 'aeon' ? timeOptionSets.aeon : time      const saveDelivery = () => {
+        if (!dNum && !dRemark) return;
         const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
         updateScheduleField('deliveries', [...deliveries, { ...newData, id: Date.now() }]);
+        if (window.showAddToast) window.showAddToast();
         setDCarrier('yamato'); setDDate(today); setDTimeSlot('指定なし'); setDRemark(''); setDNum('');
-      };
-      return (
-        <div className="space-y-3">
+      };     <div className="space-y-3">
           <div className="bg-slate-50 rounded-xl p-3 space-y-2">
             <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
             <select value={dCarrier} onChange={e => { const c = e.target.value; setDCarrier(c); setDTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark(''); }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
@@ -1071,9 +1077,11 @@
 
       const saveAnime = () => {
         if (!newAnimeTitle || !newAnimeDate) return;
+        const isNew = !editAnime;
         const newItem = { id: editAnime ? editAnime.id : Date.now(), title: newAnimeTitle, dateRaw: newAnimeDate, isWeekly: newAnimeWeekly, weeks: Number(newAnimeWeeks) };
         const updated = editAnime ? animes.map(a => a.id === editAnime.id ? newItem : a) : [...animes, newItem];
         updateScheduleField('animes', updated);
+        if (isNew && window.showAddToast) window.showAddToast();
         setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); setNewAnimeWeekly(true); setNewAnimeWeeks(12);
       };
 
@@ -1087,9 +1095,11 @@
 
       const saveBaseball = () => {
         if (!newBaseballTitle || !newBaseballDate) return;
+        const isNew = !editBaseball;
         const newItem = { id: editBaseball ? editBaseball.id : Date.now(), title: newBaseballTitle, dateRaw: newBaseballDate, time: newBaseballTime };
         const updated = editBaseball ? baseballs.map(b => b.id === editBaseball.id ? newItem : b) : [...baseballs, newItem];
         updateScheduleField('baseballs', updated);
+        if (isNew && window.showAddToast) window.showAddToast();
         setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); setNewBaseballTime('18:00');
       };
 
@@ -1103,10 +1113,12 @@
 
       const saveGarbage = () => {
         if (!newGarbageName) return;
+        const isNew = !editGarbage;
         const datesArr = newGarbageType === 'monthly_specific' ? newGarbageDates.split(',').map(s => s.trim()).filter(Boolean) : [];
         const newItem = { id: editGarbage ? editGarbage.id : Date.now(), name: newGarbageName, bg: newGarbageBg, type: newGarbageType, days: newGarbageDays, dates: datesArr };
         const updated = editGarbage ? garbageRules.map(g => g.id === editGarbage.id ? newItem : g) : [...garbageRules, newItem];
         updateScheduleField('garbageRules', updated);
+        if (isNew && window.showAddToast) window.showAddToast();
         setEditGarbage(null); setNewGarbageName(''); setNewGarbageBg('bg-[#f05a5a]'); setNewGarbageType('weekly'); setNewGarbageDays([]); setNewGarbageDates('');
       };
 
@@ -2805,7 +2817,7 @@
                           {c.accountLabel}
                         </div>
                         <span className="flex-1 text-slate-800 font-bold text-sm">{c.name}</span>
-                        <span className="text-slate-400 text-sm font-bold">{c.date}日</span>
+                        <span className="text-slate-400 text-sm font-bold">{c.date === '月末' ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() : c.date}日</span>
                         <span className="text-slate-800 font-black text-sm">¥{c.amount.toLocaleString()}</span>
                         <button
                           onClick={() => {

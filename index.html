@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Wallet</title>
+  <title>家計簿</title>
   
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -117,11 +117,9 @@
       }, []);
 
       const updateField = (key, value) => {
-        const today = new Date();
-        const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
-        setData(prev => ({ ...prev, [key]: value, lastEditedDate: dateStr }));
+        setData(prev => ({ ...prev, [key]: value }));
         db.collection('shared_data').doc('family_account').set({
-          [key]: value, lastEditedDate: dateStr
+          [key]: value
         }, { merge: true }).catch(err => console.error("保存エラー:", err));
       };
 
@@ -141,21 +139,21 @@
       'N':  'bg-[#ea4335]'
     };
 
-    const THEME = '#009BE5';
-    const THEME_DARK = '#007bbf';
+    const THEME = '#8cd2e6';
+    const THEME_DARK = '#5bb8d4';
 
     const AccountIcon = ({ label, bgColor, textColor }) => {
       const tColor = textColor ? textColor : (label === 'Ⅲ' ? 'text-gray-800' : 'text-white');
       return (
-        <div className={`w-9 h-9 flex items-center justify-center font-bold rounded-full ${bgColor} ${tColor} shrink-0`}>{label}</div>
+        <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-sm ${bgColor} ${tColor} shrink-0`}>{label}</div>
       );
     };
 
     const MonthSelector = ({ displayYearMonth, prevMonth, nextMonth }) => (
-      <div className="flex justify-center items-center gap-3 bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
+      <div className="flex justify-between items-center bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <button onClick={prevMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>＜ 前月</button>
         <div key={displayYearMonth} className="font-bold text-gray-700 text-lg animate-pop">{displayYearMonth}</div>
-        <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＞</button>
+        <button onClick={nextMonth} className="p-2 font-bold active:bg-sky-100 active:scale-90 rounded-full transition-all duration-200" style={{color: THEME_DARK}}>翌月 ＞</button>
       </div>
     );
 
@@ -241,26 +239,25 @@
       );
     };
 
-    const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, iconColorHex, handleBudgetChange, hideProgress }) => {
+    const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, handleBudgetChange }) => {
       const remaining = Math.max(0, budgetData.amount - spent);
       const progressPercent = Math.min((spent / (budgetData.amount || 1)) * 100, 100) || 0;
       const progressColor = progressPercent >= 90 ? 'bg-[#ea4335]' : progressPercent >= 70 ? 'bg-[#fbbc04]' : '';
 
       return (
-        <div className="bg-white p-3 rounded-xl shadow-sm" style={{border: `1.5px solid ${iconColorHex || '#ff4d4d'}`}}>
-          <div className={`flex flex-col ${hideProgress ? '' : 'border-b border-gray-100 pb-2 mb-2'}`}>
-            <div className="font-bold text-gray-700 text-xs flex items-center mb-2">
-              {title}
+        <div className="bg-white p-4 mx-2 mt-4 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex flex-col border-b border-gray-100 pb-3 mb-3">
+            <div className="font-bold text-gray-700 text-sm flex items-center mb-2">
+              <span className={`w-2 h-2 rounded-full ${iconColor} mr-2`}></span>{title}
             </div>
-            <div className="flex items-center gap-1">
-              <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-10" style={{focusBorderColor: THEME}}>
-                {['松','新','か','Ⅲ','P','IC'].map(a => <option key={a} value={a}>{a}</option>)}
+            <div className="flex items-center space-x-2">
+              <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white text-gray-700" style={{focusBorderColor: THEME}}>
+                {['予','松','新','か','Ⅲ','P','IC','現'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
-              <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-12">
+              <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-10 border border-gray-300 rounded-md px-3 text-sm outline-none bg-white text-gray-700">
                 <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
               </select>
-              <div className="flex-1 flex items-center h-8 border border-gray-300 rounded-md px-2 bg-white focus-within:ring-1 focus-within:ring-sky-400">
-                <span className="text-xs text-gray-400 mr-0.5 shrink-0">¥</span>
+              <div className="flex-1 flex items-center h-10 border border-gray-300 rounded-md px-2 bg-white">
                 <input 
                   type="number" 
                   inputMode="numeric" 
@@ -270,23 +267,21 @@
                     handleBudgetChange(categoryKey, 'amount', val === '' ? 0 : Number(val));
                   }}
                   placeholder="0"
-                  className="w-full text-right outline-none text-xs font-bold text-gray-700"
-                  style={{WebkitAppearance:'none'}}
+                  className="w-full text-right outline-none text-sm font-bold text-gray-700"
                 />
+                <span className="text-xs text-gray-500 ml-1">円</span>
               </div>
             </div>
           </div>
-          {!hideProgress && (
-            <div>
-              <div className="flex justify-between text-[10px] font-bold mb-1 text-gray-500">
-                <span>残 {remaining.toLocaleString()}</span>
-                <span>{spent.toLocaleString()}/{budgetData.amount.toLocaleString()}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div className={`h-1.5 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
-              </div>
+          <div>
+            <div className="flex justify-between text-xs font-bold mb-1 text-gray-600">
+              <span>残額: {remaining.toLocaleString()}円</span>
+              <span>{spent.toLocaleString()} / {budgetData.amount.toLocaleString()}円</span>
             </div>
-          )}
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className={`h-2 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
+            </div>
+          </div>
         </div>
       );
     };
@@ -299,6 +294,12 @@
         window.showAddToast = showAddToast;
         return () => { delete window.showAddToast; };
       }, []);
+      const [date, setDate] = useState(() => {
+        const now = new Date();
+        if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
+        now.setHours(0,0,0,0);
+        return now;
+      });
       const [currentTime, setCurrentTime] = useState('');
       const [showDeliveryModal, setShowDeliveryModal] = useState(false);
       const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -444,56 +445,22 @@
           {/* ── ヘッダーエリア ── */}
           <div className="px-5 pt-20 pb-2">
 
-            {/* 行1: 日付 + ゴミ（左寄せ・横並び） */}
-            <div className="flex items-center gap-3 w-full mb-3 px-12">
+            {/* 行1: 日付 + ゴミ（左寄せ・垂直並び） */}
+            <div className="flex flex-col gap-2 w-full mb-3 px-12">
               <div className="flex items-baseline gap-1 shrink-0">
                 <span className="text-[1.8rem] font-bold text-slate-900 leading-none">
                   {displayDate.getMonth()+1}月{displayDate.getDate()}日
                 </span>
                 <span className="text-xl font-bold" style={{color: getDayColor(displayDate)}}>({dayNamesShort[displayDate.getDay()]})</span>
               </div>
-              {/* ゴミタグ（日付の右隣） */}
-              <div className="flex gap-2 flex-wrap">
+              {/* ゴミがある場合は表示 */}
+              <div className="flex gap-2 flex-wrap" style={{minHeight: garbages.length > 0 ? "auto" : "0"}}>
                 {garbages.map(g => (
                   <span key={g.id} className={`${g.bg} text-white text-sm font-bold px-4 py-1.5 rounded-full`}>{g.name}</span>
                 ))}
               </div>
             </div>
-            {/* 行2: 今日の固定支出（左寄せ・インデント統一） */}
-            <div className="flex flex-col gap-2 mb-4 px-12" style={{minHeight: todayExpenses.length > 0 ? "auto" : "0"}}>
-              {todayExpenses.map(e => {
-                const isCompleted = completedExpenses.includes(e.id);
-                const acc = e.accountLabel;
-                const ACC_COLORS_MAP = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
-                const bgColor = ACC_COLORS_MAP[acc] || '#8cd2e6';
-                const txtColor = acc === 'Ⅲ' ? '#333333' : '#ffffff';
-                return (
-                  <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60`}>
-                    {acc && (
-                      <span className="w-7 h-7 rounded-full text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
-                    )}
-                    <span className="text-[1.2rem] font-bold text-slate-800 flex-1">{e.name || e.category}</span>
-                    <span className="text-[1.2rem] font-bold text-slate-800">¥{e.amount.toLocaleString()}</span>
-                  </div>
-                );
-              })}
-            </div>
-            {/* 行3: 時計（大・中央配置） */}
-            <div className="flex justify-center items-baseline leading-none mb-1">
-              <span className="font-black text-slate-900 leading-none" style={{fontSize: '5.5rem', letterSpacing: '-0.04em'}}>{currentTime}</span>
-            </div>
-            {/* 行4: プロ野球（中央配置） or 時計アイコン（中央） */}
-            {todaysBaseballs.length > 0 ? (
-              <div className="flex flex-col items-center gap-1 mb-3">
-                {todaysBaseballs.map(b => (
-                  <div key={b.id} className="flex items-center gap-3">
-                    <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>vs{b.title}</span>
-                    <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>{b.time}</span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+
           {/* ── 配達予定カード ── */}
           {todaysDeliveries.length > 0 && (
             <div className="px-5 space-y-2 mb-3">
@@ -508,15 +475,10 @@
                     <a href={trackUrl} target="_blank" className={`w-12 h-12 rounded-full ${bgCls} text-white font-black text-xl flex items-center justify-center shrink-0 active:opacity-70`} onClick={(ev) => ev.stopPropagation()}>
                       {short}
                     </a>
-                    {/* 情報（タップで編集） */}
-                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60 flex items-center gap-3 self-stretch" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
-                      <div className="flex flex-col justify-center w-[95px] shrink-0 h-full">
-                        <div className="text-[13px] font-bold text-slate-900 leading-none mb-1 whitespace-nowrap">{d.timeSlot || '指定なし'}</div>
-                        <div className="text-[9px] text-slate-300 font-medium truncate leading-none">{d.num || '番号なし'}</div>
-                      </div>
-                      {d.remark && (
-                        <div className="text-[20px] font-black text-slate-800 truncate flex-1 leading-none flex items-center h-full">{d.remark}</div>
-                      )}
+                    {/* 情報 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-base font-bold text-slate-900 leading-tight">{d.timeSlot || '時間帯未定'}</div>
+                      <div className="text-sm text-slate-400 font-medium truncate">{d.num || d.remark || '追跡番号なし'}</div>
                     </div>
                     {/* コピーアイコン */}
                     {d.num && (
@@ -532,7 +494,7 @@
                     )}
                     {/* 削除アイコン */}
                     <button
-                      onClick={() => deleteDelivery(d.id)}
+                      onClick={() => { if (window.confirm('この荷物を削除しますか？')) deleteDelivery(d.id); }}
                       className="w-9 h-9 flex items-center justify-center text-red-400 active:text-red-600 shrink-0"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
@@ -852,13 +814,15 @@
       };
 
       const handleDelete = () => {
-        onSave(deliveries.filter(d => d.id !== editDelivery.id));
-        onClose();
+        if (window.confirm('この荷物を削除しますか？')) {
+          onSave(deliveries.filter(d => d.id !== editDelivery.id));
+          onClose();
+        }
       };
 
       return (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm px-4 pt-[8vh] pb-[140px]">
-          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-full overflow-y-auto box-border">
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto box-border">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">{editDelivery ? '荷物の編集' : '荷物の登録'}</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">
@@ -866,8 +830,8 @@
               </button>
             </div>
             <div className="space-y-3.5">
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-              <select value={carrier} onChange={e => { const c = e.target.value; setCarrier(c); setTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setRemark('食料品'); else setRemark(''); }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
+              <select value={carrier} onChange={e => { setCarrier(e.target.value); setTimeSlot('指定なし'); }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 <option value="yamato">ヤマト運輸</option>
                 <option value="post">日本郵便</option>
                 <option value="sagawa">佐川急便</option>
@@ -879,19 +843,7 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <select value={remark} onChange={e => setRemark(e.target.value)} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                <option value=""></option>
-                <option value="セカンドストリート">セカンドストリート</option>
-                <option value="GEO">GEO</option>
-                <option value="オフモール">オフモール</option>
-                <option value="じゃんぱら">じゃんぱら</option>
-                <option value="ノジマ">ノジマ</option>
-                <option value="トレジャーファクトリー">トレジャーファクトリー</option>
-                <option value="Ali Express">Ali Express</option>
-                <option value="ELECOM">ELECOM</option>
-                <option value="ヨドバシカメラ">ヨドバシカメラ</option>
-                <option value="その他">その他</option>
-              </select>
+              <input type="text" value={remark} onChange={e => setRemark(e.target.value)} placeholder="備考（例：Amazonの本）" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
               <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value)} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
             </div>
             <div className="mt-5 flex gap-3">
@@ -909,23 +861,21 @@
 
     // 支出入力モーダル（予定タブから呼び出し）
     // 簡易支出フォーム（タブバーの支出ボタン用）
-    const QuickExpenseForm = ({ handleAddData, currentYearMonth, todayDay, onClose, selectedDate }) => {
+    const QuickExpenseForm = ({ handleAddData, currentYearMonth, todayDay, onClose }) => {
       const [amount, setAmount] = React.useState('');
       const [category, setCategory] = React.useState('外食');
       const categories = ['外食', '自炊', '交通'];
       const isOk = amount !== '' && Number(amount) > 0;
       const onSubmit = () => {
         if (!isOk) return;
-        const targetYM = selectedDate ? `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月` : currentYearMonth;
-        const targetDay = selectedDate ? selectedDate.getDate() : todayDay;
-        handleAddData({ amount: Number(amount), category, itemName: '', accountLabel: '', timing: '今日', day: targetDay, yearMonth: targetYM });
+        handleAddData({ amount: Number(amount), category, itemName: '', accountLabel: '', timing: '今日', day: todayDay, yearMonth: currentYearMonth });
         onClose();
       };
       return (
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border border-gray-300 rounded-2xl px-4 h-14 focus-within:ring-2 focus-within:ring-sky-300">
-            <span className="text-xl font-bold text-gray-500 shrink-0">¥</span>
-            <input type="number" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="w-0 flex-1 min-w-0 h-full text-3xl font-bold outline-none text-right bg-transparent" style={{WebkitAppearance:'none'}} />
+          <div className="flex items-center gap-2 w-full">
+            <input type="number" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="w-0 flex-1 min-w-0 h-14 text-3xl font-bold border border-gray-300 rounded-2xl px-4 text-right focus:outline-none focus:ring-2 focus:ring-sky-300" />
+            <span className="text-xl font-bold text-gray-700 shrink-0">円</span>
           </div>
           <div className="flex gap-3">
             {categories.map(cat => (
@@ -943,7 +893,7 @@
       const [account, setAccount] = useState('');
 
       const categories = ['外食', '自炊', '交通'];
-      const accounts = ['松', '新', 'か', 'Ⅲ', 'P'];
+      const accounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', '現'];
       const isSubmitEnabled = amount !== '' && category !== '';
 
       const onSubmit = () => {
@@ -962,9 +912,9 @@
               </button>
             </div>
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 border border-gray-400 rounded-md px-3 h-12 focus-within:ring-2 focus-within:ring-sky-300">
-                <span className="text-xl font-bold text-gray-500 shrink-0">¥</span>
-                <input type="number" inputMode="numeric" value={amount == 0 ? '' : amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-full text-2xl font-bold outline-none text-right bg-transparent" style={{WebkitAppearance:'none'}} />
+              <div className="flex items-center space-x-2">
+                <input type="number" inputMode="numeric" value={amount == 0 ? '' : amount} onChange={e => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none" />
+                <span className="text-xl font-bold text-gray-700 shrink-0">円</span>
               </div>
               <div className="flex gap-2">
                 {categories.map(cat => (
@@ -990,62 +940,6 @@
     };
 
     // スケジュール設定モーダル
-    const DeliverySettingsForm = ({ scheduleData, updateScheduleField, THEME }) => {
-      const deliveries = scheduleData?.deliveries || [];
-      const today = new Date().toISOString().slice(0,10);
-      const [dCarrier, setDCarrier] = React.useState('yamato');
-      const [dDate, setDDate] = React.useState(today);
-      const [dTimeSlot, setDTimeSlot] = React.useState('指定なし');
-      const [dRemark, setDRemark] = React.useState('');
-      const [dNum, setDNum] = React.useState('');
-      const timeOptionSets = {
-        default: ["指定なし","8:00〜12:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
-        trial: ["指定なし","10:00〜12:00","12:00〜14:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","20:00〜22:00"],
-        aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"]
-      };
-      const getTimeOpts = (c) => c === 'trial' ? timeOptionSets.trial : c === 'aeon' ? timeOptionSets.aeon : time      const saveDelivery = () => {
-        if (!dNum && !dRemark) return;
-        const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
-        updateScheduleField('deliveries', [...deliveries, { ...newData, id: Date.now() }]);
-        if (window.showAddToast) window.showAddToast();
-        setDCarrier('yamato'); setDDate(today); setDTimeSlot('指定なし'); setDRemark(''); setDNum('');
-      };     <div className="space-y-3">
-          <div className="bg-slate-50 rounded-xl p-3 space-y-2">
-            <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-            <select value={dCarrier} onChange={e => { const c = e.target.value; setDCarrier(c); setDTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark(''); }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
-              <option value="yamato">ヤマト運輸</option>
-              <option value="post">日本郵便</option>
-              <option value="sagawa">佐川急便</option>
-              <option value="amazon">Amazon</option>
-              <option value="yodobashi">ヨドバシ</option>
-              <option value="trial">トライアル</option>
-              <option value="aeon">イオン</option>
-            </select>
-            <select value={dTimeSlot} onChange={e => setDTimeSlot(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
-              {getTimeOpts(dCarrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-            <select value={dRemark} onChange={e => setDRemark(e.target.value)} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
-              <option value=""></option>
-              <option value="セカンドストリート">セカンドストリート</option>
-              <option value="GEO">GEO</option>
-              <option value="オフモール">オフモール</option>
-              <option value="じゃんぱら">じゃんぱら</option>
-              <option value="ノジマ">ノジマ</option>
-              <option value="トレジャーファクトリー">トレジャーファクトリー</option>
-              <option value="Ali Express">Ali Express</option>
-              <option value="ELECOM">ELECOM</option>
-              <option value="ヨドバシカメラ">ヨドバシカメラ</option>
-              <option value="食料品">食料品</option>
-              <option value="その他">その他</option>
-            </select>
-            <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value)} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-            <button onClick={saveDelivery} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
-              追加する
-            </button>
-          </div>
-        </div>
-      );
-    };
     const ScheduleSettingsModal = ({ scheduleData, updateScheduleField, onClose, onRequestDelivery }) => {
       const [tab, setTab] = useState('delivery');
       const [showDeliveryInSettings, setShowDeliveryInSettings] = useState(false);
@@ -1156,14 +1050,26 @@
             </div>
 
             {/* 荷物登録 */}
-            {tab === 'delivery' && <DeliverySettingsForm scheduleData={scheduleData} updateScheduleField={updateScheduleField} THEME={THEME} />}
+            {tab === 'delivery' && (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-400 font-bold px-1">荷物の配達情報を登録します</p>
+                <button
+                  onClick={() => { if (onRequestDelivery) { onRequestDelivery(); onClose(); } }}
+                  className="w-full py-3 rounded-2xl font-black text-sm text-white active:opacity-80 flex items-center justify-center gap-2"
+                  style={{backgroundColor: THEME}}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  荷物を登録する
+                </button>
+              </div>
+            )}
 
             {/* アニメ設定 */}
             {tab === 'anime' && (
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newAnimeTitle} onChange={e => setNewAnimeTitle(e.target.value)} placeholder="タイトル" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-                  <input type="date" value={newAnimeDate} onChange={e => setNewAnimeDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
+                  <input type="date" value={newAnimeDate} onChange={e => setNewAnimeDate(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
                   <div className="flex gap-2 items-center">
                     <label className="flex items-center gap-1 text-sm font-bold">
                       <input type="checkbox" checked={newAnimeWeekly} onChange={e => setNewAnimeWeekly(e.target.checked)} className="w-4 h-4" />毎週
@@ -1202,8 +1108,8 @@
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newBaseballTitle} onChange={e => setNewBaseballTitle(e.target.value)} placeholder="対戦相手" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-                  <input type="date" value={newBaseballDate} onChange={e => setNewBaseballDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-                  <input type="time" value={newBaseballTime} onChange={e => setNewBaseballTime(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
+                  <input type="date" value={newBaseballDate} onChange={e => setNewBaseballDate(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+                  <input type="time" value={newBaseballTime} onChange={e => setNewBaseballTime(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
                   <button onClick={saveBaseball} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
                     {editBaseball ? '更新する' : '追加する'}
                   </button>
@@ -1286,7 +1192,7 @@
     // ==========================================
     // 1. 資産タブ
     // ==========================================
-    const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout, subSection, lastEditedDate }) => {
+    const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout }) => {
       
       const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
       const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
@@ -1296,28 +1202,27 @@
       };
 
       const cashAccounts = [
-        { id: 'yo', label: '予', color: '#000000' },
-        { id: 'matsu', label: '松', color: '#4285f4' }, 
-        { id: 'shin', label: '新', color: '#fbbc04' },
-        { id: 'ka', label: 'か', color: '#ff6d01' }, 
-        { id: 'three', label: 'Ⅲ', color: '#f3f3f3', textColor: '#333333' },
-        { id: 'p', label: 'P', color: '#ea4335' },
-        { id: 'ic', label: 'IC', color: '#34a853' }, 
-        { id: 'gen', label: '現', color: '#999999' }
+        { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
+        { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] }, 
+        { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
+        { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] }, 
+        { id: 'three', label: 'Ⅲ', color: ACCOUNT_COLORS['Ⅲ'] },
+        { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
+        { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] }, 
+        { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
       ];
       
-      const ASSET_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
       const pointAccounts = [
-        { id: 't', label: 'T', color: ASSET_HEX['T'] },
-        { id: 'p', label: 'P', color: ASSET_HEX['P'] }, 
-        { id: 'nisa', label: 'N', color: ASSET_HEX['N'] }
+        { id: 't', label: 'T', color: ACCOUNT_COLORS['T'] },
+        { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] }, 
+        { id: 'nisa', label: 'N', color: ACCOUNT_COLORS['N'] }
       ];
       
       const borrowingAccounts = [
-        { id: 'p_ku', label: 'Pク', color: '#00b5ff' },
-        { id: 'ka', label: 'カ', color: '#fbbc04' },
-        { id: 'ac', label: 'AC', color: '#000000' },
-        { id: 'three', label: 'Ⅲ', color: '#f3f3f3', textColor: '#333333' }
+        { id: 'p_ku', label: 'Pク', color: 'bg-[#00b5ff]' },
+        { id: 'ka', label: 'カ', color: 'bg-[#fbbc04]' },
+        { id: 'ac', label: 'AC', color: 'bg-[#000000]' },
+        { id: 'three', label: 'Ⅲ', color: 'bg-[#f3f3f3]', textColor: 'text-gray-800' }
       ];
 
       const prevCurrentYM = getPrevYearMonth(currentYearMonth);
@@ -1359,113 +1264,120 @@
       const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
       const borrowingTotal = Object.values(borrowingAssets).reduce((sum, val) => sum + Number(val || 0), 0);
       const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
+
       return (
         <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
-          <div className="px-4 pt-5 space-y-4">
-            {subSection === 'point' && (
-              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-slate-500">ポイント・金融資産総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : ""}</span>
-                </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
-                  ¥{pointTotal.toLocaleString()}
-                </div>
-                <div className="space-y-2">
-                  {pointAccounts.map((acc) => (
-                    <div key={acc.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: '#ffffff'}}>
-                        {acc.label}
-                      </div>
-                      <div className="w-1/2 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
-                        <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]}
-                          onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
-                          placeholder="0"
-                          className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
-                          style={{WebkitAppearance:'none'}}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          
+          <div className="bg-white px-4 py-3 mb-2 shadow-sm border-b border-gray-200 sticky top-0 z-10 flex justify-center items-center">
+             <div className="font-bold text-gray-700 text-lg">{currentYearMonth}</div>
+          </div>
+          
+          <div className="flex flex-col space-y-4 pt-2 px-4">
+
+            {/* 現金口座セクション */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500 tracking-widest">現金口座</span>
+                <span className="text-base font-black" style={{color: cashTotal < 0 ? '#ea4335' : '#8cd2e6'}}>収支 {cashTotal.toLocaleString()}円</span>
               </div>
-            )}
-            {subSection === 'borrow' && (
-              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-slate-500">借入可能額総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : ""}</span>
-                </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
-                  ¥{borrowingTotal.toLocaleString()}
-                </div>
-                <div className="space-y-2">
-                  {borrowingAccounts.map((acc) => (
-                    <div key={acc.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.textColor || '#ffffff'}}>
-                        {acc.label}
-                      </div>
-                      <div className="w-1/2 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
-                        <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]}
-                          onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
-                          placeholder="0"
-                          className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
-                          style={{WebkitAppearance:'none'}}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {subSection === 'physical' && (
-              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-slate-500">物理資産総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : ""}</span>
-                </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
-                  ¥{physicalTotal.toLocaleString()}
-                </div>
-                <div className="space-y-2">
-                  {physicalAssets.map((item, idx) => (
-                    <div key={item.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white" style={{backgroundColor: '#009BE5'}}>
-                        {idx + 1}
-                      </div>
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => handlePhysicalChange(item.id, 'name', e.target.value)}
-                        placeholder="製品名"
-                        className="w-0 flex-1 h-9 rounded-xl px-3 text-sm font-bold focus:outline-none bg-slate-50 text-slate-800 placeholder-slate-300"
-                        style={{border: '1px solid #e2e8f0'}}
+              <div className="divide-y divide-gray-100">
+                {cashAccounts.map((acc) => (
+                  <div key={acc.id} className="flex items-center gap-3 px-4 py-3">
+                    <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
+                    <div className="w-[45%] shrink-0">
+                      <input 
+                        type="number" 
+                        inputMode="numeric" 
+                        value={cashAssets[acc.id] == 0 ? '' : cashAssets[acc.id]} 
+                        onChange={(e) => handleCashChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))} 
+                        placeholder="0"
+                        className="w-full h-12 border border-gray-200 rounded-xl px-3 text-right text-base font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
                       />
-                      <div className="w-0 flex-1 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
-                        <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={item.value == 0 ? '' : item.value}
-                          onChange={(e) => handlePhysicalChange(item.id, 'value', e.target.value.replace(/^0+(?=\d)/, ''))}
-                          placeholder="0"
-                          className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
-                          style={{WebkitAppearance:'none'}}
-                        />
-                      </div>
+                    </div>
+                    <div className="w-[45%] shrink-0">
+                      {acc.id !== 'yo' ? (
+                        <div className={`w-full h-12 border border-gray-200 rounded-xl px-3 text-right bg-gray-50 flex items-center justify-end text-base font-bold ${getBalance(acc.label, cashAssets[acc.id]) < 0 ? 'text-[#ea4335]' : 'text-gray-600'}`}>
+                          {getBalance(acc.label, cashAssets[acc.id]).toLocaleString()}
+                        </div>
+                      ) : <div className="w-full h-12"></div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ポイント・金融資産 & 借入可能額 - 同列配置 */}
+            <div className="flex gap-3">
+              {/* ポイント・金融資産セクション */}
+              <div className="flex-1 bg-white rounded-2xl shadow-sm overflow-hidden min-w-0">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <div className="text-[10px] font-bold text-gray-500 tracking-widest">ポイント・金融資産</div>
+                  <div className="text-xs font-bold mt-0.5" style={{color: '#8cd2e6'}}>{pointTotal.toLocaleString()}円分</div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {pointAccounts.map((acc) => (
+                    <div key={acc.id} className="flex items-center gap-2 px-3 py-2">
+                      <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
+                      <input 
+                        type="number" 
+                        inputMode="numeric" 
+                        value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]} 
+                        onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))} 
+                        placeholder="0"
+                        className="flex-1 min-w-0 h-9 border border-gray-200 rounded-lg px-2 text-right text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
+                      />
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+              {/* 借入可能額セクション */}
+              <div className="flex-1 bg-white rounded-2xl shadow-sm overflow-hidden min-w-0">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <div className="text-[10px] font-bold text-gray-500 tracking-widest">借入可能額</div>
+                  <div className="text-xs font-bold mt-0.5" style={{color: '#8cd2e6'}}>{borrowingTotal.toLocaleString()}円</div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {borrowingAccounts.map((acc) => (
+                    <div key={acc.id} className="flex items-center gap-2 px-3 py-2">
+                      <AccountIcon label={acc.label} bgColor={acc.color} textColor={acc.textColor} />
+                      <input 
+                        type="number" 
+                        inputMode="numeric" 
+                        value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]} 
+                        onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))} 
+                        placeholder="0"
+                        className="flex-1 min-w-0 h-9 border border-gray-200 rounded-lg px-2 text-right text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 物理資産セクション */}
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500 tracking-widest">物理資産</span>
+                <span className="text-base font-black" style={{color: '#8cd2e6'}}>合計 {physicalTotal.toLocaleString()}円相当</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {physicalAssets.map((item, idx) => (
+                  <div key={item.id} className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-xs font-bold text-gray-400 w-5 shrink-0 text-center">{idx + 1}</span>
+                    <input type="text" value={item.name} onChange={(e) => handlePhysicalChange(item.id, 'name', e.target.value)} className="flex-1 h-12 border border-gray-200 rounded-xl px-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50" placeholder="製品名" />
+                    <input 
+                      type="number" 
+                      inputMode="numeric" 
+                      value={item.value == 0 ? '' : item.value} 
+                      onChange={(e) => handlePhysicalChange(item.id, 'value', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                      placeholder="0"
+                      className="w-32 h-12 border border-gray-200 rounded-xl px-3 text-right text-sm font-bold focus:outline-none focus:ring-2 focus:ring-sky-300 bg-gray-50 shrink-0" 
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
             <div className="mt-4 mb-4"></div>
           </div>
         </div>
@@ -1475,7 +1387,7 @@
     // ==========================================
     // 2. 固定タブ
     // ==========================================
-    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth, handleAddData, expenses, handleDeleteExpense, todayDay, subSection }) => {
+    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth, handleAddData, expenses, handleDeleteExpense, todayDay }) => {
       // 支出入力フォームの状態
       const [expAmount, setExpAmount] = useState('');
       const [expCategory, setExpCategory] = useState('');
@@ -1491,21 +1403,20 @@
       const [editFixedAmount, setEditFixedAmount] = useState('');
       const [editFixedDate, setEditFixedDate] = useState('');
       const [editFixedAccount, setEditFixedAccount] = useState('');
-      const [editFixedTiming, setEditFixedTiming] = useState('');
-      const [editFixedAnnualMonth, setEditFixedAnnualMonth] = useState('');
 
       const expCategories = ['固定', '外食', '自炊', '交通'];
-      const expAccounts = ['松', '新', 'か', 'Ⅲ', 'P'];
+      const expAccounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', '現'];
       const expTimings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const expAnnualMonths = ['1','2','3','4','5','6','7','8','9','10','11','12'];
       const expDays = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
       const expIsDayDisabled = expTiming === '今日';
-      // 固定費入力は常にカテゴリ=固定・口座必須
-      const expIsSubmitEnabled = expAmount !== '' && expAccount !== '' && expTiming !== '' && (expTiming !== '毎年' || expAnnualMonth !== '') && (expIsDayDisabled || expDay !== '');
+      const expIsAccountRequired = !['外食', '自炊', '交通'].includes(expCategory);
+      const expIsSubmitEnabled = expAmount !== '' && expCategory !== '' && (!expIsAccountRequired || expAccount !== '') && expTiming !== '' && (expTiming !== '毎年' || expAnnualMonth !== '') && (expIsDayDisabled || expDay !== '');
 
       const onExpSubmit = () => {
         if (!expIsSubmitEnabled) return;
         let targetDay = expDay;
+        if (expCategory !== '固定') targetDay = expIsDayDisabled ? todayDay : expDay;
         let targetYearMonth = currentYearMonth;
         if (expTiming === '来月' || expTiming === '再来月') {
           const d = new Date(); d.setMonth(d.getMonth() + (expTiming === '来月' ? 1 : 2));
@@ -1515,8 +1426,14 @@
         } else if (!isNaN(expTiming)) {
           const d = new Date(); targetYearMonth = `${d.getFullYear()}年${expTiming}月`;
         }
-        handleAddData({ amount: Number(expAmount), category: '固定', itemName: expItemName, accountLabel: expAccount, timing: expTiming, day: targetDay, yearMonth: targetYearMonth });
-        setExpAmount(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth('');
+        if (expCategory !== '固定' && targetDay === '月末') {
+          const matchYM = targetYearMonth.match(/(\d+)年(\d+)月/);
+          if (matchYM) targetDay = new Date(parseInt(matchYM[1]), parseInt(matchYM[2]), 0).getDate();
+        } else if (expCategory !== '固定' && !expIsDayDisabled) {
+          targetDay = Number(targetDay);
+        }
+        handleAddData({ amount: Number(expAmount), category: expCategory, itemName: expItemName, accountLabel: expAccount, timing: expTiming, day: targetDay, yearMonth: targetYearMonth });
+        setExpAmount(''); setExpCategory(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth('');
       };
 
       const openEditFixed = (item) => {
@@ -1525,13 +1442,11 @@
         setEditFixedAmount(item.amount ? String(item.amount) : '');
         setEditFixedDate(item.date || '');
         setEditFixedAccount(item.accountLabel || '');
-        setEditFixedTiming(item.timing || '');
-        setEditFixedAnnualMonth(item.annualMonth || '');
       };
 
       const saveEditFixed = () => {
         if (!editFixedItem) return;
-        setFixedCosts(fixedCosts.map(c => c.id === editFixedItem.id ? { ...c, name: editFixedName, amount: Number(editFixedAmount) || c.amount, date: editFixedDate, accountLabel: editFixedAccount, color: ACCOUNT_COLORS[editFixedAccount] || c.color, timing: editFixedTiming || c.timing, annualMonth: editFixedAnnualMonth } : c));
+        setFixedCosts(fixedCosts.map(c => c.id === editFixedItem.id ? { ...c, name: editFixedName, amount: Number(editFixedAmount) || c.amount, date: editFixedDate, accountLabel: editFixedAccount, color: ACCOUNT_COLORS[editFixedAccount] || c.color } : c));
         setEditFixedItem(null);
       };
 
@@ -1616,99 +1531,15 @@
 
       return (
         <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
-          {subSection === 'fixed_input' ? (
-            <div className="px-4 pt-5 pb-10">
-              <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
-
-                {/* 金額 */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">金額</label>
-                  <div className="flex items-center gap-2 border border-gray-300 rounded-xl px-3 h-12 focus-within:ring-2 focus-within:ring-sky-400">
-                    <span className="text-base font-bold text-gray-500 shrink-0">¥</span>
-                    <input type="number" inputMode="numeric" value={expAmount == 0 ? '' : expAmount} onChange={e => setExpAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-full text-xl font-bold outline-none text-right bg-transparent" style={{WebkitAppearance:'none'}} />
-                  </div>
-                </div>
-
-                {/* 項目名（常時表示） */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">項目名</label>
-                  <input type="text" value={expItemName} onChange={e => setExpItemName(e.target.value)} placeholder="例: Netflix、家賃" className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
-                </div>
-
-                {/* 口座（プルダウン） */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">口座</label>
-                  <select value={expAccount} onChange={e => setExpAccount(e.target.value)} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                    <option value="">選択してください</option>
-                    {expAccounts.map(acc => (
-                      <option key={acc} value={acc}>{acc}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 頻度 */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">頻度・タイミング</label>
-                  <select value={expTiming} onChange={e => { setExpTiming(e.target.value); setExpDay(''); setExpAnnualMonth(''); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                    <option value="">選択してください</option>
-                    <optgroup label="今回のみ">
-                      <option value="今日">今日</option>
-                      <option value="今月">今月</option>
-                      <option value="来月">来月</option>
-                      <option value="再来月">再来月</option>
-                    </optgroup>
-                    <optgroup label="定期">
-                      <option value="毎月">毎月</option>
-                      <option value="偶数月">偶数月（2・4・6・8・10・12月）</option>
-                      <option value="奇数月">奇数月（1・3・5・7・9・11月）</option>
-                      <option value="毎年">毎年（特定月）</option>
-                    </optgroup>
-                    <optgroup label="特定月のみ">
-                      {['1','2','3','4','5','6','7','8','9','10','11','12'].map(m => (
-                        <option key={m} value={m}>{m}月のみ</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </div>
-
-                {/* 毎年の場合: 月選択 */}
-                {expTiming === '毎年' && (
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-1 block">対象月</label>
-                    <div className="grid grid-cols-6 gap-2">
-                      {expAnnualMonths.map(m => (
-                        <button key={m} onClick={() => setExpAnnualMonth(m)} className={`h-10 rounded-xl text-sm font-bold transition-colors ${expAnnualMonth === m ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expAnnualMonth === m ? {backgroundColor: THEME} : {}}>{m}月</button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 日付 */}
-                {!expIsDayDisabled && expTiming !== '' && (
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-1 block">日付</label>
-                    <select value={expDay} onChange={e => setExpDay(e.target.value)} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                      <option value="">日付を選択</option>
-                      {expDays.map(d => (
-                        <option key={d} value={d}>{d === '月末' ? '月末' : d + '日'}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <button onClick={onExpSubmit} disabled={!expIsSubmitEnabled} className={`w-full h-12 rounded-xl font-bold text-lg shadow-sm transition-all ${expIsSubmitEnabled ? 'text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`} style={expIsSubmitEnabled ? {backgroundColor: THEME} : {}}>登録</button>
-              </div>
-            </div>
-          ) : (
-          <>
+          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
+          
           <div className="px-4 mt-2">
-            
+            <div className="grid grid-cols-12 gap-1 mb-2 text-center text-sm font-bold text-gray-600 border-b border-gray-300 pb-1"><div className="col-span-2">口座</div><div className="col-span-4">項目</div><div className="col-span-2">日付</div><div className="col-span-3">金額</div><div className="col-span-1 text-xs flex items-center justify-center">支払</div></div>
             
             <div className="space-y-0">
               {allDisplayItems.map((item) => {
                 let displayDateStr = item.date;
-                if (item.date === '月末') displayDateStr = getEndOfMonthDate(item.targetYM).toString() + '日';
-                else if (!isNaN(Number(item.date))) displayDateStr = item.date + '日';
+                if (item.date === '月末') displayDateStr = getEndOfMonthDate(item.targetYM).toString();
 
                 if (item.isBudget) {
                   return (
@@ -1716,7 +1547,7 @@
                       <div className="col-span-2 flex justify-center"><AccountIcon label={item.accountLabel} bgColor={item.color} /></div>
                       <div className="col-span-4 w-full flex items-center px-1 text-sm bg-transparent overflow-hidden whitespace-nowrap text-gray-800 font-normal">{item.name}</div>
                       <div className="col-span-2"><div className="w-full flex items-center justify-center text-sm bg-transparent text-gray-800 font-normal">{displayDateStr}</div></div>
-                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.remaining.toLocaleString()}</div></div>
+                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.remaining.toLocaleString()}円</div></div>
                       <div className="col-span-1 flex justify-center text-gray-400 text-sm font-normal">-</div>
                     </div>
                   );
@@ -1731,8 +1562,8 @@
                           {item.isCarryOver ? <span className="text-[#ea4335] font-bold text-xs">前月</span> : displayDateStr}
                         </div>
                       </div>
-                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.remaining.toLocaleString()}</div></div>
-                      <div className="col-span-1 flex justify-center"><button onClick={() => toggleUtilityPaid(item.category, item.targetYM)} className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isPaid ? 'bg-[#009BE5]/20 active:bg-[#009BE5]/30' : 'bg-slate-100 active:bg-slate-200'}`}><svg className={`w-4 h-4 ${isPaid ? 'text-[#009BE5]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg></button></div>
+                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.remaining.toLocaleString()}円</div></div>
+                      <div className="col-span-1 flex justify-center"><input type="checkbox" checked={isPaid} onChange={() => toggleUtilityPaid(item.category, item.targetYM)} className="w-6 h-6 border-gray-400 rounded focus:ring-sky-400" style={{accentColor: THEME}} /></div>
                     </div>
                   );
                 } else {
@@ -1748,8 +1579,8 @@
                           {item.isCarryOver ? <span className="text-[#ea4335] font-bold text-xs">前月</span> : displayDateStr}
                         </div>
                       </div>
-                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">¥{item.amount.toLocaleString()}</div></div>
-                      <div className="col-span-1 flex justify-center"><button onClick={() => togglePaid(item.id, item.targetYM)} className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isPaid ? 'bg-[#009BE5]/20 active:bg-[#009BE5]/30' : 'bg-slate-100 active:bg-slate-200'}`}><svg className={`w-4 h-4 ${isPaid ? 'text-[#009BE5]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg></button></div>
+                      <div className="col-span-3"><div className="w-full flex items-center justify-end px-1 text-sm bg-transparent text-gray-800 font-normal">{item.amount.toLocaleString()}円</div></div>
+                      <div className="col-span-1 flex justify-center"><input type="checkbox" checked={isPaid} onChange={() => togglePaid(item.id, item.targetYM)} className="w-6 h-6 border-gray-400 rounded focus:ring-sky-400" style={{accentColor: THEME}} /></div>
                     </div>
                   );
                 }
@@ -1757,99 +1588,89 @@
             </div>
           </div>
 
+          {/* 支出入力フォーム */}
+          <div className="px-4 mt-4">
+            <button onClick={() => setShowExpForm(f => !f)} className="w-full py-3 rounded-xl font-black text-base text-white mb-3 shadow-sm active:opacity-80" style={{backgroundColor: THEME}}>
+              {showExpForm ? '▲ 入力を閉じる' : '▼ 支出を入力する'}
+            </button>
+            {showExpForm && (
+              <div className="bg-white rounded-2xl p-4 shadow-sm space-y-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <input type="number" inputMode="numeric" value={expAmount == 0 ? '' : expAmount} onChange={e => setExpAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="金額" className="flex-1 h-12 text-xl font-bold border border-gray-300 rounded-xl px-3 text-right focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                  <span className="text-lg font-bold text-gray-700 shrink-0">円</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {expCategories.map(cat => (
+                    <button key={cat} onClick={() => setExpCategory(cat)} className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${expCategory === cat ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expCategory === cat ? {backgroundColor: THEME} : {}}>{cat}</button>
+                  ))}
+                </div>
+                {expCategory === '固定' && (
+                  <input type="text" value={expItemName} onChange={e => setExpItemName(e.target.value)} placeholder="項目名" className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm focus:outline-none" />
+                )}
+                {expIsAccountRequired && (
+                  <div className="flex flex-wrap gap-2">
+                    {expAccounts.map(acc => (
+                      <button key={acc} onClick={() => setExpAccount(acc)} className={`w-11 h-11 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${expAccount === acc ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expAccount === acc ? {backgroundColor: THEME} : {}}>{acc}</button>
+                    ))}
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {expTimings.map(t => (
+                    <button key={t} onClick={() => setExpTiming(t)} className={`px-3 py-2 rounded-full text-sm font-bold transition-colors ${expTiming === t ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expTiming === t ? {backgroundColor: THEME} : {}}>{t}</button>
+                  ))}
+                </div>
+                {expTiming === '毎年' && (
+                  <div className="flex flex-wrap gap-2">
+                    {expAnnualMonths.map(m => (
+                      <button key={m} onClick={() => setExpAnnualMonth(m)} className={`w-11 h-11 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${expAnnualMonth === m ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expAnnualMonth === m ? {backgroundColor: THEME} : {}}>{m}月</button>
+                    ))}
+                  </div>
+                )}
+                {!expIsDayDisabled && expTiming !== '' && (
+                  <div className="flex flex-wrap gap-2">
+                    {expDays.map(d => (
+                      <button key={d} onClick={() => setExpDay(d)} className={`w-11 h-11 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${expDay === d ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expDay === d ? {backgroundColor: THEME} : {}}>{d}</button>
+                    ))}
+                  </div>
+                )}
+                <button onClick={onExpSubmit} disabled={!expIsSubmitEnabled} className={`w-full h-12 rounded-xl font-bold text-lg shadow-sm transition-all ${expIsSubmitEnabled ? 'text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`} style={expIsSubmitEnabled ? {backgroundColor: THEME} : {}}>登録</button>
+              </div>
+            )}
+          </div>
+
+          <div className="text-white px-5 py-2 mt-auto mb-4 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit" style={{backgroundColor: THEME}}>
+            <span className="font-bold text-sm">未払い合計</span><div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{totalAmount.toLocaleString()}円</div>
+          </div>
+
           {/* 固定費編集モーダル */}
           {editFixedItem && (
-            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={e => { if(e.target === e.currentTarget) setEditFixedItem(null); }}>
-              <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
-                <div className="flex justify-between items-center">
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
+              <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-3">
+                <div className="flex justify-between items-center mb-2">
                   <h3 className="font-black text-lg text-gray-800">固定費を編集</h3>
                   <button onClick={() => setEditFixedItem(null)} className="text-gray-400 text-2xl leading-none">×</button>
                 </div>
-
-                {/* 金額 */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">金額</label>
-                  <div className="flex items-center gap-2 border border-gray-300 rounded-xl px-3 h-12 focus-within:ring-2 focus-within:ring-sky-400">
-                    <span className="text-base font-bold text-gray-500 shrink-0">¥</span>
-                    <input type="number" inputMode="numeric" value={editFixedAmount} onChange={e => setEditFixedAmount(e.target.value.replace(/^0+(?=\d)/, ''))} placeholder="0" className="flex-1 h-full text-xl font-bold outline-none text-right bg-transparent" style={{WebkitAppearance:'none'}} />
-                  </div>
+                <input type="text" value={editFixedName} onChange={e => setEditFixedName(e.target.value)} placeholder="項目名" className="w-full h-12 border border-gray-300 rounded-xl px-3 text-sm focus:outline-none" />
+                <div className="flex items-center gap-2">
+                  <input type="number" inputMode="numeric" value={editFixedAmount} onChange={e => setEditFixedAmount(e.target.value)} placeholder="金額" className="flex-1 h-12 border border-gray-300 rounded-xl px-3 text-right text-lg font-bold focus:outline-none" />
+                  <span className="font-bold text-gray-700">円</span>
                 </div>
-
-                {/* 項目名 */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">項目名</label>
-                  <input type="text" value={editFixedName} onChange={e => setEditFixedName(e.target.value)} placeholder="例: Netflix、家賃" className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <div className="flex flex-wrap gap-2">
+                  {['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','月末'].map(d => (
+                    <button key={d} onClick={() => setEditFixedDate(d)} className={`w-10 h-10 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${editFixedDate === d ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={editFixedDate === d ? {backgroundColor: THEME} : {}}>{d}</button>
+                  ))}
                 </div>
-
-                {/* 口座（プルダウン） */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">口座</label>
-                  <select value={editFixedAccount} onChange={e => setEditFixedAccount(e.target.value)} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                    <option value="">選択してください</option>
-                    {expAccounts.map(acc => (
-                      <option key={acc} value={acc}>{acc}</option>
-                    ))}
-                  </select>
+                <div className="flex flex-wrap gap-2">
+                  {['予','松','新','か','Ⅲ','P','IC','現'].map(acc => (
+                    <button key={acc} onClick={() => setEditFixedAccount(acc)} className={`w-11 h-11 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${editFixedAccount === acc ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={editFixedAccount === acc ? {backgroundColor: THEME} : {}}>{acc}</button>
+                  ))}
                 </div>
-
-                {/* 頻度・タイミング */}
-                <div>
-                  <label className="text-xs font-bold text-gray-500 mb-1 block">頻度・タイミング</label>
-                  <select value={editFixedTiming} onChange={e => { setEditFixedTiming(e.target.value); setEditFixedDate(''); setEditFixedAnnualMonth(''); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                    <option value="">選択してください</option>
-                    <optgroup label="今回のみ">
-                      <option value="今日">今日</option>
-                      <option value="今月">今月</option>
-                      <option value="来月">来月</option>
-                      <option value="再来月">再来月</option>
-                    </optgroup>
-                    <optgroup label="定期">
-                      <option value="毎月">毎月</option>
-                      <option value="偶数月">偶数月（2・4・6・8・10・12月）</option>
-                      <option value="奇数月">奇数月（1・3・5・7・9・11月）</option>
-                      <option value="毎年">毎年（特定月）</option>
-                    </optgroup>
-                    <optgroup label="特定月のみ">
-                      {['1','2','3','4','5','6','7','8','9','10','11','12'].map(m => (
-                        <option key={m} value={m}>{m}月のみ</option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </div>
-
-                {/* 毎年の場合: 月選択 */}
-                {editFixedTiming === '毎年' && (
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-1 block">対象月</label>
-                    <div className="grid grid-cols-6 gap-2">
-                      {expAnnualMonths.map(m => (
-                        <button key={m} onClick={() => setEditFixedAnnualMonth(m)} className={`h-10 rounded-xl text-sm font-bold transition-colors ${editFixedAnnualMonth === m ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={editFixedAnnualMonth === m ? {backgroundColor: THEME} : {}}>{m}月</button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 日付 */}
-                {editFixedTiming !== '' && editFixedTiming !== '今日' && (
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 mb-1 block">日付</label>
-                    <select value={editFixedDate} onChange={e => setEditFixedDate(e.target.value)} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                      <option value="">日付を選択</option>
-                      {expDays.map(d => (
-                        <option key={d} value={d}>{d === '月末' ? '月末' : d + '日'}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-2">
                   <button onClick={() => { if(window.confirm('固定費「' + editFixedItem.name + '」を削除しますか？')) { handleDeleteFixed(editFixedItem.id); setEditFixedItem(null); }}} className="flex-1 h-12 rounded-xl font-bold text-white bg-[#ea4335] active:opacity-80">削除</button>
                   <button onClick={saveEditFixed} className="flex-1 h-12 rounded-xl font-bold text-white active:opacity-80" style={{backgroundColor: THEME}}>保存</button>
                 </div>
               </div>
             </div>
-          )}
-          </>
           )}
         </div>
       );
@@ -1858,8 +1679,7 @@
     // ==========================================
     // 3. 変動タブ
     // ==========================================
-    const VariableTab = (props) => {
-      const { expenses, displayYearMonth, todayDay, safeBudgets, currentElectricBudget, currentGasBudget, handleBudgetChange, handleUtilityBudgetChange, monthlySpents, prevMonth, nextMonth } = props;
+    const VariableTab = ({ expenses, displayYearMonth, todayDay, safeBudgets, currentElectricBudget, currentGasBudget, handleBudgetChange, handleUtilityBudgetChange, monthlySpents, prevMonth, nextMonth }) => {
       
       const getCalendarCells = (ymStr) => {
         const match = ymStr.match(/(\d+)年(\d+)月/);
@@ -1887,34 +1707,13 @@
 
       // タップした日の詳細表示
       const [selectedDay, setSelectedDay] = React.useState(null);
-      const [editingExpense, setEditingExpense] = React.useState(null);
       const selectedDayExpenses = selectedDay
         ? expenses.filter(e => e.yearMonth === displayYearMonth && e.day === selectedDay && ['外食','自炊','交通'].includes(e.category))
         : [];
 
-      const handleEditExpense = (expense) => {
-        setEditingExpense({ ...expense });
-      };
-
-      const saveEditedExpense = () => {
-        if (!editingExpense) return;
-        if (editingExpense.day < 1 || editingExpense.day > 31) {
-          alert('有効な日付を入力してください');
-          return;
-        }
-        const newExpenses = expenses.map(e => e.id === editingExpense.id ? editingExpense : e);
-        props.setExpenses(newExpenses);
-        setEditingExpense(null);
-      };
-
-      const deleteEditedExpense = (id) => {
-        if (!window.confirm('この支出を削除しますか？')) return;
-        props.handleDeleteExpense(id);
-        setEditingExpense(null);
-      };
-
       return (
         <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
+          <MonthSelector displayYearMonth={displayYearMonth} prevMonth={prevMonth} nextMonth={nextMonth} />
           
           <div className="px-2 mt-2">
             {/* カレンダー */}
@@ -1957,13 +1756,10 @@
                 ) : (
                   <div className="space-y-1">
                     {selectedDayExpenses.map(e => (
-                      <div key={e.id} onClick={() => handleEditExpense(e)} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 active:bg-gray-50 cursor-pointer">
+                      <div key={e.id} className="flex justify-between items-center py-1 border-b border-gray-100 last:border-0">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${e.category === '外食' ? 'bg-[#57c7e5]/20 text-[#57c7e5]' : e.category === '自炊' ? 'bg-[#fbbc04]/20 text-[#fbbc04]' : 'bg-[#34a853]/20 text-[#34a853]'}`}>{e.category}</span>
                         {e.itemName && <span className="flex-1 text-xs text-gray-600 mx-2 truncate">{e.itemName}</span>}
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-800">{e.amount.toLocaleString()}円</span>
-                          <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
+                        <span className="text-sm font-bold text-gray-800">{e.amount.toLocaleString()}円</span>
                       </div>
                     ))}
                     <div className="flex justify-end pt-1">
@@ -1974,62 +1770,11 @@
               </div>
             )}
 
-            {/* 編集モーダル */}
-            {editingExpense && (
-              <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center px-6" onClick={() => setEditingExpense(null)}>
-                <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl" onClick={e => e.stopPropagation()}>
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-black text-slate-800">支出を編集</h3>
-                    <button onClick={() => setEditingExpense(null)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-2xl px-4 h-14 focus-within:ring-2 focus-within:ring-sky-300">
-                        <span className="text-xl font-bold text-gray-500 shrink-0">¥</span>
-                        <input type="number" inputMode="numeric" value={editingExpense.amount} onChange={e => setEditingExpense({...editingExpense, amount: Number(e.target.value.replace(/^0+(?=\d)/, ''))})} className="w-0 flex-1 min-w-0 h-full text-2xl font-bold outline-none text-right bg-transparent" />
-                      </div>
-                      <div className="w-20 flex flex-col items-center border border-gray-300 rounded-2xl h-14 justify-center bg-gray-50">
-                        <span className="text-[10px] font-bold text-gray-400">日付</span>
-                        <input 
-                          type="number" 
-                          inputMode="numeric" 
-                          value={editingExpense.day === 0 ? '' : editingExpense.day} 
-                          onChange={e => {
-                            const val = e.target.value.replace(/^0+(?=\d)/, '');
-                            if (val === '') {
-                              setEditingExpense({...editingExpense, day: 0});
-                            } else {
-                              const num = Math.min(31, Math.max(1, Number(val)));
-                              setEditingExpense({...editingExpense, day: num});
-                            }
-                          }} 
-                          className="w-full text-center text-lg font-black outline-none bg-transparent" 
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {['外食', '自炊', '交通'].map(cat => (
-                        <button key={cat} onClick={() => setEditingExpense({...editingExpense, category: cat})} className={`flex-1 py-2 rounded-xl text-sm font-bold ${editingExpense.category === cat ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={editingExpense.category === cat ? {backgroundColor: THEME} : {}}>{cat}</button>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <button onClick={() => deleteEditedExpense(editingExpense.id)} className="flex-1 h-12 rounded-xl font-bold text-white bg-red-500 active:opacity-80">削除</button>
-                      <button onClick={saveEditedExpense} className="flex-[2] h-12 rounded-xl font-bold text-white active:opacity-80" style={{backgroundColor: THEME}}>保存</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 予算ブロック（2列グリッド） */}
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <IntegratedBudgetBlock title="食費" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" iconColorHex="#fbbc04" handleBudgetChange={handleBudgetChange} />
-              <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" iconColorHex="#34a853" handleBudgetChange={handleBudgetChange} />
-              <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
-              <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
-            </div>
+            {/* 予算ブロック */}
+            <IntegratedBudgetBlock title="食費（外食＋自炊）" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" handleBudgetChange={handleBudgetChange} />
+            <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" handleBudgetChange={handleBudgetChange} />
+            <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" handleBudgetChange={handleUtilityBudgetChange} />
+            <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" handleBudgetChange={handleUtilityBudgetChange} />
           </div>
         </div>
       );
@@ -2042,7 +1787,7 @@
       
       const handleUpdate = (id, field, value) => {
         const d = new Date();
-        const dateStr = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}時点`;
+        const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
         
         setLoans(loans.map(loan => {
           if (loan.id === id) {
@@ -2071,94 +1816,93 @@
 
       return (
          <div className="flex flex-col h-full pb-48 w-full bg-gray-50 min-h-full">
-            <div className="px-4 pt-6 flex-1">
-               <div className="bg-white rounded-2xl p-4 shadow-sm" style={{border: '3px solid #ff4d4d'}}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-bold text-slate-600">ローン残債総合計</span>
-                    <span className="text-xs font-bold text-slate-400"></span>
-                  </div>
-                  <div className="text-3xl font-black mb-4" style={{color: '#ff4d4d'}}>¥{loansTotal.toLocaleString()}</div>
+            <div className="px-2 pt-6 flex-1 overflow-x-auto">
+               <div className="min-w-[440px]">
                   
-                  <div className="space-y-4">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 mb-2 border-b border-gray-300 pb-1">
+                    <div className="w-[40px] text-center">借入</div>
+                    <div className="w-[44px] text-center">更新</div>
+                    <div className="w-[74px] text-center">残債</div>
+                    <div className="w-[66px] text-center">済 / 計</div>
+                    <div className="w-[70px] text-center">月々</div>
+                    <div className="flex-1 text-center">備考</div>
+                  </div>
+                  
+                  <div className="space-y-3">
                      {loans.map(loan => {
                         return (
-                           <div key={loan.id} className="border-b border-gray-100 pb-4">
-                              {/* 1行目: アイコン + 残債 + 済/総 + 月々 (横幅統一) */}
-                              <div className="flex items-center gap-2 mb-2">
-                                 <div className={`w-9 h-9 flex items-center justify-center font-bold text-white rounded-full text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
+                           <div key={loan.id} className="flex items-center gap-1.5 border-b border-gray-200 pb-2">
+                              <div className="w-[40px] flex justify-center">
+                                 <div className={`w-10 h-10 flex items-center justify-center font-bold text-white rounded-sm text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
                                     {loan.lender}
                                  </div>
-                                 {/* 残債入力 */}
-                                 <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2 h-9 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
-                                    <span className="text-[10px] text-gray-400 mr-0.5 shrink-0">¥</span>
-                                    <input 
-                                       type="number" 
-                                       inputMode="numeric" 
-                                       value={loan.remaining == 0 ? '' : loan.remaining} 
-                                       onChange={e => handleUpdate(loan.id, 'remaining', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                       className="w-full text-right text-xs font-bold outline-none bg-transparent text-gray-800" 
-                                       placeholder="残債"
-                                       style={{WebkitAppearance:'none'}}
-                                    />
-                                 </div>
-                                 {/* 済/総回 */}
-                                 <div className="flex-1 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl px-2 h-9 gap-1">
-                                    <input 
-                                       type="number" 
-                                       inputMode="numeric" 
-                                       value={loan.done == 0 ? '' : loan.done} 
-                                       onChange={e => handleUpdate(loan.id, 'done', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                       className="w-full text-center text-xs font-bold outline-none bg-transparent" 
-                                       placeholder="-"
-                                       style={{WebkitAppearance:'none'}}
-                                    />
-                                    <span className="text-[10px] text-gray-400 font-bold shrink-0">/</span>
-                                    <input 
-                                       type="number" 
-                                       inputMode="numeric" 
-                                       value={loan.total == 0 ? '' : loan.total} 
-                                       onChange={e => handleUpdate(loan.id, 'total', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                       className="w-full text-center text-xs font-bold outline-none bg-transparent" 
-                                       placeholder="-"
-                                       style={{WebkitAppearance:'none'}}
-                                    />
-                                    <span className="text-[9px] text-gray-400 shrink-0">回</span>
-                                 </div>
-                                 {/* 月々 */}
-                                 <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-2 h-9">
-                                    <span className="text-[10px] text-gray-400 mr-0.5 shrink-0">¥</span>
-                                    <input 
-                                       type="number" 
-                                       inputMode="numeric" 
-                                       value={loan.monthly == 0 ? '' : loan.monthly} 
-                                       onChange={e => handleUpdate(loan.id, 'monthly', e.target.value.replace(/^0+(?=\d)/, ''))} 
-                                       className="w-full text-right text-xs font-bold outline-none bg-transparent" 
-                                       placeholder="月々"
-                                       style={{WebkitAppearance:'none'}}
-                                    />
-                                 </div>
                               </div>
-                              {/* 2行目: メモ (アイコン分の左マージンを除いた幅) */}
-                              <div className="pl-11">
+                              <div className="w-[44px] text-[10px] text-center text-gray-500 font-bold">{loan.updated}</div>
+                              
+                              <div className="w-[74px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                                 <input 
+                                    type="number" 
+                                    inputMode="numeric" 
+                                    value={loan.remaining == 0 ? '' : loan.remaining} 
+                                    onChange={e => handleUpdate(loan.id, 'remaining', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                    className="w-full text-right text-[11px] font-bold outline-none bg-transparent text-gray-700" 
+                                    placeholder=""
+                                 />
+                                 <span className="text-[9px] text-gray-500 ml-0.5">円</span>
+                              </div>
+                              
+                              <div className="w-[66px] flex items-center justify-between bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                                 <input 
+                                    type="number" 
+                                    inputMode="numeric" 
+                                    value={loan.done == 0 ? '' : loan.done} 
+                                    onChange={e => handleUpdate(loan.id, 'done', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                    className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" 
+                                    placeholder=""
+                                 />
+                                 <span className="text-[10px] text-gray-400 font-bold">/</span>
+                                 <input 
+                                    type="number" 
+                                    inputMode="numeric" 
+                                    value={loan.total == 0 ? '' : loan.total} 
+                                    onChange={e => handleUpdate(loan.id, 'total', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                    className="w-5 text-center text-[11px] font-bold outline-none bg-transparent" 
+                                    placeholder=""
+                                 />
+                              </div>
+                              
+                              <div className="w-[70px] flex items-center bg-white border border-gray-300 rounded-md px-1.5 py-1.5 focus-within:border-sky-400 focus-within:ring-1 focus-within:ring-sky-400">
+                                 <input 
+                                    type="number" 
+                                    inputMode="numeric" 
+                                    value={loan.monthly == 0 ? '' : loan.monthly} 
+                                    onChange={e => handleUpdate(loan.id, 'monthly', e.target.value.replace(/^0+(?=\d)/, ''))} 
+                                    className="w-full text-right text-[11px] font-bold outline-none bg-transparent" 
+                                    placeholder=""
+                                 />
+                                 <span className="text-[9px] text-gray-500 ml-0.5">円</span>
+                              </div>
+                              
+                              <div className="flex-1 h-[30px]">
                                  <input 
                                     type="text" 
                                     value={loan.memo} 
                                     onChange={e => handleUpdate(loan.id, 'memo', e.target.value)} 
-                                    className="w-full text-xs bg-gray-50 border border-gray-200 rounded-xl px-3 h-9 outline-none text-left focus:border-sky-400 focus:ring-1 focus:ring-sky-400" 
-                                    placeholder="メモ"
+                                    className="w-full h-full text-[11px] bg-white border border-gray-300 rounded-md px-2 outline-none text-left focus:border-sky-400 focus:ring-1 focus:ring-sky-400" 
+                                    placeholder=""
                                  />
-                                 {loan.updated && loan.updated !== '-' && (
-                                    <div className="text-[9px] text-gray-400 text-right mt-1 pr-1">
-                                       {loan.updated.includes('時点') ? loan.updated : '2026/04/27時点'}
-                                    </div>
-                                 )}
                               </div>
                            </div>
                         )
                      })}
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-3">※このタブの数値はアプリ内の他計算には影響しません。</div>
                </div>
+               <div className="text-[10px] text-gray-400 mt-4 ml-1">※このタブの数値はアプリ内の他計算には影響しません。</div>
+            </div>
+            
+            <div className="text-white px-5 py-2 mt-auto mb-4 flex items-center space-x-4 shrink-0 rounded-xl mr-4 shadow-md self-end w-fit" style={{backgroundColor: THEME}}>
+              <span className="font-bold text-sm">残債合計</span>
+              <div className="w-auto bg-transparent flex items-center justify-end px-2 font-bold text-lg">{loansTotal.toLocaleString()}円</div>
             </div>
          </div>
       )
@@ -2167,7 +1911,7 @@
     // ==========================================
     // 4. 累計タブ
     // ==========================================
-    const TotalTab = ({ expenses, utilityBudgets, safeBudgets }) => {
+    const TotalTab = ({ expenses }) => {
       const monthlyDataMap = {};
       expenses.forEach(e => {
         if (!monthlyDataMap[e.yearMonth]) {
@@ -2175,20 +1919,12 @@
         }
         if (e.category === '外食') monthlyDataMap[e.yearMonth].food.out += e.amount;
         if (e.category === '自炊') monthlyDataMap[e.yearMonth].food.cook += e.amount;
-        // 電気・ガスは予算を表示するため、expensesからの集計は行わない（必要ならコメントアウト解除）
-        // if (e.category === '電気') monthlyDataMap[e.yearMonth].utility.electric += e.amount;
-        // if (e.category === 'ガス') monthlyDataMap[e.yearMonth].utility.gas += e.amount;
+        if (e.category === '電気') monthlyDataMap[e.yearMonth].utility.electric += e.amount;
+        if (e.category === 'ガス') monthlyDataMap[e.yearMonth].utility.gas += e.amount;
         if (e.category === '交通') monthlyDataMap[e.yearMonth].transport += e.amount;
       });
 
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
-
-      // 予算データを反映
-      sortedMonths.forEach(data => {
-        const budgets = utilityBudgets[data.month] || safeBudgets;
-        data.utility.electric = budgets.electric.amount;
-        data.utility.gas = budgets.gas.amount;
-      });
 
       return (
         <div className="flex flex-col pt-4 pb-48 px-4 space-y-4 w-full bg-gray-100 min-h-full">
@@ -2198,45 +1934,28 @@
             const utilityTotal = data.utility.electric + data.utility.gas;
             const total = foodTotal + utilityTotal + data.transport;
             return (
-              <div key={index} className="bg-white rounded-3xl shadow-sm p-5" style={{border: '2px solid #ff4d4d'}}>
-                {/* ヘッダー: 年月 + 合計 */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-base font-black" style={{color: '#ff4d4d'}}>{data.month}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-gray-400">変動費合計</div>
-                    <div className="text-xl font-black" style={{color: '#ff4d4d'}}>¥{total.toLocaleString()}</div>
-                  </div>
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <div className="flex justify-between items-end border-b border-gray-100 pb-2 mb-3">
+                  <h2 className="text-lg font-bold" style={{color: THEME_DARK}}>{data.month}</h2>
+                  <div className="text-sm text-gray-500">変動費合計 <span className="text-lg font-bold text-gray-800 ml-1">{total.toLocaleString()}円</span></div>
                 </div>
-                {/* 明細 */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#fbbc04'}}>食</div>
-                      <span className="text-sm font-bold text-gray-700">食費</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-gray-800">¥{foodTotal.toLocaleString()}</div>
-                      <div className="text-[10px] text-gray-400">外食 {data.food.out.toLocaleString()} / 自炊 {data.food.cook.toLocaleString()}</div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#fbbc04] mr-2"></span>食費</span><span className="text-sm font-bold">{foodTotal.toLocaleString()}円</span></div>
+                    <div className="flex text-xs text-gray-500 pl-4">
+                      <span className="w-28">外食: {data.food.out.toLocaleString()}円</span>
+                      <span>自炊: {data.food.cook.toLocaleString()}円</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#4285f4'}}>光</div>
-                      <span className="text-sm font-bold text-gray-700">光熱費</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-gray-800">¥{utilityTotal.toLocaleString()}</div>
-                      <div className="text-[10px] text-gray-400">電気 {data.utility.electric.toLocaleString()} / ガス {data.utility.gas.toLocaleString()}</div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#4285f4] mr-2"></span>光熱費</span><span className="text-sm font-bold">{utilityTotal.toLocaleString()}円</span></div>
+                    <div className="flex text-xs text-gray-500 pl-4">
+                      <span className="w-28">電気: {data.utility.electric.toLocaleString()}円</span>
+                      <span>ガス: {data.utility.gas.toLocaleString()}円</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#34a853'}}>交</div>
-                      <span className="text-sm font-bold text-gray-700">交通費</span>
-                    </div>
-                    <div className="text-sm font-bold text-gray-800">¥{data.transport.toLocaleString()}</div>
+                  <div>
+                    <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-700 flex items-center"><span className="w-2 h-2 rounded-full bg-[#34a853] mr-2"></span>交通費</span><span className="text-sm font-bold">{data.transport.toLocaleString()}円</span></div>
                   </div>
                 </div>
               </div>
@@ -2259,7 +1978,7 @@
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通'];
-      const accounts = ['松', '新', 'か', 'Ⅲ', 'P', 'IC'];
+      const accounts = ['予', '松', '新', 'か', 'Ⅲ', 'P', 'IC', '現'];
       
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const annualMonths = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -2309,17 +2028,17 @@
       return (
         <div className="flex flex-col w-full min-h-full pb-48" style={{backgroundColor: '#f2f2f2'}}>
           <div className="px-4 py-4 shrink-0 w-full box-border mt-2">
-            <div className="flex items-center space-x-2 border border-gray-400 rounded-md px-3 h-12 focus-within:ring-2" style={{'--tw-ring-color': THEME}}>
-               <span className="text-xl font-bold text-gray-500 shrink-0">¥</span>
+            <div className="flex items-center space-x-2 w-full">
                <input 
                  type="number" 
                  inputMode="numeric" 
                  value={amount == 0 ? '' : amount} 
                  onChange={(e) => setAmount(e.target.value.replace(/^0+(?=\d)/, ''))} 
                  placeholder="0" 
-                 className="flex-1 min-w-0 h-full text-2xl font-bold outline-none text-right bg-transparent" 
-                 style={{WebkitAppearance:'none'}}
+                 className="flex-1 min-w-0 h-12 text-2xl font-bold border border-gray-400 rounded-md px-3 text-right focus:outline-none focus:ring-2" 
+                 style={{'--tw-ring-color': THEME}}
                />
+               <span className="text-xl font-bold text-gray-700 shrink-0">円</span>
             </div>
             {category === '固定' && (
               <div className="mt-4 w-full"><h2 className="text-sm font-bold text-gray-700 mb-1">項目名（家賃など）</h2><input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="項目名を入力" className="w-full h-10 border border-gray-400 rounded-md px-3 focus:outline-none focus:ring-2 box-border" style={{'--tw-ring-color': THEME}} /></div>
@@ -2391,28 +2110,9 @@
       const [showQuickExpense, setShowQuickExpense] = React.useState(false);
       const [showKakeiboPage, setShowKakeiboPage] = React.useState(false);
       const [kakeiboSubPage, setKakeiboSubPage] = React.useState(null);
-      const walletScrollRef = useRef(null);
-      const walletScrollPos = useRef(0);
-      const goToWalletSubPage = (page) => {
-        if (walletScrollRef.current) walletScrollPos.current = walletScrollRef.current.scrollTop;
-        setKakeiboSubPage(page);
-      };
-      const goBackFromWalletSubPage = () => {
-        setKakeiboSubPage(null);
-        setTimeout(() => {
-          if (walletScrollRef.current) walletScrollRef.current.scrollTop = walletScrollPos.current;
-        }, 0);
-      };
       const [showDeliveryModalGlobal, setShowDeliveryModalGlobal] = React.useState(false);
       const [scheduleDatePrev, setScheduleDatePrev] = React.useState(0);
       const [scheduleDateNext, setScheduleDateNext] = React.useState(0);
-
-      const [displayDate, setDisplayDate] = useState(() => {
-        const now = new Date();
-        if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
-        now.setHours(0,0,0,0);
-        return now;
-      });
 
       useEffect(() => {
         const container = scrollContainerRef.current;
@@ -2431,6 +2131,8 @@
       const d = new Date();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
+
+      const [displayDate, setDisplayDate] = useState(new Date());
       const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
 
       const prevMonth = () => {
@@ -2454,7 +2156,6 @@
          );
       }
 
-      const lastEditedDate = data?.lastEditedDate || '';
       const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 
@@ -2596,16 +2297,15 @@
       // ============================================================
 
       // 現金総収支の計算（AssetTabと同じロジック）
-      const ACC_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
       const cashAccountsForHome = [
-        { id: 'yo', label: '予', color: ACC_HEX['予'] },
-        { id: 'matsu', label: '松', color: ACC_HEX['松'] },
-        { id: 'shin', label: '新', color: ACC_HEX['新'] },
-        { id: 'ka', label: 'か', color: ACC_HEX['か'] },
-        { id: 'three', label: 'Ⅲ', color: ACC_HEX['Ⅲ'] },
-        { id: 'p', label: 'P', color: ACC_HEX['P'] },
-        { id: 'ic', label: 'IC', color: ACC_HEX['IC'] },
-        { id: 'gen', label: '現', color: ACC_HEX['現'] }
+        { id: 'yo', label: '予', color: ACCOUNT_COLORS['予'] },
+        { id: 'matsu', label: '松', color: ACCOUNT_COLORS['松'] },
+        { id: 'shin', label: '新', color: ACCOUNT_COLORS['新'] },
+        { id: 'ka', label: 'か', color: ACCOUNT_COLORS['か'] },
+        { id: 'three', label: 'Ⅲ', color: ACCOUNT_COLORS['Ⅲ'] },
+        { id: 'p', label: 'P', color: ACCOUNT_COLORS['P'] },
+        { id: 'ic', label: 'IC', color: ACCOUNT_COLORS['IC'] },
+        { id: 'gen', label: '現', color: ACCOUNT_COLORS['現'] }
       ];
 
       const prevCurrentYMForHome = getPrevYearMonth(currentYearMonth);
@@ -2638,7 +2338,7 @@
         return val - unpaidFixed - remainingBudgetForAcc;
       };
 
-      const cashTotalForHome = cashAccountsForHome.reduce((sum, acc) => sum + Number(cashAssets[acc.id] || 0), 0);
+      const cashTotalForHome = cashAccountsForHome.reduce((sum, acc) => sum + getBalanceForHome(acc.label, cashAssets[acc.id]), 0);
       const pointTotalForHome = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
       const borrowingTotalForHome = Object.values(borrowingAssets).reduce((sum, val) => sum + Number(val || 0), 0);
       const physicalTotalForHome = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
@@ -2668,47 +2368,31 @@
         // サブページ表示中
         if (kakeiboSubPage) {
           return (
-            <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
-              {(kakeiboSubPage === 'fixed_all' || kakeiboSubPage === 'variable') ? (
-                <div className="bg-white px-4 pt-20 pb-3 border-b border-gray-100 sticky top-0 z-10 shrink-0">
-                  <div className="flex items-center gap-2">
-                    <button onClick={goBackFromWalletSubPage} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <span className="text-lg font-black text-slate-800 flex-1">
-                      {kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' : '変動費'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center gap-3 mt-2 px-1">
-                    <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
-                    <span key={displayYearMonth} className="text-base font-black text-slate-700 animate-pop">{displayYearMonth}</span>
-                    <button onClick={nextMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＞</button>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
-                  <button onClick={goBackFromWalletSubPage} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                  </button>
-                  <span className="text-lg font-black text-slate-800">{
-                    kakeiboSubPage === 'point' ? 'ポイント・金融資産' :
-                    kakeiboSubPage === 'borrow' ? '借入可能額' :
-                    kakeiboSubPage === 'physical' ? '物理資産' :
-                    kakeiboSubPage === 'fixed_input' ? '固定費を入力' :
-                    kakeiboSubPage === 'loan' ? 'ローン残債' :
-                    kakeiboSubPage === 'total' ? '月ごとの収支' : ''
-                  }</span>
-                </div>
-              )}
+            <div className="flex flex-col h-screen w-full bg-gray-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+              <div className="bg-white px-4 pt-14 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
+                <button onClick={() => setKakeiboSubPage(null)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <span className="text-lg font-black text-slate-800">{
+                  kakeiboSubPage === 'point' ? 'ポイント・金融資産' :
+                  kakeiboSubPage === 'borrow' ? '借入可能額' :
+                  kakeiboSubPage === 'physical' ? '物理資産' :
+                  kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' :
+                  kakeiboSubPage === 'fixed_input' ? '固定費を入力' :
+                  kakeiboSubPage === 'variable' ? '変動費を入力' :
+                  kakeiboSubPage === 'loan' ? 'ローンを入力' :
+                  kakeiboSubPage === 'total' ? '月ごとの収支' : ''
+                }</span>
+              </div>
               <div className="flex-1 overflow-y-auto">
-                {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" lastEditedDate={lastEditedDate} />}
-                {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" lastEditedDate={lastEditedDate} />}
-                {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" lastEditedDate={lastEditedDate} />}
-                {kakeiboSubPage === 'fixed_all' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_all" />}
-                {kakeiboSubPage === 'fixed_input' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_input" />}
-                {kakeiboSubPage === 'variable' && <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />}
+                {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" />}
+                {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" />}
+                {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" />}
+                {kakeiboSubPage === 'fixed_all' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} />}
+                {kakeiboSubPage === 'fixed_input' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} />}
+                {kakeiboSubPage === 'variable' && <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />}
                 {kakeiboSubPage === 'loan' && <LoanTab loans={loans} setLoans={setLoans} />}
-                {kakeiboSubPage === 'total' && <TotalTab expenses={expenses} utilityBudgets={utilityBudgets} safeBudgets={safeBudgets} />}
+                {kakeiboSubPage === 'total' && <TotalTab expenses={expenses} />}
               </div>
             </div>
           );
@@ -2716,24 +2400,24 @@
 
         // 家計簿ホーム
         return (
-          <div ref={walletScrollRef} className="flex flex-col h-screen w-full overflow-y-auto" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
+          <div className="flex flex-col min-h-screen w-full pb-8" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
             {/* ヘッダー */}
-            <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
+            <div className="bg-white px-4 pt-14 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
               <button onClick={() => setShowKakeiboPage(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
               </button>
-              <span className="text-lg font-black text-slate-800">Wallet</span>
+              <span className="text-lg font-black text-slate-800">家計簿</span>
             </div>
 
             <div className="px-4 pt-5 space-y-4">
 
-              {/* ── 現金資産総合計カード（水色） ── */}
-              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
+              {/* ── 現金総収支カード（水色） ── */}
+              <div className="rounded-3xl p-5" style={{backgroundColor: '#8cd2e6'}}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-slate-500">現金資産総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : todayStr + "時点"}</span>
+                  <span className="text-sm font-bold text-white/80">現金総収支</span>
+                  <span className="text-xs font-bold text-white/70">{todayStr}時点</span>
                 </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
+                <div className="text-[2.2rem] font-black text-white leading-none mb-4">
                   ¥{cashTotalForHome.toLocaleString()}
                 </div>
                 {/* 各口座の入力欄 */}
@@ -2743,26 +2427,26 @@
                     const hasBalance = acc.id !== 'yo';
                     return (
                       <div key={acc.id} className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0" style={{backgroundColor: acc.color}}>
                           {acc.label}
                         </div>
-                        <div className="w-0 flex-1 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
-                          <span className="text-sm text-gray-400 mr-1 shrink-0">¥</span>
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            value={cashAssets[acc.id] == 0 ? '' : cashAssets[acc.id]}
-                            onChange={(e) => setCashAssets({ ...cashAssets, [acc.id]: e.target.value.replace(/^0+(?=\d)/, '') })}
-                            placeholder="0"
-                            className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
-                            style={{WebkitAppearance:'none'}}
-                          />
-                        </div>
-                        <div className={`w-0 flex-1 h-9 rounded-xl px-3 flex items-center gap-1 shrink-0`}
-                          style={{backgroundColor: hasBalance ? '#f1f5f9' : 'transparent', border: hasBalance ? '1px solid #e2e8f0' : 'none', visibility: hasBalance ? 'visible' : 'hidden'}}>
-                          {hasBalance && <span className="text-xs text-gray-400 shrink-0">¥</span>}
-                          <span className={`flex-1 text-right text-sm font-bold ${hasBalance ? (balance < 0 ? 'text-red-500' : 'text-slate-700') : ''}`}>{hasBalance ? balance.toLocaleString() : ''}</span>
-                        </div>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          value={cashAssets[acc.id] == 0 ? '' : cashAssets[acc.id]}
+                          onChange={(e) => setCashAssets({ ...cashAssets, [acc.id]: e.target.value.replace(/^0+(?=\d)/, '') })}
+                          placeholder="0"
+                          className="flex-1 h-9 rounded-xl px-3 text-right text-sm font-bold focus:outline-none bg-white/30 text-white placeholder-white/50"
+                          style={{border: '1px solid rgba(255,255,255,0.4)'}}
+                        />
+                        {hasBalance ? (
+                          <div className={`w-28 h-9 rounded-xl px-3 flex items-center justify-end text-sm font-bold shrink-0 ${balance < 0 ? 'text-red-200' : 'text-white'}`}
+                            style={{backgroundColor: 'rgba(255,255,255,0.2)'}}>
+                            {balance.toLocaleString()}
+                          </div>
+                        ) : (
+                          <div className="w-28 h-9 shrink-0"></div>
+                        )}
                       </div>
                     );
                   })}
@@ -2772,22 +2456,22 @@
               {/* ── ポイント・金融資産 / 借入可能額 / 物理資産（リスト行） ── */}
               <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                 {/* ポイント・金融資産 */}
-                <button onClick={() => goToWalletSubPage('point')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>P</div>
+                <button onClick={() => setKakeiboSubPage('point')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#8cd2e6'}}>P</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">ポイント・金融資産</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{pointTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
                 {/* 借入可能額 */}
-                <button onClick={() => goToWalletSubPage('borrow')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>借</div>
+                <button onClick={() => setKakeiboSubPage('borrow')} className="w-full flex items-center px-4 py-4 border-b border-gray-100 active:bg-gray-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#8cd2e6'}}>借</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">借入可能額</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{borrowingTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
                 {/* 物理資産 */}
-                <button onClick={() => goToWalletSubPage('physical')} className="w-full flex items-center px-4 py-4 active:bg-gray-50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#009BE5'}}>物</div>
+                <button onClick={() => setKakeiboSubPage('physical')} className="w-full flex items-center px-4 py-4 active:bg-gray-50">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: '#8cd2e6'}}>物</div>
                   <span className="flex-1 text-base font-bold text-slate-800 text-left">物理資産</span>
                   <span className="text-sm font-bold text-slate-400 mr-1">¥{physicalTotalForHome.toLocaleString()}</span>
                   <svg className="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -2795,28 +2479,27 @@
               </div>
 
               {/* ── 未払い総合計カード（オレンジ） ── */}
-              <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #ff4d4d'}}>
+              <div className="rounded-3xl p-5" style={{backgroundColor: '#f97316'}}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-slate-500">未払い総合計</span>
-                  <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : todayStr + "時点"}</span>
+                  <span className="text-sm font-bold text-white/80">未払い総合計</span>
+                  <span className="text-xs font-bold text-white/70">{todayStr}時点</span>
                 </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#ff4d4d'}}>
+                <div className="text-[2.2rem] font-black text-white leading-none mb-4">
                   ¥{unpaidTotal.toLocaleString()}
                 </div>
                 {/* 上位3件 */}
                 <div className="space-y-2">
                   {unpaidFixedCosts.length === 0 && (
-                    <p className="text-slate-400 text-sm font-bold text-center py-2">未払いの固定費はありません</p>
+                    <p className="text-white/70 text-sm font-bold text-center py-2">未払いの固定費はありません</p>
                   )}
                   {unpaidFixedCosts.map(c => {
-                    const ACCOUNT_COLORS_LOCAL = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
+                    const ACCOUNT_COLORS_LOCAL = { '予': '#f97316', '松': '#8b5cf6', '新': '#3b82f6', 'か': '#f59e0b', 'Ⅲ': '#10b981', 'P': '#ec4899', 'IC': '#6366f1', '現': '#64748b' };
                     const bgColor = ACCOUNT_COLORS_LOCAL[c.accountLabel] || '#888';
                     return (
                       <div key={c.id} className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: bgColor, color: c.accountLabel === 'Ⅲ' ? '#333333' : '#ffffff'}}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0" style={{backgroundColor: bgColor}}>
                           {c.accountLabel}
-                        </div>
-                        <span className="flex-1 text-slate-800 font-bold text-sm">{c.name}</span>
+                        </div>                        <span className="flex-1 text-slate-800 font-bold text-sm">{c.name}</span>
                         <span className="text-slate-400 text-sm font-bold">{c.date === '月末' ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() : c.date}日</span>
                         <span className="text-slate-800 font-black text-sm">¥{c.amount.toLocaleString()}</span>
                         <button
@@ -2837,13 +2520,13 @@
               {/* ── 各タブへのリスト行（オレンジ系） ── */}
               <div className="bg-white rounded-3xl overflow-hidden shadow-sm">
                 {[
-                  { key: 'fixed_all', icon: 'す', label: 'すべての固定費用', color: '#f97316' },
-                  { key: 'fixed_input', icon: '固', label: '固定費用を入力', color: '#f97316' },
-                  { key: 'variable', icon: '変', label: '変動費', color: '#f97316' },
-                  { key: 'loan', icon: 'ロ', label: 'ローン残債', color: '#f97316' },
-                  { key: 'total', icon: '月', label: '月ごとの収支', color: '#f97316' },
+                  { key: 'fixed_all', icon: 'す', label: 'すべての固定費用を確認する', color: '#f97316' },
+                  { key: 'fixed_input', icon: '固', label: '固定費を入力する', color: '#f97316' },
+                  { key: 'variable', icon: '変', label: '変動費を入力する', color: '#f97316' },
+                  { key: 'loan', icon: 'ロ', label: 'ローンを入力する', color: '#f97316' },
+                  { key: 'total', icon: '月', label: '月ごとの収支を確認する', color: '#f97316' },
                 ].map((item, idx, arr) => (
-                  <button key={item.key} onClick={() => goToWalletSubPage(item.key)} className={`w-full flex items-center px-4 py-4 active:bg-gray-50 ${idx < arr.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <button key={item.key} onClick={() => setKakeiboSubPage(item.key)} className={`w-full flex items-center px-4 py-4 active:bg-gray-50 ${idx < arr.length - 1 ? 'border-b border-gray-100' : ''}`}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black shrink-0 mr-3" style={{backgroundColor: item.color}}>
                       {item.icon}
                     </div>
@@ -2859,28 +2542,28 @@
       }
 
       const renderContent = () => {
-        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} displayDate={displayDate} setDisplayDate={setDisplayDate} />;
+        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} />;
       };
 
       const renderKakeiboContent = () => {
         switch(activeTab) {
           case '資産': return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
-          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection={kakeiboSubPage} />;
-          case '変動費': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />;
+          case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} />;
+          case '変動': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} />;
           case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
-          case '累計': return <TotalTab expenses={expenses} utilityBudgets={utilityBudgets} safeBudgets={safeBudgets} />;
+          case '累計': return <TotalTab expenses={expenses} />;
           default: return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
         }
       };
 
-      const tabs = ['予定', '資産', '固定', '変動費', 'ローン', '累計'];
+      const tabs = ['予定', '資産', '固定', '変動', 'ローン', '累計'];
 
       return (
         <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
           <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full">
             {renderContent()}
           </div>
-          {/* ── 新タブバー: ‹ 設定 支出 Wallet › ── */}
+          {/* ── 新タブバー: ‹ 設定 支出 家計簿 › ── */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] bg-white border-t border-gray-100 safe-area-pb shadow-[0_-1px_8px_rgba(0,0,0,0.08)] z-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
             <div className="flex items-center justify-between px-4 h-[80px]">
 
@@ -2908,7 +2591,7 @@
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path strokeLinecap="round" strokeLinejoin="round" d="M17.586 3.586a2 2 0 112.828 2.828L12 15l-4 1 1-4 8.586-8.414z"/></svg>
               </button>
 
-              {/* Walletボタン（袋） */}
+              {/* 家計簿ボタン（袋） */}
               <button
                 onClick={() => { setShowKakeiboPage(true); setKakeiboSubPage(null); }}
                 className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
@@ -2971,12 +2654,12 @@
             <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={() => setShowQuickExpense(false)}>
               <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-lg font-black text-slate-800">支出を入力</h3>
+                  <h3 className="text-lg font-black text-slate-800">今日の支出を入力</h3>
                   <button onClick={() => setShowQuickExpense(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                 </div>
-                <QuickExpenseForm handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} onClose={() => setShowQuickExpense(false)} selectedDate={displayDate} />
+                <QuickExpenseForm handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} onClose={() => setShowQuickExpense(false)} />
               </div>
             </div>
           )}
@@ -3010,7 +2693,7 @@
           events.forEach(event => window.removeEventListener(event, updateActivity));
           clearInterval(checkInactivity);
         };
-      }, [isLoggedIn]);
+      }, [isLoggedIn, setIsLoggedIn]);
 
       if (!isLoggedIn) {
         return <SimpleLoginScreen onLogin={() => setIsLoggedIn(true)} />;

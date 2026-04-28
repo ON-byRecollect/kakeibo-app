@@ -241,14 +241,14 @@
       );
     };
 
-    const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, iconColorHex, handleBudgetChange }) => {
+    const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, iconColorHex, handleBudgetChange, hideProgress }) => {
       const remaining = Math.max(0, budgetData.amount - spent);
       const progressPercent = Math.min((spent / (budgetData.amount || 1)) * 100, 100) || 0;
       const progressColor = progressPercent >= 90 ? 'bg-[#ea4335]' : progressPercent >= 70 ? 'bg-[#fbbc04]' : '';
 
       return (
         <div className="bg-white p-3 rounded-xl shadow-sm" style={{border: `1.5px solid ${iconColorHex || '#ff4d4d'}`}}>
-          <div className="flex flex-col border-b border-gray-100 pb-2 mb-2">
+          <div className={`flex flex-col ${hideProgress ? '' : 'border-b border-gray-100 pb-2 mb-2'}`}>
             <div className="font-bold text-gray-700 text-xs flex items-center mb-2">
               {title}
             </div>
@@ -276,15 +276,17 @@
               </div>
             </div>
           </div>
-          <div>
-            <div className="flex justify-between text-[10px] font-bold mb-1 text-gray-500">
-              <span>残 {remaining.toLocaleString()}</span>
-              <span>{spent.toLocaleString()}/{budgetData.amount.toLocaleString()}</span>
+          {!hideProgress && (
+            <div>
+              <div className="flex justify-between text-[10px] font-bold mb-1 text-gray-500">
+                <span>残 {remaining.toLocaleString()}</span>
+                <span>{spent.toLocaleString()}/{budgetData.amount.toLocaleString()}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className={`h-1.5 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-1.5">
-              <div className={`h-1.5 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
-            </div>
-          </div>
+          )}
         </div>
       );
     };
@@ -460,7 +462,7 @@
                 const bgColor = ACC_COLORS_MAP[acc] || '#8cd2e6';
                 const txtColor = acc === 'Ⅲ' ? '#333333' : '#ffffff';
                 return (
-                  <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60 ${isCompleted ? 'completed-item' : ''}`}>
+                  <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60`}>
                     {acc && (
                       <span className="w-7 h-7 rounded-full text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
                     )}
@@ -501,9 +503,14 @@
                       {short}
                     </a>
                     {/* 情報（タップで編集） */}
-                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
+                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60 flex flex-col justify-center h-12" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
                       <div className="text-base font-bold text-slate-900 leading-tight">{d.timeSlot || '時間帯未定'}</div>
-                      <div className="text-sm text-slate-400 font-medium truncate">{d.num || d.remark || '追跡番号なし'}</div>
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="text-[10px] text-slate-400 font-medium truncate shrink-0">{d.num || '追跡番号なし'}</div>
+                        {d.remark && (
+                          <div className="text-[20px] text-slate-600 font-bold truncate leading-none">{d.remark}</div>
+                        )}
+                      </div>
                     </div>
                     {/* コピーアイコン */}
                     {d.num && (
@@ -2008,8 +2015,8 @@
             <div className="grid grid-cols-2 gap-2 mt-2">
               <IntegratedBudgetBlock title="食費" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" iconColorHex="#fbbc04" handleBudgetChange={handleBudgetChange} />
               <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" iconColorHex="#34a853" handleBudgetChange={handleBudgetChange} />
-              <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} />
-              <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} />
+              <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
+              <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
             </div>
           </div>
         </div>
@@ -2148,7 +2155,7 @@
     // ==========================================
     // 4. 累計タブ
     // ==========================================
-    const TotalTab = ({ expenses }) => {
+    const TotalTab = ({ expenses, utilityBudgets, safeBudgets }) => {
       const monthlyDataMap = {};
       expenses.forEach(e => {
         if (!monthlyDataMap[e.yearMonth]) {
@@ -2156,12 +2163,20 @@
         }
         if (e.category === '外食') monthlyDataMap[e.yearMonth].food.out += e.amount;
         if (e.category === '自炊') monthlyDataMap[e.yearMonth].food.cook += e.amount;
-        if (e.category === '電気') monthlyDataMap[e.yearMonth].utility.electric += e.amount;
-        if (e.category === 'ガス') monthlyDataMap[e.yearMonth].utility.gas += e.amount;
+        // 電気・ガスは予算を表示するため、expensesからの集計は行わない（必要ならコメントアウト解除）
+        // if (e.category === '電気') monthlyDataMap[e.yearMonth].utility.electric += e.amount;
+        // if (e.category === 'ガス') monthlyDataMap[e.yearMonth].utility.gas += e.amount;
         if (e.category === '交通') monthlyDataMap[e.yearMonth].transport += e.amount;
       });
 
       const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
+
+      // 予算データを反映
+      sortedMonths.forEach(data => {
+        const budgets = utilityBudgets[data.month] || safeBudgets;
+        data.utility.electric = budgets.electric.amount;
+        data.utility.gas = budgets.gas.amount;
+      });
 
       return (
         <div className="flex flex-col pt-4 pb-48 px-4 space-y-4 w-full bg-gray-100 min-h-full">
@@ -2841,7 +2856,7 @@
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection={kakeiboSubPage} />;
           case '変動費': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />;
           case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
-          case '累計': return <TotalTab expenses={expenses} />;
+          case '累計': return <TotalTab expenses={expenses} utilityBudgets={utilityBudgets} safeBudgets={safeBudgets} />;
           default: return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
         }
       };

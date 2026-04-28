@@ -503,14 +503,14 @@
                       {short}
                     </a>
                     {/* 情報（タップで編集） */}
-                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60 flex flex-col justify-center h-12" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
-                      <div className="text-base font-bold text-slate-900 leading-tight">{d.timeSlot || '時間帯未定'}</div>
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <div className="text-[10px] text-slate-400 font-medium truncate shrink-0">{d.num || '追跡番号なし'}</div>
-                        {d.remark && (
-                          <div className="text-[20px] text-slate-600 font-bold truncate leading-none">{d.remark}</div>
-                        )}
+                    <div className="flex-1 min-w-0 cursor-pointer active:opacity-60 flex items-center gap-3 h-12" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
+                      <div className="flex flex-col justify-center min-w-[80px]">
+                        <div className="text-sm font-bold text-slate-900 leading-tight whitespace-nowrap">{d.timeSlot || '時間帯未定'}</div>
+                        <div className="text-[9px] text-slate-300 font-medium truncate">{d.num || '番号なし'}</div>
                       </div>
+                      {d.remark && (
+                        <div className="text-[20px] font-black text-slate-800 truncate flex-1 leading-none">{d.remark}</div>
+                      )}
                     </div>
                     {/* コピーアイコン */}
                     {d.num && (

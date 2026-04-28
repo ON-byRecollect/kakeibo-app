@@ -504,8 +504,8 @@
                     </a>
                     {/* 情報（タップで編集） */}
                     <div className="flex-1 min-w-0 cursor-pointer active:opacity-60 flex items-center gap-3 self-stretch" onClick={() => { setEditDelivery(d); setShowDeliveryModal(true); }}>
-                      <div className="flex flex-col justify-center min-w-[80px] h-full">
-                        <div className="text-sm font-bold text-slate-900 leading-none mb-1 whitespace-nowrap">{d.timeSlot || '時間帯未定'}</div>
+                      <div className="flex flex-col justify-center w-[95px] shrink-0 h-full">
+                        <div className="text-[13px] font-bold text-slate-900 leading-none mb-1 whitespace-nowrap">{d.timeSlot || '指定なし'}</div>
                         <div className="text-[9px] text-slate-300 font-medium truncate leading-none">{d.num || '番号なし'}</div>
                       </div>
                       {d.remark && (

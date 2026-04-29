@@ -2593,9 +2593,9 @@
       // スケジュールデータ（Firestore）
       const scheduleData = {
         deliveries: data?.deliveries || [],
-        animes: data?.animes || null,
-        baseballs: data?.baseballs || null,
-        garbageRules: data?.garbageRules || null
+        animes: data?.animes || [],
+        baseballs: data?.baseballs || [],
+        garbageRules: data?.garbageRules || []
       };
       const updateScheduleField = (key, value) => updateField(key, value);
 

@@ -427,6 +427,15 @@
         setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 1300);
       };
 
+      const showAddToast = () => {
+        const popup = document.createElement('div');
+        popup.textContent = '追加しました';
+        popup.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
+        document.body.appendChild(popup);
+        setTimeout(() => { popup.style.opacity = '0'; }, 900);
+        setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 1300);
+      };
+
       const deleteDelivery = (id) => {
         const updated = deliveries.filter(d => d.id !== id);
         updateScheduleField('deliveries', updated);
@@ -1000,6 +1009,7 @@
       const saveDelivery = () => {
         const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
         updateScheduleField('deliveries', [...deliveries, { ...newData, id: Date.now() }]);
+        showAddToast();
         setDCarrier('yamato'); setDDate(today); setDTimeSlot('指定なし'); setDRemark(''); setDNum('');
       };
       return (
@@ -1074,6 +1084,7 @@
         const newItem = { id: editAnime ? editAnime.id : Date.now(), title: newAnimeTitle, dateRaw: newAnimeDate, isWeekly: newAnimeWeekly, weeks: Number(newAnimeWeeks) };
         const updated = editAnime ? animes.map(a => a.id === editAnime.id ? newItem : a) : [...animes, newItem];
         updateScheduleField('animes', updated);
+        if (!editAnime) showAddToast();
         setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); setNewAnimeWeekly(true); setNewAnimeWeeks(12);
       };
 
@@ -1090,6 +1101,7 @@
         const newItem = { id: editBaseball ? editBaseball.id : Date.now(), title: newBaseballTitle, dateRaw: newBaseballDate, time: newBaseballTime };
         const updated = editBaseball ? baseballs.map(b => b.id === editBaseball.id ? newItem : b) : [...baseballs, newItem];
         updateScheduleField('baseballs', updated);
+        if (!editBaseball) showAddToast();
         setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); setNewBaseballTime('18:00');
       };
 
@@ -1107,6 +1119,7 @@
         const newItem = { id: editGarbage ? editGarbage.id : Date.now(), name: newGarbageName, bg: newGarbageBg, type: newGarbageType, days: newGarbageDays, dates: datesArr };
         const updated = editGarbage ? garbageRules.map(g => g.id === editGarbage.id ? newItem : g) : [...garbageRules, newItem];
         updateScheduleField('garbageRules', updated);
+        if (!editGarbage) showAddToast();
         setEditGarbage(null); setNewGarbageName(''); setNewGarbageBg('bg-[#f05a5a]'); setNewGarbageType('weekly'); setNewGarbageDays([]); setNewGarbageDates('');
       };
 
@@ -2574,6 +2587,7 @@
         } else {
           setExpenses([...expenses, { id: Date.now(), amount: newData.amount, category: newData.category, day: newData.day, yearMonth: newData.yearMonth, accountLabel: newData.accountLabel }]);
         }
+        showAddToast();
       };
 
       const handleDeleteFixed = (id) => setFixedCosts(fixedCosts.filter(cost => cost.id !== id));
@@ -2805,7 +2819,15 @@
                           {c.accountLabel}
                         </div>
                         <span className="flex-1 text-slate-800 font-bold text-sm">{c.name}</span>
-                        <span className="text-slate-400 text-sm font-bold">{c.date}日</span>
+                        <span className="text-slate-400 text-sm font-bold">{(() => {
+                          if (c.date === '月末') {
+                            const match = currentYearMonth.match(/(\d+)年(\d+)月/);
+                            if (match) {
+                              return new Date(parseInt(match[1]), parseInt(match[2]), 0).getDate();
+                            }
+                          }
+                          return c.date;
+                        })()}日</span>
                         <span className="text-slate-800 font-black text-sm">¥{c.amount.toLocaleString()}</span>
                         <button
                           onClick={() => {

@@ -2027,8 +2027,8 @@
 
             {/* 予算ブロック（2列グリッド） */}
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <IntegratedBudgetBlock title="食費" categoryKey="food" budgetData={currentFoodBudget} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" iconColorHex="#fbbc04" handleBudgetChange={handleBudgetChange} />
-              <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={currentTransportBudget} spent={monthlySpents.trans} iconColor="bg-[#34a853]" iconColorHex="#34a853" handleBudgetChange={handleBudgetChange} />
+              <IntegratedBudgetBlock title="食費" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" iconColorHex="#fbbc04" handleBudgetChange={handleBudgetChange} />
+              <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" iconColorHex="#34a853" handleBudgetChange={handleBudgetChange} />
               <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
               <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
             </div>

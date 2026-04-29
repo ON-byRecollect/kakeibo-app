@@ -1300,11 +1300,18 @@
     // ==========================================
     const AssetTab = ({ fixedCosts, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, monthlySpents, prevMonthlySpents, utilityPaid, cashAssets, setCashAssets, pointAssets, setPointAssets, borrowingAssets, setBorrowingAssets, physicalAssets, setPhysicalAssets, onLogout, subSection, lastEditedDate }) => {
       
-      const handleCashChange = (id, value) => setCashAssets({ ...cashAssets, [id]: value });
-      const handlePointChange = (id, value) => setPointAssets({ ...pointAssets, [id]: value });
-      const handleBorrowingChange = (id, value) => setBorrowingAssets({ ...borrowingAssets, [id]: value });
+      const safeCashAssets = cashAssets || {};
+      const safePointAssets = pointAssets || {};
+      const safeBorrowingAssets = borrowingAssets || {};
+      const safePhysicalAssets = Array.isArray(physicalAssets) ? physicalAssets : [
+        { id: 1, name: '', value: '' }, { id: 2, name: '', value: '' }, { id: 3, name: '', value: '' }, { id: 4, name: '', value: '' }, { id: 5, name: '', value: '' }
+      ];
+
+      const handleCashChange = (id, value) => setCashAssets({ ...safeCashAssets, [id]: value });
+      const handlePointChange = (id, value) => setPointAssets({ ...safePointAssets, [id]: value });
+      const handleBorrowingChange = (id, value) => setBorrowingAssets({ ...safeBorrowingAssets, [id]: value });
       const handlePhysicalChange = (id, field, value) => {
-        setPhysicalAssets(physicalAssets.map(item => item.id === id ? { ...item, [field]: value } : item));
+        setPhysicalAssets(safePhysicalAssets.map(item => item.id === id ? { ...item, [field]: value } : item));
       };
 
       const cashAccounts = [
@@ -1351,10 +1358,10 @@
 
         let remainingBudgetForAcc = 0;
         ['food', 'transport'].forEach(cat => {
-          const budget = (utilityBudgets[currentYearMonth] && utilityBudgets[currentYearMonth][cat]) ? utilityBudgets[currentYearMonth][cat] : safeBudgets[cat];
+          const budget = safeBudgets[cat];
           if (budget && budget.account === accLabel) {
             let catSpent = monthlySpents[cat === 'transport' ? 'trans' : cat];
-            remainingBudgetForAcc += Math.max(0, budget.amount - catSpent);
+            remainingBudgetForAcc += Math.max(0, Number(budget.amount || 0) - Number(catSpent || 0));
           }
         });
         
@@ -1368,10 +1375,10 @@
         return val - unpaidFixed - remainingBudgetForAcc;
       };
 
-      const cashTotal = cashAccounts.reduce((sum, acc) => sum + getBalance(acc.label, cashAssets[acc.id]), 0);
-      const pointTotal = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
-      const borrowingTotal = Object.values(borrowingAssets).reduce((sum, val) => sum + Number(val || 0), 0);
-      const physicalTotal = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
+      const cashTotal = cashAccounts.reduce((sum, acc) => sum + getBalance(acc.label, safeCashAssets[acc.id]), 0);
+      const pointTotal = Object.values(safePointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+      const borrowingTotal = Object.values(safeBorrowingAssets).reduce((sum, val) => sum + Number(val || 0), 0);
+      const physicalTotal = safePhysicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
       return (
         <div className="flex flex-col pb-48 w-full bg-gray-50 min-h-full relative">
           <div className="px-4 pt-5 space-y-4">
@@ -1395,7 +1402,7 @@
                         <input
                           type="number"
                           inputMode="numeric"
-                          value={pointAssets[acc.id] == 0 ? '' : pointAssets[acc.id]}
+                          value={safePointAssets[acc.id] == 0 ? '' : safePointAssets[acc.id]}
                           onChange={(e) => handlePointChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
                           placeholder="0"
                           className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
@@ -1427,7 +1434,7 @@
                         <input
                           type="number"
                           inputMode="numeric"
-                          value={borrowingAssets[acc.id] == 0 ? '' : borrowingAssets[acc.id]}
+                          value={safeBorrowingAssets[acc.id] == 0 ? '' : safeBorrowingAssets[acc.id]}
                           onChange={(e) => handleBorrowingChange(acc.id, e.target.value.replace(/^0+(?=\d)/, ''))}
                           placeholder="0"
                           className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
@@ -1449,7 +1456,7 @@
                   ¥{physicalTotal.toLocaleString()}
                 </div>
                 <div className="space-y-2">
-                  {physicalAssets.map((item, idx) => (
+                  {safePhysicalAssets.map((item, idx) => (
                     <div key={item.id} className="flex items-center gap-2">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white" style={{backgroundColor: '#009BE5'}}>
                         {idx + 1}
@@ -2660,6 +2667,12 @@
       ];
 
       const prevCurrentYMForHome = getPrevYearMonth(currentYearMonth);
+      const safeCashAssetsForHome = cashAssets || {};
+      const safePointAssetsForHome = pointAssets || {};
+      const safeBorrowingAssetsForHome = borrowingAssets || {};
+      const safePhysicalAssetsForHome = Array.isArray(physicalAssets) ? physicalAssets : [
+        { id: 1, name: '', value: '' }, { id: 2, name: '', value: '' }, { id: 3, name: '', value: '' }, { id: 4, name: '', value: '' }, { id: 5, name: '', value: '' }
+      ];
 
       const getBalanceForHome = (accLabel, currentVal) => {
         const val = Number(currentVal || 0);
@@ -2689,10 +2702,10 @@
         return val - unpaidFixed - remainingBudgetForAcc;
       };
 
-      const cashTotalForHome = cashAccountsForHome.reduce((sum, acc) => sum + Number(cashAssets[acc.id] || 0), 0);
-      const pointTotalForHome = Object.values(pointAssets).reduce((sum, val) => sum + Number(val || 0), 0);
-      const borrowingTotalForHome = Object.values(borrowingAssets).reduce((sum, val) => sum + Number(val || 0), 0);
-      const physicalTotalForHome = physicalAssets.reduce((sum, item) => sum + Number(item.value || 0), 0);
+      const cashTotalForHome = cashAccountsForHome.reduce((sum, acc) => sum + Number(safeCashAssetsForHome[acc.id] || 0), 0);
+      const pointTotalForHome = Object.values(safePointAssetsForHome).reduce((sum, val) => sum + Number(val || 0), 0);
+      const borrowingTotalForHome = Object.values(safeBorrowingAssetsForHome).reduce((sum, val) => sum + Number(val || 0), 0);
+      const physicalTotalForHome = safePhysicalAssetsForHome.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
       // 未払い固定費（近い日付から上位3件）
       const todayDateNum = new Date().getDate();
@@ -2790,7 +2803,7 @@
                 {/* 各口座の入力欄 */}
                 <div className="space-y-2">
                   {cashAccountsForHome.map((acc) => {
-                    const balance = getBalanceForHome(acc.label, cashAssets[acc.id]);
+                    const balance = getBalanceForHome(acc.label, safeCashAssetsForHome[acc.id]);
                     const hasBalance = acc.id !== 'yo';
                     return (
                       <div key={acc.id} className="flex items-center gap-2">
@@ -2802,8 +2815,8 @@
                           <input
                             type="number"
                             inputMode="numeric"
-                            value={cashAssets[acc.id] == 0 ? '' : cashAssets[acc.id]}
-                            onChange={(e) => setCashAssets({ ...cashAssets, [acc.id]: e.target.value.replace(/^0+(?=\d)/, '') })}
+                            value={safeCashAssetsForHome[acc.id] == 0 ? '' : safeCashAssetsForHome[acc.id]}
+                            onChange={(e) => setCashAssets({ ...safeCashAssetsForHome, [acc.id]: e.target.value.replace(/^0+(?=\d)/, '') })}
                             placeholder="0"
                             className="w-full text-right text-sm font-bold focus:outline-none bg-transparent text-slate-800 placeholder-slate-300"
                             style={{WebkitAppearance:'none'}}

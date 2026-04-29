@@ -254,8 +254,19 @@
     };
 
     const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, iconColorHex, handleBudgetChange, hideProgress }) => {
-      const remaining = Math.max(0, budgetData.amount - spent);
-      const progressPercent = Math.min((spent / (budgetData.amount || 1)) * 100, 100) || 0;
+      const [localAmount, setLocalAmount] = React.useState(budgetData.amount === 0 ? '' : String(budgetData.amount || ''));
+      const [localAccount, setLocalAccount] = React.useState(budgetData.account || '');
+      const [localDate, setLocalDate] = React.useState(budgetData.date || '-');
+
+      React.useEffect(() => {
+        setLocalAmount(budgetData.amount === 0 ? '' : String(budgetData.amount || ''));
+        setLocalAccount(budgetData.account || '');
+        setLocalDate(budgetData.date || '-');
+      }, [budgetData.amount, budgetData.account, budgetData.date]);
+
+      const currentAmount = Number(localAmount || 0);
+      const remaining = Math.max(0, currentAmount - spent);
+      const progressPercent = Math.min((spent / (currentAmount || 1)) * 100, 100) || 0;
       const progressColor = progressPercent >= 90 ? 'bg-[#ea4335]' : progressPercent >= 70 ? 'bg-[#fbbc04]' : '';
 
       return (
@@ -265,10 +276,10 @@
               {title}
             </div>
             <div className="flex items-center gap-1">
-              <select value={budgetData.account} onChange={(e) => handleBudgetChange(categoryKey, 'account', e.target.value)} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-10" style={{focusBorderColor: THEME}}>
+              <select value={localAccount} onChange={(e) => { setLocalAccount(e.target.value); handleBudgetChange(categoryKey, 'account', e.target.value); }} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-10" style={{focusBorderColor: THEME}}>
                 {['松','新','か','Ⅲ','P','IC'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
-              <select value={budgetData.date} onChange={(e) => handleBudgetChange(categoryKey, 'date', e.target.value)} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-12">
+              <select value={localDate} onChange={(e) => { setLocalDate(e.target.value); handleBudgetChange(categoryKey, 'date', e.target.value); }} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-12">
                 <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
               </select>
               <div className="flex-1 flex items-center h-8 border border-gray-300 rounded-md px-2 bg-white focus-within:ring-1 focus-within:ring-sky-400">
@@ -276,9 +287,10 @@
                 <input 
                   type="number" 
                   inputMode="numeric" 
-                  value={budgetData.amount === 0 ? '' : budgetData.amount} 
+                  value={localAmount} 
                   onChange={(e) => {
                     const val = e.target.value;
+                    setLocalAmount(val);
                     handleBudgetChange(categoryKey, 'amount', val === '' ? 0 : Number(val));
                   }}
                   placeholder="0"
@@ -292,7 +304,7 @@
             <div>
               <div className="flex justify-between text-[10px] font-bold mb-1 text-gray-500">
                 <span>残 {remaining.toLocaleString()}</span>
-                <span>{spent.toLocaleString()}/{budgetData.amount.toLocaleString()}</span>
+                <span>{spent.toLocaleString()}/{currentAmount.toLocaleString()}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5">
                 <div className={`h-1.5 rounded-full transition-all ${progressColor}`} style={{width: `${progressPercent}%`, backgroundColor: progressColor ? undefined : THEME}}></div>
@@ -2727,7 +2739,7 @@
                 {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'fixed_all' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_all" />}
                 {kakeiboSubPage === 'fixed_input' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_input" />}
-                {kakeiboSubPage === 'variable' && <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />}
+                {kakeiboSubPage === 'variable' && <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={{...safeBudgets, food: currentFoodBudget, transport: currentTransportBudget}} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />}
                 {kakeiboSubPage === 'loan' && <LoanTab loans={loans} setLoans={setLoans} />}
                 {kakeiboSubPage === 'total' && <TotalTab expenses={expenses} utilityBudgets={utilityBudgets} safeBudgets={safeBudgets} />}
               </div>

@@ -1339,9 +1339,10 @@
 
         let remainingBudgetForAcc = 0;
         ['food', 'transport'].forEach(cat => {
-          if (safeBudgets[cat] && safeBudgets[cat].account === accLabel) {
+          const budget = (utilityBudgets[currentYearMonth] && utilityBudgets[currentYearMonth][cat]) ? utilityBudgets[currentYearMonth][cat] : safeBudgets[cat];
+          if (budget && budget.account === accLabel) {
             let catSpent = monthlySpents[cat === 'transport' ? 'trans' : cat];
-            remainingBudgetForAcc += Math.max(0, safeBudgets[cat].amount - catSpent);
+            remainingBudgetForAcc += Math.max(0, budget.amount - catSpent);
           }
         });
         
@@ -2187,8 +2188,10 @@
       // 予算データを反映
       sortedMonths.forEach(data => {
         const budgets = utilityBudgets[data.month] || safeBudgets;
-        data.utility.electric = budgets.electric.amount;
-        data.utility.gas = budgets.gas.amount;
+        data.utility.electric = (budgets.electric || safeBudgets.electric).amount;
+        data.utility.gas = (budgets.gas || safeBudgets.gas).amount;
+        data.foodBudget = (budgets.food || safeBudgets.food).amount;
+        data.transportBudget = (budgets.transport || safeBudgets.transport).amount;
       });
 
       return (
@@ -2498,6 +2501,8 @@
 
       const currentElectricBudget = utilityBudgets[displayYearMonth]?.electric || safeBudgets.electric;
       const currentGasBudget = utilityBudgets[displayYearMonth]?.gas || safeBudgets.gas;
+      const currentFoodBudget = utilityBudgets[displayYearMonth]?.food || safeBudgets.food;
+      const currentTransportBudget = utilityBudgets[displayYearMonth]?.transport || safeBudgets.transport;
 
       const prevYM = getPrevYearMonth(displayYearMonth);
       const prevElectricBudget = utilityBudgets[prevYM]?.electric || safeBudgets.electric;
@@ -2506,21 +2511,22 @@
       const prevCurrentYM = getPrevYearMonth(currentYearMonth);
       const realCurrentElectricBudget = utilityBudgets[currentYearMonth]?.electric || safeBudgets.electric;
       const realCurrentGasBudget = utilityBudgets[currentYearMonth]?.gas || safeBudgets.gas;
+      const realCurrentFoodBudget = utilityBudgets[currentYearMonth]?.food || safeBudgets.food;
+      const realCurrentTransportBudget = utilityBudgets[currentYearMonth]?.transport || safeBudgets.transport;
+
       const prevRealCurrentElectricBudget = utilityBudgets[prevCurrentYM]?.electric || safeBudgets.electric;
       const prevRealCurrentGasBudget = utilityBudgets[prevCurrentYM]?.gas || safeBudgets.gas;
 
       const handleBudgetChange = (category, field, value) => {
-        updateField('budgets', { ...safeBudgets, [category]: { ...safeBudgets[category], [field]: value } });
-      };
-
-      const handleUtilityBudgetChange = (category, field, value) => {
-        const monthData = utilityBudgets[displayYearMonth] || { electric: safeBudgets.electric, gas: safeBudgets.gas };
+        const monthData = utilityBudgets[displayYearMonth] || { ...safeBudgets };
         const updatedMonthData = {
           ...monthData,
-          [category]: { ...monthData[category], [field]: value }
+          [category]: { ...(monthData[category] || safeBudgets[category]), [field]: value }
         };
         updateField('utilityBudgets', { ...utilityBudgets, [displayYearMonth]: updatedMonthData });
       };
+
+      const handleUtilityBudgetChange = handleBudgetChange;
 
       const toggleUtilityPaid = (category, ym) => {
          const currentList = utilityPaid[category] || [];
@@ -2886,7 +2892,7 @@
         switch(activeTab) {
           case '資産': return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection={kakeiboSubPage} />;
-          case '変動費': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} handleAddData={handleAddData} />;
+          case '変動費': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={{...safeBudgets, food: currentFoodBudget, transport: currentTransportBudget}} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} handleAddData={handleAddData} />;
           case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
           case '累計': return <TotalTab expenses={expenses} utilityBudgets={utilityBudgets} safeBudgets={safeBudgets} />;
           default: return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;

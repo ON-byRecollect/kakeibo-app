@@ -921,6 +921,7 @@
         const targetYM = selectedDate ? `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月` : currentYearMonth;
         const targetDay = selectedDate ? selectedDate.getDate() : todayDay;
         handleAddData({ amount: Number(amount), category, itemName: '', accountLabel: '', timing: '今日', day: targetDay, yearMonth: targetYM });
+        showAddToast();
         onClose();
       };
       return (
@@ -951,6 +952,7 @@
       const onSubmit = () => {
         if (!isSubmitEnabled) return;
         handleAddData({ amount: Number(amount), category, itemName: '', accountLabel: account, timing: '今日', day: todayDay, yearMonth: currentYearMonth });
+        showAddToast();
         onClose();
       };
 
@@ -1517,6 +1519,7 @@
           const d = new Date(); targetYearMonth = `${d.getFullYear()}年${expTiming}月`;
         }
         handleAddData({ amount: Number(expAmount), category: '固定', itemName: expItemName, accountLabel: expAccount, timing: expTiming, day: targetDay, yearMonth: targetYearMonth });
+        showAddToast();
         setExpAmount(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth('');
       };
 
@@ -2301,7 +2304,7 @@
         }
 
         handleAddData({ amount: Number(amount), category, itemName, accountLabel: account, timing, day: targetDay, yearMonth: targetYearMonth });
-        
+        showAddToast();
         setAmount(''); setCategory(''); setItemName(''); setAccount(''); setTiming(''); setDay(''); setAnnualMonth('');
       };
 

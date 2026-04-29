@@ -1533,19 +1533,49 @@
         setExpAmount(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth('');
       };
 
+      const normalizeFixedDateForEdit = (item) => {
+        const rawDate = item?.date ?? item?.day ?? '';
+        const strDate = String(rawDate).trim();
+        if (!strDate) return '';
+        if (strDate === '月末' || strDate === '末日' || strDate === '月末日') return '月末';
+        const numericDate = Number(strDate.replace(/日$/, ''));
+        return Number.isInteger(numericDate) && numericDate >= 1 && numericDate <= 31 ? String(numericDate) : '';
+      };
+
+      const normalizeFixedTimingForEdit = (item) => {
+        const timing = item?.timing || '';
+        if (['今日', '今月', '来月', '再来月'].includes(timing)) {
+          const match = String(item?.yearMonth || item?.targetYM || '').match(/(\d+)年(\d+)月/);
+          return match ? match[2] : '';
+        }
+        return timing;
+      };
+
+      const buildFixedYearMonthForEdit = (item, timing, annualMonth) => {
+        const existingYM = item?.yearMonth || currentYearMonth;
+        const yearMatch = String(existingYM).match(/(\d+)年/);
+        const year = yearMatch ? yearMatch[1] : String(new Date().getFullYear());
+        if (timing === '毎年') return `${year}年${annualMonth || item?.annualMonth || new Date().getMonth() + 1}月`;
+        if (!isNaN(Number(timing))) return `${year}年${timing}月`;
+        return existingYM;
+      };
+
       const openEditFixed = (item) => {
         setEditFixedItem(item);
         setEditFixedName(item.name || '');
         setEditFixedAmount(item.amount ? String(item.amount) : '');
-        setEditFixedDate(item.date || '');
+        setEditFixedDate(normalizeFixedDateForEdit(item));
         setEditFixedAccount(item.accountLabel || '');
-        setEditFixedTiming(item.timing || '');
+        setEditFixedTiming(normalizeFixedTimingForEdit(item));
         setEditFixedAnnualMonth(item.annualMonth || '');
       };
 
       const saveEditFixed = () => {
         if (!editFixedItem) return;
-        setFixedCosts(fixedCosts.map(c => c.id === editFixedItem.id ? { ...c, name: editFixedName, amount: Number(editFixedAmount) || c.amount, date: editFixedDate, accountLabel: editFixedAccount, color: ACCOUNT_COLORS[editFixedAccount] || c.color, timing: editFixedTiming || c.timing, annualMonth: editFixedAnnualMonth } : c));
+        const nextTiming = editFixedTiming || normalizeFixedTimingForEdit(editFixedItem);
+        const nextDate = normalizeFixedDateForEdit({ date: editFixedDate });
+        const nextYearMonth = buildFixedYearMonthForEdit(editFixedItem, nextTiming, editFixedAnnualMonth);
+        setFixedCosts(fixedCosts.map(c => c.id === editFixedItem.id ? { ...c, name: editFixedName, amount: Number(editFixedAmount) || c.amount, date: nextDate, accountLabel: editFixedAccount, color: ACCOUNT_COLORS[editFixedAccount] || c.color, timing: nextTiming, yearMonth: nextYearMonth, annualMonth: nextTiming === '毎年' ? editFixedAnnualMonth : '' } : c));
         setEditFixedItem(null);
       };
 
@@ -1665,12 +1695,6 @@
                   <label className="text-xs font-bold text-gray-500 mb-1 block">頻度・タイミング</label>
                   <select value={expTiming} onChange={e => { setExpTiming(e.target.value); setExpDay(''); setExpAnnualMonth(''); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
                     <option value="">選択してください</option>
-                    <optgroup label="今回のみ">
-                      <option value="今日">今日</option>
-                      <option value="今月">今月</option>
-                      <option value="来月">来月</option>
-                      <option value="再来月">再来月</option>
-                    </optgroup>
                     <optgroup label="定期">
                       <option value="毎月">毎月</option>
                       <option value="偶数月">偶数月（2・4・6・8・10・12月）</option>
@@ -1679,7 +1703,7 @@
                     </optgroup>
                     <optgroup label="特定月のみ">
                       {['1','2','3','4','5','6','7','8','9','10','11','12'].map(m => (
-                        <option key={m} value={m}>{m}月のみ</option>
+                        <option key={m} value={m}>{m}月</option>
                       ))}
                     </optgroup>
                   </select>
@@ -1811,12 +1835,6 @@
                   <label className="text-xs font-bold text-gray-500 mb-1 block">頻度・タイミング</label>
                   <select value={editFixedTiming} onChange={e => { setEditFixedTiming(e.target.value); setEditFixedDate(''); setEditFixedAnnualMonth(''); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
                     <option value="">選択してください</option>
-                    <optgroup label="今回のみ">
-                      <option value="今日">今日</option>
-                      <option value="今月">今月</option>
-                      <option value="来月">来月</option>
-                      <option value="再来月">再来月</option>
-                    </optgroup>
                     <optgroup label="定期">
                       <option value="毎月">毎月</option>
                       <option value="偶数月">偶数月（2・4・6・8・10・12月）</option>
@@ -1825,7 +1843,7 @@
                     </optgroup>
                     <optgroup label="特定月のみ">
                       {['1','2','3','4','5','6','7','8','9','10','11','12'].map(m => (
-                        <option key={m} value={m}>{m}月のみ</option>
+                        <option key={m} value={m}>{m}月</option>
                       ))}
                     </optgroup>
                   </select>

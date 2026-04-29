@@ -75,6 +75,18 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
 
+    window.showToast = (message) => {
+      const popup = document.createElement('div');
+      popup.textContent = message;
+      popup.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 22px;border-radius:999px;font-size:14px;font-weight:bold;z-index:10000;pointer-events:none;opacity:1;transition:opacity 0.4s;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+      document.body.appendChild(popup);
+      setTimeout(() => { popup.style.opacity = '0'; }, 1500);
+      setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 2000);
+    };
+
+    window.showAddToast = () => window.showToast('追加しました');
+    window.showCopyToast = () => window.showToast('コピーしました');
+
     function useLocalStorage(key, initialValue) {
       const [value, setValue] = useState(() => {
         const saved = localStorage.getItem(key);
@@ -418,23 +430,8 @@
       const carrierBg = { post: 'bg-post', yamato: 'bg-yamato', sagawa: 'bg-sagawa', amazon: 'bg-amazon', yodobashi: 'bg-yodobashi', trial: 'bg-trial', aeon: 'bg-aeon' };
       const carrierTextColor = { post: 'text-white', yamato: 'text-white', sagawa: 'text-white', amazon: 'text-white', yodobashi: 'text-white', trial: 'text-white', aeon: 'text-white' };
 
-      const showCopyToast = () => {
-        const popup = document.createElement('div');
-        popup.textContent = 'コピーしました';
-        popup.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
-        document.body.appendChild(popup);
-        setTimeout(() => { popup.style.opacity = '0'; }, 900);
-        setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 1300);
-      };
-
-      const showAddToast = () => {
-        const popup = document.createElement('div');
-        popup.textContent = '追加しました';
-        popup.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:bold;z-index:9999;pointer-events:none;opacity:1;transition:opacity 0.4s';
-        document.body.appendChild(popup);
-        setTimeout(() => { popup.style.opacity = '0'; }, 900);
-        setTimeout(() => { if (document.body.contains(popup)) document.body.removeChild(popup); }, 1300);
-      };
+      const showCopyToast = () => window.showCopyToast();
+      const showAddToast = () => window.showAddToast();
 
       const deleteDelivery = (id) => {
         const updated = deliveries.filter(d => d.id !== id);
@@ -1863,7 +1860,7 @@
     // 3. 変動タブ
     // ==========================================
     const VariableTab = (props) => {
-      const { expenses, displayYearMonth, todayDay, safeBudgets, currentElectricBudget, currentGasBudget, handleBudgetChange, handleUtilityBudgetChange, monthlySpents, prevMonth, nextMonth } = props;
+      const { expenses, displayYearMonth, todayDay, safeBudgets, currentElectricBudget, currentGasBudget, handleBudgetChange, handleUtilityBudgetChange, monthlySpents, prevMonth, nextMonth, handleAddData } = props;
       
       const getCalendarCells = (ymStr) => {
         const match = ymStr.match(/(\d+)年(\d+)月/);
@@ -2879,7 +2876,7 @@
         switch(activeTab) {
           case '資産': return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;
           case '固定': return <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection={kakeiboSubPage} />;
-          case '変動費': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />;
+          case '変動費': return <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={safeBudgets} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} handleAddData={handleAddData} />;
           case 'ローン': return <LoanTab loans={loans} setLoans={setLoans} />;
           case '累計': return <TotalTab expenses={expenses} utilityBudgets={utilityBudgets} safeBudgets={safeBudgets} />;
           default: return <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} />;

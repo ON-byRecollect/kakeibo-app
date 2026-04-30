@@ -2707,11 +2707,19 @@
       const borrowingTotalForHome = Object.values(safeBorrowingAssetsForHome).reduce((sum, val) => sum + Number(val || 0), 0);
       const physicalTotalForHome = safePhysicalAssetsForHome.reduce((sum, item) => sum + Number(item.value || 0), 0);
 
-      // 未払い固定費（近い日付から上位3件）
-      const todayDateNum = new Date().getDate();
+      // 未払い固定費（繰越優先・日付順に上位3件）
+      const prevYMForUnpaid = getPrevYearMonth(currentYearMonth);
       const unpaidFixedCosts = fixedCosts
-        .filter(c => isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth))
+        .filter(c => {
+          const isUnpaidThisMonth = isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth);
+          const isUnpaidPrevMonth = isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid);
+          return isUnpaidThisMonth || isUnpaidPrevMonth;
+        })
         .sort((a, b) => {
+          const isCarryA = isCostVisibleInMonth(a, prevYMForUnpaid) && !(a.paidMonths || []).includes(prevYMForUnpaid);
+          const isCarryB = isCostVisibleInMonth(b, prevYMForUnpaid) && !(b.paidMonths || []).includes(prevYMForUnpaid);
+          if (isCarryA && !isCarryB) return -1;
+          if (!isCarryA && isCarryB) return 1;
           const parseDate = (d) => {
             if (d === '月末') return 32;
             const n = Number(d);
@@ -2721,7 +2729,11 @@
         })
         .slice(0, 3);
       const unpaidTotal = fixedCosts
-        .filter(c => isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth))
+        .filter(c => {
+          const isUnpaidThisMonth = isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth);
+          const isUnpaidPrevMonth = isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid);
+          return isUnpaidThisMonth || isUnpaidPrevMonth;
+        })
         .reduce((sum, c) => sum + c.amount, 0);
 
       const todayStr = (() => {
@@ -2894,7 +2906,9 @@
                         <span className="text-slate-800 font-black text-sm">¥{c.amount.toLocaleString()}</span>
                         <button
                           onClick={() => {
-                            const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), currentYearMonth] } : fc);
+                            const isCarry = isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid);
+                            const targetYM = isCarry ? prevYMForUnpaid : currentYearMonth;
+                            const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), targetYM] } : fc);
                             setFixedCosts(updated);
                           }}
                           className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:bg-slate-200 shrink-0"

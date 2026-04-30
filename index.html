@@ -2712,11 +2712,12 @@
       const unpaidFixedCosts = fixedCosts
         .filter(c => isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth))
         .sort((a, b) => {
-          const da = a.date === '-' ? 99 : Number(a.date);
-          const db = b.date === '-' ? 99 : Number(b.date);
-          const diffA = da >= todayDateNum ? da - todayDateNum : da + 31 - todayDateNum;
-          const diffB = db >= todayDateNum ? db - todayDateNum : db + 31 - todayDateNum;
-          return diffA - diffB;
+          const parseDate = (d) => {
+            if (d === '月末') return 32;
+            const n = Number(d);
+            return isNaN(n) ? 99 : n;
+          };
+          return parseDate(a.date) - parseDate(b.date);
         })
         .slice(0, 3);
       const unpaidTotal = fixedCosts

@@ -2709,17 +2709,30 @@
 
       // 未払い固定費（繰越優先・日付順に上位3件）
       const prevYMForUnpaid = getPrevYearMonth(currentYearMonth);
-      const unpaidFixedCosts = fixedCosts
-        .filter(c => {
-          const isUnpaidThisMonth = isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth);
-          const isUnpaidPrevMonth = isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid);
-          return isUnpaidThisMonth || isUnpaidPrevMonth;
-        })
+      
+      // 集計対象の全アイテム（固定費 + 電気ガス + 食費交通費予算）
+      const allUnpaidItems = [
+        // 今月の固定費
+        ...fixedCosts.filter(c => isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth))
+          .map(c => ({ ...c, isCarry: false, amountToSum: c.amount })),
+        // 前月の繰越固定費
+        ...fixedCosts.filter(c => isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid))
+          .map(c => ({ ...c, isCarry: true, amountToSum: c.amount })),
+        // 今月の電気・ガス
+        ...(!utilityPaid.electric.includes(currentYearMonth) ? [{ id: 'u-e', name: '電気', date: realCurrentElectricBudget.date, amountToSum: Math.max(0, realCurrentElectricBudget.amount - realCurrentMonthlySpents.electric), isCarry: false, accountLabel: realCurrentElectricBudget.account }] : []),
+        ...(!utilityPaid.gas.includes(currentYearMonth) ? [{ id: 'u-g', name: 'ガス', date: realCurrentGasBudget.date, amountToSum: Math.max(0, realCurrentGasBudget.amount - realCurrentMonthlySpents.gas), isCarry: false, accountLabel: realCurrentGasBudget.account }] : []),
+        // 前月の繰越電気・ガス
+        ...(!utilityPaid.electric.includes(prevYMForUnpaid) ? [{ id: 'c-u-e', name: '電気(繰越)', date: prevRealCurrentElectricBudget.date, amountToSum: Math.max(0, prevRealCurrentElectricBudget.amount - prevRealCurrentMonthlySpents.electric), isCarry: true, accountLabel: prevRealCurrentElectricBudget.account }] : []),
+        ...(!utilityPaid.gas.includes(prevYMForUnpaid) ? [{ id: 'c-u-g', name: 'ガス(繰越)', date: prevRealCurrentGasBudget.date, amountToSum: Math.max(0, prevRealCurrentGasBudget.amount - prevRealCurrentMonthlySpents.gas), isCarry: true, accountLabel: prevRealCurrentGasBudget.account }] : []),
+        // 食費・交通費予算（残高）
+        { id: 'b-f', name: '食費', date: realCurrentFoodBudget.date, amountToSum: Math.max(0, realCurrentFoodBudget.amount - realCurrentMonthlySpents.food), isCarry: false, accountLabel: realCurrentFoodBudget.account },
+        { id: 'b-t', name: '交通費', date: realCurrentTransportBudget.date, amountToSum: Math.max(0, realCurrentTransportBudget.amount - realCurrentMonthlySpents.transport), isCarry: false, accountLabel: realCurrentTransportBudget.account }
+      ].filter(item => item.amountToSum > 0);
+
+      const unpaidFixedCosts = [...allUnpaidItems]
         .sort((a, b) => {
-          const isCarryA = isCostVisibleInMonth(a, prevYMForUnpaid) && !(a.paidMonths || []).includes(prevYMForUnpaid);
-          const isCarryB = isCostVisibleInMonth(b, prevYMForUnpaid) && !(b.paidMonths || []).includes(prevYMForUnpaid);
-          if (isCarryA && !isCarryB) return -1;
-          if (!isCarryA && isCarryB) return 1;
+          if (a.isCarry && !b.isCarry) return -1;
+          if (!a.isCarry && b.isCarry) return 1;
           const parseDate = (d) => {
             if (d === '月末') return 32;
             const n = Number(d);
@@ -2727,14 +2740,10 @@
           };
           return parseDate(a.date) - parseDate(b.date);
         })
+        .map(item => ({ ...item, amount: item.amountToSum })) // 表示用にamountに統一
         .slice(0, 3);
-      const unpaidTotal = fixedCosts
-        .filter(c => {
-          const isUnpaidThisMonth = isCostVisibleInMonth(c, currentYearMonth) && !(c.paidMonths || []).includes(currentYearMonth);
-          const isUnpaidPrevMonth = isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid);
-          return isUnpaidThisMonth || isUnpaidPrevMonth;
-        })
-        .reduce((sum, c) => sum + c.amount, 0);
+
+      const unpaidTotal = allUnpaidItems.reduce((sum, item) => sum + item.amountToSum, 0);
 
       const todayStr = (() => {
         const d = new Date();
@@ -2904,17 +2913,24 @@
                           return c.date;
                         })()}日</span>
                         <span className="text-slate-800 font-black text-sm">¥{c.amount.toLocaleString()}</span>
-                        <button
-                          onClick={() => {
-                            const isCarry = isCostVisibleInMonth(c, prevYMForUnpaid) && !(c.paidMonths || []).includes(prevYMForUnpaid);
-                            const targetYM = isCarry ? prevYMForUnpaid : currentYearMonth;
-                            const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), targetYM] } : fc);
-                            setFixedCosts(updated);
-                          }}
-                          className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:bg-slate-200 shrink-0"
-                        >
-                          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                        </button>
+                        {!(c.id === 'b-f' || c.id === 'b-t') && (
+                          <button
+                            onClick={() => {
+                              if (c.id.includes('u-e')) {
+                                toggleUtilityPaid('electric', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                              } else if (c.id.includes('u-g')) {
+                                toggleUtilityPaid('gas', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                              } else {
+                                const targetYM = c.isCarry ? prevYMForUnpaid : currentYearMonth;
+                                const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), targetYM] } : fc);
+                                setFixedCosts(updated);
+                              }
+                            }}
+                            className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center active:bg-slate-200 shrink-0"
+                          >
+                            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                          </button>
+                        )}
                       </div>
                     );
                   })}

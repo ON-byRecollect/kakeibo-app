@@ -912,7 +912,7 @@
                 <option value="ヨドバシカメラ">ヨドバシカメラ</option>
                 <option value="その他">その他</option>
               </select>
-              <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value)} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
+              <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value.replace(/-/g, ''))} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
             </div>
             <div className="mt-5 flex gap-3">
               {editDelivery && (
@@ -1071,7 +1071,7 @@
               <option value="食料品">食料品</option>
               <option value="その他">その他</option>
             </select>
-            <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value)} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+            <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value.replace(/-/g, ''))} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
             <button onClick={saveDelivery} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
               追加する
             </button>

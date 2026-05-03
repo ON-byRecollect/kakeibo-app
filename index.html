@@ -835,7 +835,8 @@
       const timeOptionSets = {
         default: ["指定なし", "8:00〜12:00", "14:00〜16:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"],
         trial: ["指定なし", "10:00〜12:00", "12:00〜14:00", "14:00〜16:00", "16:00〜18:00", "18:00〜20:00", "20:00〜22:00"],
-        aeon: ["指定なし", "12:00〜14:00", "13:00〜15:00", "15:00〜17:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"]
+        aeon: ["指定なし", "12:00〜14:00", "13:00〜15:00", "15:00〜17:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"],
+        yodobashi: ["指定なし", "〜12:00までに配達", "〜14:00までに配達", "〜16:00までに配達", "〜18:00までに配達", "〜20:00までに配達", "〜21:00までに配達"]
       };
 
       const [carrier, setCarrier] = useState(editDelivery?.carrier || 'yamato');
@@ -847,6 +848,7 @@
       const getTimeOptions = (c) => {
         if (c === 'trial') return timeOptionSets.trial;
         if (c === 'aeon') return timeOptionSets.aeon;
+        if (c === 'yodobashi') return timeOptionSets.yodobashi;
         return timeOptionSets.default;
       };
 
@@ -1023,9 +1025,15 @@
       const timeOptionSets = {
         default: ["指定なし","8:00〜12:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
         trial: ["指定なし","10:00〜12:00","12:00〜14:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","20:00〜22:00"],
-        aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"]
+        aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
+        yodobashi: ["指定なし", "〜12:00までに配達", "〜14:00までに配達", "〜16:00までに配達", "〜18:00までに配達", "〜20:00までに配達", "〜21:00までに配達"]
       };
-      const getTimeOpts = (c) => c === 'trial' ? timeOptionSets.trial : c === 'aeon' ? timeOptionSets.aeon : timeOptionSets.default;
+      const getTimeOpts = (c) => {
+        if (c === 'trial') return timeOptionSets.trial;
+        if (c === 'aeon') return timeOptionSets.aeon;
+        if (c === 'yodobashi') return timeOptionSets.yodobashi;
+        return timeOptionSets.default;
+      };
       const saveDelivery = () => {
         const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
         updateScheduleField('deliveries', [...deliveries, { ...newData, id: Date.now() }]);

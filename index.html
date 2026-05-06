@@ -254,15 +254,15 @@
     };
 
     const IntegratedBudgetBlock = ({ title, categoryKey, budgetData, spent, iconColor, iconColorHex, handleBudgetChange, hideProgress }) => {
-      const [localAmount, setLocalAmount] = React.useState(budgetData.amount === 0 ? '' : String(budgetData.amount || ''));
-      const [localAccount, setLocalAccount] = React.useState(budgetData.account || '');
-      const [localDate, setLocalDate] = React.useState(budgetData.date || '-');
+      const [localAmount, setLocalAmount] = React.useState(budgetData?.amount === 0 ? '' : String(budgetData?.amount || ''));
+      const [localAccount, setLocalAccount] = React.useState(budgetData?.account || '');
+      const [localDate, setLocalDate] = React.useState(budgetData?.date || '-');
 
       React.useEffect(() => {
-        setLocalAmount(budgetData.amount === 0 ? '' : String(budgetData.amount || ''));
-        setLocalAccount(budgetData.account || '');
-        setLocalDate(budgetData.date || '-');
-      }, [budgetData.amount, budgetData.account, budgetData.date]);
+        setLocalAmount(budgetData?.amount === 0 ? '' : String(budgetData?.amount || ''));
+        setLocalAccount(budgetData?.account || '');
+        setLocalDate(budgetData?.date || '-');
+      }, [budgetData?.amount, budgetData?.account, budgetData?.date]);
 
       const currentAmount = Number(localAmount || 0);
       const remaining = Math.max(0, currentAmount - spent);
@@ -317,7 +317,7 @@
     // ==========================================
     // 予定タブ（スケジュール統合）
     // ==========================================
-    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate }) => {
+    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate, currentElectricBudget, currentGasBudget, monthlySpents, toggleUtilityPaid }) => {
       const [currentTime, setCurrentTime] = useState('');
       const [showDeliveryModal, setShowDeliveryModal] = useState(false);
       const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -418,13 +418,27 @@
       // 表示日の固定費（fixedCostsから表示日分を取得）
       const displayYM = `${displayDate.getFullYear()}年${displayDate.getMonth()+1}月`;
       const displayDayNum = displayDate.getDate();
+      const lastDayOfMonth = new Date(displayDate.getFullYear(), displayDate.getMonth()+1, 0).getDate();
       const todayExpenses = (fixedCosts || []).filter(c => {
         if (!isCostVisibleInMonth(c, displayYM)) return false;
         if ((c.paidMonths || []).includes(displayYM)) return false;
-        const lastDay = new Date(displayDate.getFullYear(), displayDate.getMonth()+1, 0).getDate();
-        const dateNum = c.date === '月末' ? lastDay : Number(c.date);
+        const dateNum = c.date === '月末' ? lastDayOfMonth : Number(c.date);
         return dateNum === displayDayNum;
-      }).map(c => ({ id: c.id, accountLabel: c.accountLabel, name: c.name, amount: c.amount }));
+      }).map(c => ({ id: c.id, accountLabel: c.accountLabel, name: c.name, amount: c.amount, type: 'fixed' }));
+
+      // 光熱費の追加
+      if (currentElectricBudget && !utilityPaid.electric.includes(displayYM)) {
+        const eDate = currentElectricBudget.date === '月末' ? lastDayOfMonth : Number(currentElectricBudget.date);
+        if (eDate === displayDayNum) {
+          todayExpenses.push({ id: 'u-e', accountLabel: currentElectricBudget.account, name: '電気', amount: Math.max(0, currentElectricBudget.amount - (monthlySpents?.electric || 0)), type: 'utility', category: 'electric' });
+        }
+      }
+      if (currentGasBudget && !utilityPaid.gas.includes(displayYM)) {
+        const gDate = currentGasBudget.date === '月末' ? lastDayOfMonth : Number(currentGasBudget.date);
+        if (gDate === displayDayNum) {
+          todayExpenses.push({ id: 'u-g', accountLabel: currentGasBudget.account, name: 'ガス', amount: Math.max(0, currentGasBudget.amount - (monthlySpents?.gas || 0)), type: 'utility', category: 'gas' });
+        }
+      }
 
       const carrierDisplayNames = { post: '日本郵便', yamato: 'ヤマト運輸', sagawa: '佐川急便', amazon: 'Amazon', yodobashi: 'ヨドバシ', trial: 'トライアル', aeon: 'イオン' };
       const carrierColors = { post: 'text-post', yamato: 'text-yamato', sagawa: 'text-sagawa', amazon: 'text-amazon', yodobashi: 'text-yodobashi', trial: 'text-trial', aeon: 'text-aeon' };
@@ -483,7 +497,13 @@
                 const bgColor = ACC_COLORS_MAP[acc] || '#8cd2e6';
                 const txtColor = acc === 'Ⅲ' ? '#333333' : '#ffffff';
                 return (
-                  <div key={e.id} onClick={() => toggleExpenseComplete(e.id)} className={`flex items-center gap-2 cursor-pointer active:opacity-60`}>
+                  <div key={e.id} onClick={() => {
+                    if (e.type === 'utility') {
+                      toggleUtilityPaid(e.category, displayYM);
+                    } else {
+                      toggleExpenseComplete(e.id);
+                    }
+                  }} className={`flex items-center gap-2 cursor-pointer active:opacity-60`}>
                     {acc && (
                       <span className="w-7 h-7 rounded-full text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
                     )}
@@ -2926,10 +2946,10 @@
                         {!(c.id === 'b-f' || c.id === 'b-t') && (
                           <button
                             onClick={() => {
-                              if (c.id.includes(\'u-e\')) {
-                                toggleUtilityPaid(\'electric\', c.isCarry ? prevYMForUnpaid : currentYearMonth);
-                              } else if (c.id.includes(\'u-g\')) {
-                                toggleUtilityPaid(\'gas\', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                              if (c.id === 'u-e' || c.id === 'c-u-e') {
+                                toggleUtilityPaid('electric', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                              } else if (c.id === 'u-g' || c.id === 'c-u-g') {
+                                toggleUtilityPaid('gas', c.isCarry ? prevYMForUnpaid : currentYearMonth);
                               } else {
                                 const targetYM = c.isCarry ? prevYMForUnpaid : currentYearMonth;
                                 const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), targetYM] } : fc);
@@ -2972,7 +2992,7 @@
       }
 
       const renderContent = () => {
-        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} displayDate={displayDate} setDisplayDate={setDisplayDate} />;
+        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} displayDate={displayDate} setDisplayDate={setDisplayDate} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} monthlySpents={monthlySpents} toggleUtilityPaid={toggleUtilityPaid} />;
       };
 
       const renderKakeiboContent = () => {

@@ -408,7 +408,11 @@
       };
 
       const garbages = getGarbageForDate(displayDate);
-      const todaysBaseballs = baseballs.filter(b => b.dateRaw === targetDateStr);
+      const todaysBaseballs = (baseballs || []).filter(b => {
+        const d = b.dateRaw || b.date;
+        if (!d) return false;
+        return d === targetDateStr || d === targetDateStr.slice(5);
+      });
       const todaysDeliveries = deliveries.filter(d => d.deliveryDateRaw === targetDateStr);
       const todaysAnimes = getAnimesForDate(targetDateStr);
 
@@ -499,7 +503,7 @@
               <div className="flex flex-col items-center gap-1 mb-4">
                 {todaysBaseballs.map(b => (
                   <div key={b.id} className="flex items-center gap-3 text-black">
-                    <span className="bg-black text-white px-4 py-1 rounded-full text-[1.1rem] font-bold leading-none flex items-center justify-center min-w-[3.5rem]">{b.title}</span>
+                    <span className="bg-black text-white px-4 py-1 rounded-full text-[1.1rem] font-bold leading-none flex items-center justify-center min-w-[3.5rem]">{b.title || b.opponent}</span>
                     <span className="text-[1.4rem] font-black">{b.time}</span>
                     {b.stadium && <span className="text-[1.4rem] font-black">{b.stadium}</span>}
                   </div>

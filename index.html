@@ -494,14 +494,14 @@
             <div className="flex justify-center items-baseline leading-none mb-1">
               <span className="font-black text-slate-900 leading-none" style={{fontSize: '5.5rem', letterSpacing: '-0.04em'}}>{currentTime}</span>
             </div>
-            {/* 行4: プロ野球（中央配置） or 時計アイコン（中央） */}
+            {/* 行4: プロ野球（中央配置） */}
             {todaysBaseballs.length > 0 ? (
-              <div className="flex flex-col items-center gap-1 mb-3">
+              <div className="flex flex-col items-center gap-1 mb-4">
                 {todaysBaseballs.map(b => (
-                  <div key={b.id} className="flex items-center gap-3">
-                    <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>vs{b.title}</span>
-                    <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>{b.time}</span>
-                    {b.stadium && <span className="text-[1.1rem] font-bold text-slate-400">@{b.stadium}</span>}
+                  <div key={b.id} className="flex items-center gap-3 text-black">
+                    <span className="bg-black text-white px-4 py-1 rounded-full text-[1.1rem] font-bold leading-none flex items-center justify-center min-w-[3.5rem]">{b.title}</span>
+                    <span className="text-[1.4rem] font-black">{b.time}</span>
+                    {b.stadium && <span className="text-[1.4rem] font-black">{b.stadium}</span>}
                   </div>
                 ))}
               </div>

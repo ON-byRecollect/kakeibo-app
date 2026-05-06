@@ -419,7 +419,7 @@
       // 表示日の固定費（fixedCostsから表示日分を取得）
       const displayYM = `${displayDate.getFullYear()}年${displayDate.getMonth()+1}月`;
       const displayDayNum = displayDate.getDate();
-      const todayExpenses = (fixedCosts || []).filter(c => {
+      let todayExpenses = (fixedCosts || []).filter(c => {
         if (!isCostVisibleInMonth(c, displayYM)) return false;
         if ((c.paidMonths || []).includes(displayYM)) return false;
         const lastDay = new Date(displayDate.getFullYear(), displayDate.getMonth()+1, 0).getDate();
@@ -2945,12 +2945,12 @@
                         {!(c.id === 'b-f' || c.id === 'b-t') && (
                           <button
                             onClick={() => {
-                              if (c.id.includes('u-e')) {
-                                toggleUtilityPaid('electric', c.isCarry ? c.targetYM : currentYearMonth);
-                              } else if (c.id.includes('u-g')) {
-                                toggleUtilityPaid('gas', c.isCarry ? c.targetYM : currentYearMonth);
+                              if (c.id.includes(\'u-e\')) {
+                                toggleUtilityPaid(\'electric\', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                              } else if (c.id.includes(\'u-g\')) {
+                                toggleUtilityPaid(\'gas\', c.isCarry ? prevYMForUnpaid : currentYearMonth);
                               } else {
-                                const targetYM = c.isCarry ? c.targetYM : currentYearMonth;
+                                const targetYM = c.isCarry ? prevYMForUnpaid : currentYearMonth;
                                 const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), targetYM] } : fc);
                                 setFixedCosts(updated);
                               }

@@ -332,9 +332,9 @@
 
       // Firestore から取得したデータ
       const deliveries = scheduleData?.deliveries || [];
-      const animes = scheduleData?.animes || getDefaultAnimes();
-      const baseballs = scheduleData?.baseballs || getDefaultBaseballs();
-      const garbageRules = scheduleData?.garbageRules || getDefaultGarbageRules();
+      const animes = (scheduleData?.animes && scheduleData.animes.length > 0) ? scheduleData.animes : getDefaultAnimes();
+      const baseballs = (scheduleData?.baseballs && scheduleData.baseballs.length > 0) ? scheduleData.baseballs : getDefaultBaseballs();
+      const garbageRules = (scheduleData?.garbageRules && scheduleData.garbageRules.length > 0) ? scheduleData.garbageRules : getDefaultGarbageRules();
 
       // 外部からの日付変更（タブバーの矢印）
       useEffect(() => {
@@ -1090,9 +1090,9 @@
       const [tab, setTab] = useState('delivery');
       const [showDeliveryInSettings, setShowDeliveryInSettings] = useState(false);
       const [editDeliveryInSettings, setEditDeliveryInSettings] = useState(null);
-      const animes = scheduleData?.animes || getDefaultAnimes();
-      const baseballs = scheduleData?.baseballs || getDefaultBaseballs();
-      const garbageRules = scheduleData?.garbageRules || getDefaultGarbageRules();
+      const animes = (scheduleData?.animes && scheduleData.animes.length > 0) ? scheduleData.animes : getDefaultAnimes();
+      const baseballs = (scheduleData?.baseballs && scheduleData.baseballs.length > 0) ? scheduleData.baseballs : getDefaultBaseballs();
+      const garbageRules = (scheduleData?.garbageRules && scheduleData.garbageRules.length > 0) ? scheduleData.garbageRules : getDefaultGarbageRules();
 
       // アニメ管理
       const [editAnime, setEditAnime] = useState(null);

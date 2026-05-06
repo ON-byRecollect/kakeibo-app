@@ -427,6 +427,22 @@
         return dateNum === displayDayNum;
       }).map(c => ({ id: c.id, accountLabel: c.accountLabel, name: c.name, amount: c.amount }));
 
+      // 予算項目（電気・ガス）をスケジュールに追加
+      ['electric', 'gas'].forEach(cat => {
+        const budget = (utilityBudgets[displayYM] && utilityBudgets[displayYM][cat]) || safeBudgets[cat];
+        const isPaid = (utilityPaid[cat] || []).includes(displayYM);
+        const lastDay = new Date(displayDate.getFullYear(), displayDate.getMonth()+1, 0).getDate();
+        const budgetDate = budget.date === '月末' ? lastDay : Number(budget.date);
+        if (budgetDate === displayDayNum && !isPaid) {
+          todayExpenses.push({
+            id: `u-${cat}-${displayYM}`,
+            accountLabel: budget.account,
+            name: cat === 'electric' ? '電気代' : 'ガス代',
+            amount: budget.amount - (monthlySpents[cat] || 0)
+          });
+        }
+      });
+
       const carrierDisplayNames = { post: '日本郵便', yamato: 'ヤマト運輸', sagawa: '佐川急便', amazon: 'Amazon', yodobashi: 'ヨドバシ', trial: 'トライアル', aeon: 'イオン' };
       const carrierColors = { post: 'text-post', yamato: 'text-yamato', sagawa: 'text-sagawa', amazon: 'text-amazon', yodobashi: 'text-yodobashi', trial: 'text-trial', aeon: 'text-aeon' };
       const urls = { post: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=", yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=", sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=", amazon: "https://www.amazon.co.jp/gp/your-account/order-history", yodobashi: "https://www.yodobashi.com/", trial: "https://www.trial-net.co.jp/", aeon: "https://www.aeon.com/" };
@@ -2930,11 +2946,11 @@
                           <button
                             onClick={() => {
                               if (c.id.includes('u-e')) {
-                                toggleUtilityPaid('electric', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                                toggleUtilityPaid('electric', c.isCarry ? c.targetYM : currentYearMonth);
                               } else if (c.id.includes('u-g')) {
-                                toggleUtilityPaid('gas', c.isCarry ? prevYMForUnpaid : currentYearMonth);
+                                toggleUtilityPaid('gas', c.isCarry ? c.targetYM : currentYearMonth);
                               } else {
-                                const targetYM = c.isCarry ? prevYMForUnpaid : currentYearMonth;
+                                const targetYM = c.isCarry ? c.targetYM : currentYearMonth;
                                 const updated = fixedCosts.map(fc => fc.id === c.id ? { ...fc, paidMonths: [...(fc.paidMonths || []), targetYM] } : fc);
                                 setFixedCosts(updated);
                               }

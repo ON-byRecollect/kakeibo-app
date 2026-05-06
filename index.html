@@ -501,6 +501,7 @@
                   <div key={b.id} className="flex items-center gap-3">
                     <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>vs{b.title}</span>
                     <span className="text-[1.4rem] font-black" style={{color: '#004090'}}>{b.time}</span>
+                    {b.stadium && <span className="text-[1.1rem] font-bold text-slate-400">@{b.stadium}</span>}
                   </div>
                 ))}
               </div>
@@ -660,144 +661,145 @@
       ];
     }
 
+    const baseballTeams = ['巨人', 'ヤクルト', '阪神', '中日', '広島', 'オリックス', 'ロッテ', '楽天', 'ソフトバンク', '日本ハム', '西武'];
+    const baseballStadiums = ['横浜', '神宮', '東京ドーム', 'マツダスタジアム', '甲子園', 'バンテリンドーム', 'ベルーナドーム', 'エスコンF', 'ZOZOマリン', '楽天モバイル', 'みずほPayPay', '京セラD大阪', 'ほっともっと神戸', '岐阜', 'ハードオフ新潟', '静岡'];
+
     function getDefaultBaseballs() {
       return [
-        { id: 1, title: '阪神', dateRaw: '2026-04-01', time: '18:00' },
-        { id: 2, title: '阪神', dateRaw: '2026-04-02', time: '18:00' },
-        { id: 3, title: '巨人', dateRaw: '2026-04-03', time: '18:00' },
-        { id: 4, title: '巨人', dateRaw: '2026-04-04', time: '14:00' },
-        { id: 5, title: '巨人', dateRaw: '2026-04-05', time: '14:00' },
-        { id: 6, title: '中日', dateRaw: '2026-04-07', time: '18:00' },
-        { id: 7, title: '中日', dateRaw: '2026-04-08', time: '18:00' },
-        { id: 8, title: '広島', dateRaw: '2026-04-11', time: '14:00' },
-        { id: 9, title: '広島', dateRaw: '2026-04-12', time: '14:00' },
-        { id: 10, title: 'ヤクルト', dateRaw: '2026-04-14', time: '18:00' },
-        { id: 11, title: 'ヤクルト', dateRaw: '2026-04-16', time: '18:00' },
-        { id: 12, title: '広島', dateRaw: '2026-04-17', time: '18:00' },
-        { id: 13, title: '広島', dateRaw: '2026-04-18', time: '14:00' },
-        { id: 14, title: '広島', dateRaw: '2026-04-19', time: '13:30' },
-        { id: 15, title: '阪神', dateRaw: '2026-04-21', time: '17:45' },
-        { id: 16, title: '阪神', dateRaw: '2026-04-22', time: '17:45' },
-        { id: 17, title: '巨人', dateRaw: '2026-04-24', time: '18:00' },
-        { id: 18, title: '巨人', dateRaw: '2026-04-25', time: '14:00' },
-        { id: 19, title: '巨人', dateRaw: '2026-04-26', time: '14:00' },
-        { id: 20, title: '中日', dateRaw: '2026-04-28', time: '18:00' },
-        { id: 21, title: '中日', dateRaw: '2026-04-29', time: '14:00' },
-        { id: 22, title: '中日', dateRaw: '2026-04-30', time: '18:00' },
-        { id: 23, title: 'ヤクルト', dateRaw: '2026-05-01', time: '18:00' },
-        { id: 24, title: 'ヤクルト', dateRaw: '2026-05-02', time: '18:00' },
-        { id: 25, title: 'ヤクルト', dateRaw: '2026-05-03', time: '18:00' },
-        { id: 26, title: '広島', dateRaw: '2026-05-04', time: '15:00' },
-        { id: 27, title: '広島', dateRaw: '2026-05-05', time: '14:00' },
-        { id: 28, title: '広島', dateRaw: '2026-05-06', time: '14:00' },
-        { id: 29, title: '阪神', dateRaw: '2026-05-08', time: '18:00' },
-        { id: 30, title: '阪神', dateRaw: '2026-05-09', time: '14:00' },
-        { id: 31, title: '阪神', dateRaw: '2026-05-10', time: '14:00' },
-        { id: 32, title: '中日', dateRaw: '2026-05-12', time: '18:00' },
-        { id: 33, title: '中日', dateRaw: '2026-05-13', time: '18:00' },
-        { id: 34, title: '中日', dateRaw: '2026-05-14', time: '18:00' },
-        { id: 35, title: '巨人', dateRaw: '2026-05-15', time: '18:00' },
-        { id: 36, title: '巨人', dateRaw: '2026-05-16', time: '14:00' },
-        { id: 37, title: '巨人', dateRaw: '2026-05-17', time: '14:00' },
-        { id: 38, title: '広島', dateRaw: '2026-05-19', time: '18:00' },
-        { id: 39, title: '広島', dateRaw: '2026-05-20', time: '18:00' },
-        { id: 40, title: '広島', dateRaw: '2026-05-21', time: '18:00' },
-        { id: 41, title: 'ヤクルト', dateRaw: '2026-05-23', time: '14:00' },
-        { id: 42, title: 'ヤクルト', dateRaw: '2026-05-24', time: '14:00' },
-        { id: 43, title: 'オリックス', dateRaw: '2026-05-26', time: '17:45' },
-        { id: 44, title: 'オリックス', dateRaw: '2026-05-27', time: '17:45' },
-        { id: 45, title: 'オリックス', dateRaw: '2026-05-28', time: '17:45' },
-        { id: 46, title: '西武', dateRaw: '2026-05-29', time: '18:00' },
-        { id: 47, title: '西武', dateRaw: '2026-05-30', time: '14:00' },
-        { id: 48, title: '西武', dateRaw: '2026-05-31', time: '14:00' },
-        { id: 49, title: '楽天', dateRaw: '2026-06-02', time: '18:00' },
-        { id: 50, title: '楽天', dateRaw: '2026-06-03', time: '18:00' },
-        { id: 51, title: '楽天', dateRaw: '2026-06-04', time: '18:00' },
-        { id: 52, title: 'SB', dateRaw: '2026-06-05', time: '18:00' },
-        { id: 53, title: 'SB', dateRaw: '2026-06-06', time: '14:00' },
-        { id: 54, title: 'SB', dateRaw: '2026-06-07', time: '14:00' },
-        { id: 55, title: 'SB', dateRaw: '2026-06-08', time: '18:00' },
-        { id: 56, title: '日ハム', dateRaw: '2026-06-09', time: '18:00' },
-        { id: 57, title: '日ハム', dateRaw: '2026-06-10', time: '18:00' },
-        { id: 58, title: '日ハム', dateRaw: '2026-06-11', time: '18:00' },
-        { id: 59, title: 'ロッテ', dateRaw: '2026-06-12', time: '18:00' },
-        { id: 60, title: 'ロッテ', dateRaw: '2026-06-13', time: '14:00' },
-        { id: 61, title: 'ロッテ', dateRaw: '2026-06-14', time: '14:00' },
-        { id: 62, title: '阪神', dateRaw: '2026-06-19', time: '18:15' },
-        { id: 63, title: '阪神', dateRaw: '2026-06-20', time: '18:15' },
-        { id: 64, title: '阪神', dateRaw: '2026-06-21', time: '18:15' },
-        { id: 65, title: '中日', dateRaw: '2026-06-23', time: '18:00' },
-        { id: 66, title: '中日', dateRaw: '2026-06-24', time: '18:00' },
-        { id: 67, title: '中日', dateRaw: '2026-06-25', time: '18:00' },
-        { id: 68, title: '巨人', dateRaw: '2026-06-26', time: '18:15' },
-        { id: 69, title: '巨人', dateRaw: '2026-06-27', time: '18:15' },
-        { id: 70, title: '巨人', dateRaw: '2026-06-28', time: '18:15' },
-        { id: 71, title: '広島', dateRaw: '2026-06-30', time: '18:00' },
-        { id: 72, title: '広島', dateRaw: '2026-07-02', time: '18:15' },
-        { id: 73, title: 'ヤクルト', dateRaw: '2026-07-03', time: '18:00' },
-        { id: 74, title: 'ヤクルト', dateRaw: '2026-07-04', time: '18:00' },
-        { id: 75, title: 'ヤクルト', dateRaw: '2026-07-05', time: '18:00' },
-        { id: 76, title: '中日', dateRaw: '2026-07-07', time: '18:15' },
-        { id: 77, title: '中日', dateRaw: '2026-07-08', time: '18:15' },
-        { id: 78, title: '中日', dateRaw: '2026-07-09', time: '18:15' },
-        { id: 79, title: '巨人', dateRaw: '2026-07-10', time: '18:15' },
-        { id: 80, title: '巨人', dateRaw: '2026-07-11', time: '18:00' },
-        { id: 81, title: '巨人', dateRaw: '2026-07-12', time: '18:00' },
-        { id: 82, title: '広島', dateRaw: '2026-07-14', time: '18:00' },
-        { id: 83, title: '広島', dateRaw: '2026-07-15', time: '18:00' },
-        { id: 84, title: 'ヤクルト', dateRaw: '2026-07-17', time: '18:00' },
-        { id: 85, title: 'ヤクルト', dateRaw: '2026-07-18', time: '18:00' },
-        { id: 86, title: 'ヤクルト', dateRaw: '2026-07-19', time: '18:00' },
-        { id: 87, title: '阪神', dateRaw: '2026-07-20', time: '18:00' },
-        { id: 88, title: '阪神', dateRaw: '2026-07-21', time: '18:00' },
-        { id: 89, title: '阪神', dateRaw: '2026-07-22', time: '18:00' },
-        { id: 90, title: '中日', dateRaw: '2026-07-24', time: '18:00' },
-        { id: 91, title: '中日', dateRaw: '2026-07-25', time: '14:00' },
-        { id: 92, title: '中日', dateRaw: '2026-07-26', time: '13:30' },
-        { id: 93, title: '巨人', dateRaw: '2026-07-31', time: '18:00' },
-        { id: 94, title: '巨人', dateRaw: '2026-08-01', time: '18:00' },
-        { id: 95, title: '巨人', dateRaw: '2026-08-02', time: '14:00' },
-        { id: 96, title: '阪神', dateRaw: '2026-08-04', time: '17:45' },
-        { id: 97, title: '阪神', dateRaw: '2026-08-05', time: '17:45' },
-        { id: 98, title: '阪神', dateRaw: '2026-08-06', time: '17:45' },
-        { id: 99, title: '広島', dateRaw: '2026-08-07', time: '18:00' },
-        { id: 100, title: '広島', dateRaw: '2026-08-08', time: '18:00' },
-        { id: 101, title: '広島', dateRaw: '2026-08-09', time: '18:00' },
-        { id: 102, title: '中日', dateRaw: '2026-08-11', time: '14:00' },
-        { id: 103, title: '中日', dateRaw: '2026-08-12', time: '18:00' },
-        { id: 104, title: '中日', dateRaw: '2026-08-13', time: '18:00' },
-        { id: 105, title: 'ヤクルト', dateRaw: '2026-08-14', time: '18:00' },
-        { id: 106, title: 'ヤクルト', dateRaw: '2026-08-15', time: '18:00' },
-        { id: 107, title: 'ヤクルト', dateRaw: '2026-08-16', time: '18:00' },
-        { id: 108, title: '巨人', dateRaw: '2026-08-18', time: '17:45' },
-        { id: 109, title: '巨人', dateRaw: '2026-08-19', time: '17:45' },
-        { id: 110, title: '巨人', dateRaw: '2026-08-20', time: '17:45' },
-        { id: 111, title: '阪神', dateRaw: '2026-08-21', time: '18:00' },
-        { id: 112, title: '阪神', dateRaw: '2026-08-22', time: '18:00' },
-        { id: 113, title: '阪神', dateRaw: '2026-08-23', time: '18:00' },
-        { id: 114, title: '広島', dateRaw: '2026-08-25', time: '18:00' },
-        { id: 115, title: '広島', dateRaw: '2026-08-26', time: '18:00' },
-        { id: 116, title: '広島', dateRaw: '2026-08-27', time: '18:00' },
-        { id: 117, title: '中日', dateRaw: '2026-08-28', time: '18:00' },
-        { id: 118, title: '中日', dateRaw: '2026-08-29', time: '18:00' },
-        { id: 119, title: '中日', dateRaw: '2026-08-30', time: '18:00' },
-        { id: 120, title: '巨人', dateRaw: '2026-09-01', time: '18:00' },
-        { id: 121, title: '巨人', dateRaw: '2026-09-02', time: '18:00' },
-        { id: 122, title: '阪神', dateRaw: '2026-09-05', time: '18:00' },
-        { id: 123, title: '阪神', dateRaw: '2026-09-06', time: '18:00' },
-        { id: 124, title: 'ヤクルト', dateRaw: '2026-09-08', time: '18:00' },
-        { id: 125, title: 'ヤクルト', dateRaw: '2026-09-09', time: '18:00' },
-        { id: 126, title: 'ヤクルト', dateRaw: '2026-09-10', time: '18:00' },
-        { id: 127, title: '広島', dateRaw: '2026-09-11', time: '18:00' },
-        { id: 128, title: '広島', dateRaw: '2026-09-12', time: '14:00' },
-        { id: 129, title: '巨人', dateRaw: '2026-09-13', time: '18:00' },
-        { id: 130, title: '巨人', dateRaw: '2026-09-14', time: '18:00' },
-        { id: 131, title: 'ヤクルト', dateRaw: '2026-09-18', time: '18:00' },
-        { id: 132, title: 'ヤクルト', dateRaw: '2026-09-19', time: '18:00' },
-        { id: 133, title: '阪神', dateRaw: '2026-09-20', time: '18:00' },
-        { id: 134, title: '阪神', dateRaw: '2026-09-21', time: '14:00' },
-        { id: 135, title: '中日', dateRaw: '2026-09-22', time: '18:00' },
-        { id: 136, title: '中日', dateRaw: '2026-09-23', time: '18:00' }
+        { id: 1, title: '阪神', dateRaw: '2026-04-01', time: '18:00', stadium: '横浜' },
+        { id: 2, title: '阪神', dateRaw: '2026-04-02', time: '18:00', stadium: '横浜' },
+        { id: 3, title: '巨人', dateRaw: '2026-04-03', time: '18:00', stadium: '東京ドーム' },
+        { id: 4, title: '巨人', dateRaw: '2026-04-04', time: '14:00', stadium: '東京ドーム' },
+        { id: 5, title: '巨人', dateRaw: '2026-04-05', time: '14:00', stadium: '東京ドーム' },
+        { id: 6, title: '中日', dateRaw: '2026-04-07', time: '18:00', stadium: '横浜' },
+        { id: 7, title: '中日', dateRaw: '2026-04-08', time: '18:00', stadium: '横浜' },
+        { id: 8, title: '広島', dateRaw: '2026-04-11', time: '14:00', stadium: 'マツダスタジアム' },
+        { id: 9, title: '広島', dateRaw: '2026-04-12', time: '14:00', stadium: 'マツダスタジアム' },
+        { id: 10, title: 'ヤクルト', dateRaw: '2026-04-14', time: '18:00', stadium: '横浜' },
+        { id: 11, title: 'ヤクルト', dateRaw: '2026-04-16', time: '18:00', stadium: '横浜' },
+        { id: 12, title: '広島', dateRaw: '2026-04-17', time: '18:00', stadium: '横浜' },
+        { id: 13, title: '広島', dateRaw: '2026-04-18', time: '14:00', stadium: '横浜' },
+        { id: 14, title: '広島', dateRaw: '2026-04-19', time: '13:30', stadium: '横浜' },
+        { id: 15, title: '阪神', dateRaw: '2026-04-21', time: '17:45', stadium: '甲子園' },
+        { id: 16, title: '阪神', dateRaw: '2026-04-22', time: '17:45', stadium: '甲子園' },
+        { id: 17, title: '巨人', dateRaw: '2026-04-24', time: '18:00', stadium: '横浜' },
+        { id: 18, title: '巨人', dateRaw: '2026-04-25', time: '14:00', stadium: '横浜' },
+        { id: 19, title: '巨人', dateRaw: '2026-04-26', time: '14:00', stadium: '横浜' },
+        { id: 20, title: '中日', dateRaw: '2026-04-28', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 21, title: '中日', dateRaw: '2026-04-29', time: '14:00', stadium: 'バンテリンドーム' },
+        { id: 22, title: '中日', dateRaw: '2026-04-30', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 1001, dateRaw: '2026-05-01', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1002, dateRaw: '2026-05-02', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1003, dateRaw: '2026-05-03', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1004, dateRaw: '2026-05-04', title: '広島', time: '15:00', stadium: '横浜' },
+        { id: 1005, dateRaw: '2026-05-05', title: '広島', time: '14:00', stadium: '横浜' },
+        { id: 1006, dateRaw: '2026-05-06', title: '広島', time: '14:00', stadium: '横浜' },
+        { id: 1007, dateRaw: '2026-05-08', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1008, dateRaw: '2026-05-09', title: '阪神', time: '14:00', stadium: '甲子園' },
+        { id: 1009, dateRaw: '2026-05-10', title: '阪神', time: '14:00', stadium: '甲子園' },
+        { id: 1010, dateRaw: '2026-05-12', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1011, dateRaw: '2026-05-13', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1012, dateRaw: '2026-05-14', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1013, dateRaw: '2026-05-15', title: '巨人', time: '18:00', stadium: '東京ドーム' },
+        { id: 1014, dateRaw: '2026-05-16', title: '巨人', time: '14:00', stadium: '東京ドーム' },
+        { id: 1015, dateRaw: '2026-05-17', title: '巨人', time: '14:00', stadium: '東京ドーム' },
+        { id: 1016, dateRaw: '2026-05-19', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1017, dateRaw: '2026-05-20', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1018, dateRaw: '2026-05-21', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1019, dateRaw: '2026-05-23', title: 'ヤクルト', time: '14:00', stadium: '横浜' },
+        { id: 1020, dateRaw: '2026-05-24', title: 'ヤクルト', time: '14:00', stadium: '横浜' },
+        { id: 1021, dateRaw: '2026-05-26', title: 'オリックス', time: '17:45', stadium: '横浜' },
+        { id: 1022, dateRaw: '2026-05-27', title: 'オリックス', time: '17:45', stadium: '横浜' },
+        { id: 1023, dateRaw: '2026-05-28', title: 'オリックス', time: '17:45', stadium: '横浜' },
+        { id: 1024, dateRaw: '2026-05-29', title: '西武', time: '18:00', stadium: 'ベルーナドーム' },
+        { id: 1025, dateRaw: '2026-05-30', title: '西武', time: '14:00', stadium: 'ベルーナドーム' },
+        { id: 1026, dateRaw: '2026-05-31', title: '西武', time: '14:00', stadium: 'ベルーナドーム' },
+        { id: 1027, dateRaw: '2026-06-02', title: '楽天', time: '18:00', stadium: '横浜' },
+        { id: 1028, dateRaw: '2026-06-03', title: '楽天', time: '18:00', stadium: '横浜' },
+        { id: 1029, dateRaw: '2026-06-04', title: '楽天', time: '18:00', stadium: '横浜' },
+        { id: 1030, dateRaw: '2026-06-05', title: 'ソフトバンク', time: '18:00', stadium: '横浜' },
+        { id: 1031, dateRaw: '2026-06-06', title: 'ソフトバンク', time: '14:00', stadium: '横浜' },
+        { id: 1032, dateRaw: '2026-06-07', title: 'ソフトバンク', time: '14:00', stadium: '横浜' },
+        { id: 1033, dateRaw: '2026-06-09', title: '日本ハム', time: '18:00', stadium: 'エスコンF' },
+        { id: 1034, dateRaw: '2026-06-10', title: '日本ハム', time: '18:00', stadium: 'エスコンF' },
+        { id: 1035, dateRaw: '2026-06-11', title: '日本ハム', time: '18:00', stadium: 'エスコンF' },
+        { id: 1036, dateRaw: '2026-06-12', title: 'ロッテ', time: '18:00', stadium: 'ZOZOマリン' },
+        { id: 1037, dateRaw: '2026-06-13', title: 'ロッテ', time: '14:00', stadium: 'ZOZOマリン' },
+        { id: 1038, dateRaw: '2026-06-14', title: 'ロッテ', time: '14:00', stadium: 'ZOZOマリン' },
+        { id: 1039, dateRaw: '2026-06-19', title: '阪神', time: '18:15', stadium: '横浜' },
+        { id: 1040, dateRaw: '2026-06-20', title: '阪神', time: '18:15', stadium: '横浜' },
+        { id: 1041, dateRaw: '2026-06-21', title: '阪神', time: '18:15', stadium: '横浜' },
+        { id: 1042, dateRaw: '2026-06-23', title: '中日', time: '18:00', stadium: '岐阜' },
+        { id: 1043, dateRaw: '2026-06-24', title: '中日', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 1044, dateRaw: '2026-06-25', title: '中日', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 1045, dateRaw: '2026-06-26', title: '巨人', time: '18:15', stadium: '横浜' },
+        { id: 1046, dateRaw: '2026-06-27', title: '巨人', time: '18:15', stadium: '横浜' },
+        { id: 1047, dateRaw: '2026-06-28', title: '巨人', time: '18:15', stadium: '横浜' },
+        { id: 1048, dateRaw: '2026-06-30', title: '広島', time: '18:00', stadium: 'ハードオフ新潟' },
+        { id: 1049, dateRaw: '2026-07-02', title: '広島', time: '18:15', stadium: '横浜' },
+        { id: 1050, dateRaw: '2026-07-03', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1051, dateRaw: '2026-07-04', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1052, dateRaw: '2026-07-05', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1053, dateRaw: '2026-07-07', title: '中日', time: '18:15', stadium: '横浜' },
+        { id: 1054, dateRaw: '2026-07-08', title: '中日', time: '18:15', stadium: '横浜' },
+        { id: 1055, dateRaw: '2026-07-09', title: '中日', time: '18:15', stadium: '横浜' },
+        { id: 1056, dateRaw: '2026-07-10', title: '巨人', time: '18:15', stadium: '横浜' },
+        { id: 1057, dateRaw: '2026-07-11', title: '巨人', time: '18:00', stadium: '横浜' },
+        { id: 1058, dateRaw: '2026-07-12', title: '巨人', time: '18:00', stadium: '横浜' },
+        { id: 1059, dateRaw: '2026-07-14', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1060, dateRaw: '2026-07-15', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1061, dateRaw: '2026-07-17', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1062, dateRaw: '2026-07-18', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1063, dateRaw: '2026-07-19', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1064, dateRaw: '2026-07-20', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1065, dateRaw: '2026-07-21', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1066, dateRaw: '2026-07-22', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1067, dateRaw: '2026-07-24', title: '中日', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 1068, dateRaw: '2026-07-25', title: '中日', time: '14:00', stadium: 'バンテリンドーム' },
+        { id: 1069, dateRaw: '2026-07-26', title: '中日', time: '13:30', stadium: 'バンテリンドーム' },
+        { id: 1070, dateRaw: '2026-07-31', title: '巨人', time: '18:00', stadium: '東京ドーム' },
+        { id: 1071, dateRaw: '2026-08-01', title: '巨人', time: '18:00', stadium: '東京ドーム' },
+        { id: 1072, dateRaw: '2026-08-02', title: '巨人', time: '14:00', stadium: '東京ドーム' },
+        { id: 1073, dateRaw: '2026-08-04', title: '阪神', time: '17:45', stadium: '横浜' },
+        { id: 1074, dateRaw: '2026-08-05', title: '阪神', time: '17:45', stadium: '横浜' },
+        { id: 1075, dateRaw: '2026-08-06', title: '阪神', time: '17:45', stadium: '横浜' },
+        { id: 1076, dateRaw: '2026-08-07', title: '広島', time: '18:00', stadium: '横浜' },
+        { id: 1077, dateRaw: '2026-08-08', title: '広島', time: '18:00', stadium: '横浜' },
+        { id: 1078, dateRaw: '2026-08-09', title: '広島', time: '18:00', stadium: '横浜' },
+        { id: 1079, dateRaw: '2026-08-11', title: '中日', time: '14:00', stadium: 'バンテリンドーム' },
+        { id: 1080, dateRaw: '2026-08-12', title: '中日', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 1081, dateRaw: '2026-08-13', title: '中日', time: '18:00', stadium: 'バンテリンドーム' },
+        { id: 1082, dateRaw: '2026-08-14', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1083, dateRaw: '2026-08-15', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1084, dateRaw: '2026-08-16', title: 'ヤクルト', time: '18:00', stadium: '神宮' },
+        { id: 1085, dateRaw: '2026-08-18', title: '巨人', time: '17:45', stadium: '横浜' },
+        { id: 1086, dateRaw: '2026-08-19', title: '巨人', time: '17:45', stadium: '横浜' },
+        { id: 1087, dateRaw: '2026-08-20', title: '巨人', time: '17:45', stadium: '横浜' },
+        { id: 1088, dateRaw: '2026-08-21', title: '阪神', time: '18:00', stadium: '横浜' },
+        { id: 1089, dateRaw: '2026-08-22', title: '阪神', time: '18:00', stadium: '横浜' },
+        { id: 1090, dateRaw: '2026-08-23', title: '阪神', time: '18:00', stadium: '横浜' },
+        { id: 1091, dateRaw: '2026-08-25', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1092, dateRaw: '2026-08-26', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1093, dateRaw: '2026-08-27', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1094, dateRaw: '2026-08-28', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1095, dateRaw: '2026-08-29', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1096, dateRaw: '2026-08-30', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1097, dateRaw: '2026-09-01', title: '巨人', time: '18:00', stadium: '京セラD大阪' },
+        { id: 1098, dateRaw: '2026-09-02', title: '巨人', time: '18:00', stadium: '京セラD大阪' },
+        { id: 1099, dateRaw: '2026-09-05', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1100, dateRaw: '2026-09-06', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1101, dateRaw: '2026-09-08', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1102, dateRaw: '2026-09-09', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1103, dateRaw: '2026-09-10', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1104, dateRaw: '2026-09-11', title: '広島', time: '18:00', stadium: 'マツダスタジアム' },
+        { id: 1105, dateRaw: '2026-09-12', title: '広島', time: '14:00', stadium: 'マツダスタジアム' },
+        { id: 1106, dateRaw: '2026-09-13', title: '巨人', time: '18:00', stadium: '横浜' },
+        { id: 1107, dateRaw: '2026-09-18', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1108, dateRaw: '2026-09-19', title: 'ヤクルト', time: '18:00', stadium: '横浜' },
+        { id: 1109, dateRaw: '2026-09-20', title: '阪神', time: '18:00', stadium: '甲子園' },
+        { id: 1110, dateRaw: '2026-09-21', title: '阪神', time: '14:00', stadium: '甲子園' },
+        { id: 1111, dateRaw: '2026-09-22', title: '中日', time: '18:00', stadium: '横浜' },
+        { id: 1112, dateRaw: '2026-09-23', title: '中日', time: '18:00', stadium: '横浜' }
       ];
     }
 
@@ -835,8 +837,7 @@
       const timeOptionSets = {
         default: ["指定なし", "8:00〜12:00", "14:00〜16:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"],
         trial: ["指定なし", "10:00〜12:00", "12:00〜14:00", "14:00〜16:00", "16:00〜18:00", "18:00〜20:00", "20:00〜22:00"],
-        aeon: ["指定なし", "12:00〜14:00", "13:00〜15:00", "15:00〜17:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"],
-        yodobashi: ["指定なし", "〜12:00", "〜14:00", "〜16:00", "〜18:00", "〜20:00", "〜21:00"]
+        aeon: ["指定なし", "12:00〜14:00", "13:00〜15:00", "15:00〜17:00", "16:00〜18:00", "18:00〜20:00", "19:00〜21:00"]
       };
 
       const [carrier, setCarrier] = useState(editDelivery?.carrier || 'yamato');
@@ -848,7 +849,6 @@
       const getTimeOptions = (c) => {
         if (c === 'trial') return timeOptionSets.trial;
         if (c === 'aeon') return timeOptionSets.aeon;
-        if (c === 'yodobashi') return timeOptionSets.yodobashi;
         return timeOptionSets.default;
       };
 
@@ -880,15 +880,7 @@
             </div>
             <div className="space-y-3.5">
               <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-              <select value={carrier} onChange={e => { 
-                const c = e.target.value; 
-                setCarrier(c); 
-                setTimeSlot('指定なし'); 
-                if (c === 'aeon' || c === 'trial') setRemark('食料品'); 
-                else if (c === 'amazon') setRemark('Amazon');
-                else if (c === 'yodobashi') setRemark('ヨドバシカメラ');
-                else setRemark(''); 
-              }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
+              <select value={carrier} onChange={e => { const c = e.target.value; setCarrier(c); setTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setRemark('食料品'); else setRemark(''); }} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 <option value="yamato">ヤマト運輸</option>
                 <option value="post">日本郵便</option>
                 <option value="sagawa">佐川急便</option>
@@ -900,7 +892,7 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <select value={remark} onChange={e => setRemark(e.target.value)} disabled={carrier === 'aeon' || carrier === 'trial' || carrier === 'amazon' || carrier === 'yodobashi'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${ (carrier === 'aeon' || carrier === 'trial' || carrier === 'amazon' || carrier === 'yodobashi') ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+              <select value={remark} onChange={e => setRemark(e.target.value)} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
                 <option value=""></option>
                 <option value="セカスト">セカスト</option>
                 <option value="GEO">GEO</option>
@@ -910,11 +902,10 @@
                 <option value="トレファク">トレファク</option>
                 <option value="Ali Express">Ali Express</option>
                 <option value="ELECOM">ELECOM</option>
-                <option value="Amazon">Amazon</option>
                 <option value="ヨドバシカメラ">ヨドバシカメラ</option>
                 <option value="その他">その他</option>
               </select>
-              <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value.replace(/-/g, ''))} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
+              <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value)} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
             </div>
             <div className="mt-5 flex gap-3">
               {editDelivery && (
@@ -1025,15 +1016,9 @@
       const timeOptionSets = {
         default: ["指定なし","8:00〜12:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
         trial: ["指定なし","10:00〜12:00","12:00〜14:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","20:00〜22:00"],
-        aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
-        yodobashi: ["指定なし", "〜12:00", "〜14:00", "〜16:00", "〜18:00", "〜20:00", "〜21:00"]
+        aeon: ["指定なし","12:00〜14:00","13:00〜15:00","15:00〜17:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"]
       };
-      const getTimeOpts = (c) => {
-        if (c === 'trial') return timeOptionSets.trial;
-        if (c === 'aeon') return timeOptionSets.aeon;
-        if (c === 'yodobashi') return timeOptionSets.yodobashi;
-        return timeOptionSets.default;
-      };
+      const getTimeOpts = (c) => c === 'trial' ? timeOptionSets.trial : c === 'aeon' ? timeOptionSets.aeon : timeOptionSets.default;
       const saveDelivery = () => {
         const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
         updateScheduleField('deliveries', [...deliveries, { ...newData, id: Date.now() }]);
@@ -1044,15 +1029,7 @@
         <div className="space-y-3">
           <div className="bg-slate-50 rounded-xl p-3 space-y-2">
             <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-            <select value={dCarrier} onChange={e => { 
-              const c = e.target.value; 
-              setDCarrier(c); 
-              setDTimeSlot('指定なし'); 
-              if (c === 'aeon' || c === 'trial') setDRemark('食料品'); 
-              else if (c === 'amazon') setDRemark('Amazon');
-              else if (c === 'yodobashi') setDRemark('ヨドバシカメラ');
-              else setDRemark(''); 
-            }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
+            <select value={dCarrier} onChange={e => { const c = e.target.value; setDCarrier(c); setDTimeSlot('指定なし'); if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark(''); }} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               <option value="yamato">ヤマト運輸</option>
               <option value="post">日本郵便</option>
               <option value="sagawa">佐川急便</option>
@@ -1064,7 +1041,7 @@
             <select value={dTimeSlot} onChange={e => setDTimeSlot(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               {getTimeOpts(dCarrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-            <select value={dRemark} onChange={e => setDRemark(e.target.value)} disabled={dCarrier === 'aeon' || dCarrier === 'trial' || dCarrier === 'amazon' || dCarrier === 'yodobashi'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${ (dCarrier === 'aeon' || dCarrier === 'trial' || dCarrier === 'amazon' || dCarrier === 'yodobashi') ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
+            <select value={dRemark} onChange={e => setDRemark(e.target.value)} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
               <option value=""></option>
               <option value="セカスト">セカスト</option>
               <option value="GEO">GEO</option>
@@ -1074,12 +1051,11 @@
               <option value="トレファク">トレファク</option>
               <option value="Ali Express">Ali Express</option>
               <option value="ELECOM">ELECOM</option>
-              <option value="Amazon">Amazon</option>
               <option value="ヨドバシカメラ">ヨドバシカメラ</option>
               <option value="食料品">食料品</option>
               <option value="その他">その他</option>
             </select>
-            <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value.replace(/-/g, ''))} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+            <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value)} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
             <button onClick={saveDelivery} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
               追加する
             </button>
@@ -1101,14 +1077,14 @@
       const [newAnimeDate, setNewAnimeDate] = useState('');
       const [newAnimeWeekly, setNewAnimeWeekly] = useState(true);
       const [newAnimeWeeks, setNewAnimeWeeks] = useState(12);
-
       // 野球管理
       const [editBaseball, setEditBaseball] = useState(null);
       const [newBaseballTitle, setNewBaseballTitle] = useState('');
       const [newBaseballDate, setNewBaseballDate] = useState('');
       const [newBaseballTime, setNewBaseballTime] = useState('18:00');
+      const [newBaseballStadium, setNewBaseballStadium] = useState('横浜');
 
-      // ゴミ管理
+      // ゴミ出し管理
       const [editGarbage, setEditGarbage] = useState(null);
       const [newGarbageName, setNewGarbageName] = useState('');
       const [newGarbageBg, setNewGarbageBg] = useState('bg-[#f05a5a]');
@@ -1135,11 +1111,11 @@
 
       const saveBaseball = () => {
         if (!newBaseballTitle || !newBaseballDate) return;
-        const newItem = { id: editBaseball ? editBaseball.id : Date.now(), title: newBaseballTitle, dateRaw: newBaseballDate, time: newBaseballTime };
+        const newItem = { id: editBaseball ? editBaseball.id : Date.now(), title: newBaseballTitle, dateRaw: newBaseballDate, time: newBaseballTime, stadium: newBaseballStadium };
         const updated = editBaseball ? baseballs.map(b => b.id === editBaseball.id ? newItem : b) : [...baseballs, newItem];
         updateScheduleField('baseballs', updated);
         if (!editBaseball) showAddToast();
-        setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); setNewBaseballTime('18:00');
+        setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); setNewBaseballTime('18:00'); setNewBaseballStadium('横浜');
       };
 
       const deleteBaseball = (id) => {
@@ -1147,7 +1123,7 @@
       };
 
       const startEditBaseball = (b) => {
-        setEditBaseball(b); setNewBaseballTitle(b.title); setNewBaseballDate(b.dateRaw); setNewBaseballTime(b.time);
+        setEditBaseball(b); setNewBaseballTitle(b.title); setNewBaseballDate(b.dateRaw); setNewBaseballTime(b.time); setNewBaseballStadium(b.stadium || '横浜');
       };
 
       const saveGarbage = () => {
@@ -1239,20 +1215,27 @@
             {tab === 'baseball' && (
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
-                  <input type="text" value={newBaseballTitle} onChange={e => setNewBaseballTitle(e.target.value)} placeholder="対戦相手" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+                  <select value={newBaseballTitle} onChange={e => setNewBaseballTitle(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
+                    <option value="">対戦相手を選択</option>
+                    {baseballTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <select value={newBaseballStadium} onChange={e => setNewBaseballStadium(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
+                    <option value="">開催球場を選択</option>
+                    {baseballStadiums.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                   <input type="date" value={newBaseballDate} onChange={e => setNewBaseballDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
                   <input type="time" value={newBaseballTime} onChange={e => setNewBaseballTime(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
                   <button onClick={saveBaseball} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
                     {editBaseball ? '更新する' : '追加する'}
                   </button>
-                  {editBaseball && <button onClick={() => { setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); }} className="w-full py-2 rounded-xl font-black text-sm text-slate-500 bg-slate-100 active:opacity-80">キャンセル</button>}
+                  {editBaseball && <button onClick={() => { setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); setNewBaseballStadium('横浜'); }} className="w-full py-2 rounded-xl font-black text-sm text-slate-500 bg-slate-100 active:opacity-80">キャンセル</button>}
                 </div>
                 <div className="space-y-1 max-h-60 overflow-y-auto">
                   {[...baseballs].sort((a,b) => a.dateRaw.localeCompare(b.dateRaw)).map(b => (
                     <div key={b.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
                       <div className="flex-1 min-w-0 mr-2">
                         <p className="text-sm font-bold text-slate-800">{b.dateRaw} {b.time}</p>
-                        <p className="text-xs text-slate-400">vs {b.title}</p>
+                        <p className="text-xs text-slate-400">vs {b.title} @{b.stadium}</p>
                       </div>
                       <div className="flex gap-1 shrink-0">
                         <button onClick={() => startEditBaseball(b)} className="text-xs bg-white border border-slate-200 px-2 py-1 rounded-lg font-bold text-slate-600 active:opacity-70">編集</button>

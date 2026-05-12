@@ -928,12 +928,29 @@
                 <option value="ヨドバシカメラ">ヨドバシカメラ</option>
                 <option value="その他">その他</option>
               </select>
-              <input type="text" inputMode="numeric" value={num} onChange={e => setNum(e.target.value)} placeholder="追跡番号" className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
-            </div>
-            <div className="mt-5 flex gap-3">
-              {editDelivery && (
-                <button onClick={handleDelete} className="flex-1 py-3.5 rounded-xl font-black text-base text-white bg-[#ea4335] active:opacity-80">削除</button>
-              )}
+              <input 
+  type="text" 
+  inputMode="numeric" 
+  value={num} 
+  onChange={(e) => {
+    // 半角・全角ハイフン、長音記号、マイナス記号を空文字に置換（自動削除）
+    const sanitizedValue = e.target.value.replace(/[-－ー−]/g, '');
+    setNum(sanitizedValue);
+  }} 
+  placeholder="追跡番号" 
+  className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" 
+/>
+</div>
+<div className="mt-5 flex gap-3">
+  {editDelivery && (
+    <button 
+      onClick={handleDelete} 
+      className="flex-1 py-3.5 rounded-xl font-black text-base text-white bg-[#ea4335] active:opacity-80"
+    >
+      削除
+    </button>
+  )}
+
               <button onClick={handleSave} className="flex-1 py-3.5 rounded-xl font-black text-base text-white active:opacity-80" style={{backgroundColor: THEME}}>
                 {editDelivery ? '保存する' : '追加する'}
               </button>
@@ -1078,14 +1095,30 @@
               <option value="食料品">食料品</option>
               <option value="その他">その他</option>
             </select>
-            <input type="text" inputMode="numeric" value={dNum} onChange={e => setDNum(e.target.value)} placeholder="追跡番号" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-            <button onClick={saveDelivery} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
-              追加する
-            </button>
-          </div>
-        </div>
-      );
-    };
+            <input 
+  type="text" 
+  inputMode="numeric" 
+  value={dNum} 
+  onChange={(e) => {
+    // 半角・全角ハイフン、長音記号、マイナス記号を空文字に置換（自動削除）
+    const sanitizedValue = e.target.value.replace(/[-－ー−]/g, '');
+    setDNum(sanitizedValue);
+  }} 
+  placeholder="追跡番号" 
+  className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" 
+/>
+<button 
+  onClick={saveDelivery} 
+  className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" 
+  style={{backgroundColor: THEME}}
+>
+  追加する
+</button>
+</div>
+</div>
+);
+};
+
     const ScheduleSettingsModal = ({ scheduleData, updateScheduleField, onClose, onRequestDelivery }) => {
       const [tab, setTab] = useState('delivery');
       const [showDeliveryInSettings, setShowDeliveryInSettings] = useState(false);

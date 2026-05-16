@@ -3159,37 +3159,20 @@
     };
 
     const AuthWrapper = () => {
+      // ログイン状態をローカルストレージで管理
       const [isLoggedIn, setIsLoggedIn] = useLocalStorage('kakeibo_app_locked_v1', false);
 
-      useEffect(() => {
-        if (!isLoggedIn) return;
-
-        let lastActivityTime = Date.now();
-        const TIMEOUT_MS = 15 * 60 * 1000;
-
-        const updateActivity = () => {
-          lastActivityTime = Date.now();
-        };
-
-        const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll'];
-        events.forEach(event => window.addEventListener(event, updateActivity));
-
-        const checkInactivity = setInterval(() => {
-          if (Date.now() - lastActivityTime > TIMEOUT_MS) {
-            setIsLoggedIn(false);
-          }
-        }, 10000);
-
-        return () => {
-          events.forEach(event => window.removeEventListener(event, updateActivity));
-          clearInterval(checkInactivity);
-        };
-      }, [isLoggedIn]);
+      /* * 【変更点】
+       * 15分経過で自動ロックする useEffect の処理を全削除しました。
+       * これにより、初回ログイン以降は isLoggedIn が永続化され、
+       * ログイン実績のある端末ではパスコードが要求されなくなります。
+       */
 
       if (!isLoggedIn) {
         return <SimpleLoginScreen onLogin={() => setIsLoggedIn(true)} />;
       }
 
+      // ※ 資産タブ等にある「画面をロックする」ボタンを手動で押した時のみ、ロック状態に戻ります
       return <App onLogout={() => setIsLoggedIn(false)} />;
     };
 

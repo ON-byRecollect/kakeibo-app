@@ -317,7 +317,7 @@
     // ==========================================
     // 予定タブ（スケジュール統合）
     // ==========================================
-    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate, currentElectricBudget, currentGasBudget, monthlySpents, toggleUtilityPaid }) => {
+    const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate, currentElectricBudget, currentGasBudget, monthlySpents, toggleUtilityPaid, dailyBalance, setDailyBalance }) => {
       const [currentTime, setCurrentTime] = useState('');
       const [showDeliveryModal, setShowDeliveryModal] = useState(false);
       const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -619,6 +619,30 @@
               <p className="text-slate-400 font-bold text-sm tracking-widest text-center py-4">予定はありません</p>
             </div>
           )}
+
+          {/* ── 今日の収支メモ ── */}
+          <div className="px-5 mt-4">
+            <div className="flex items-center rounded-2xl h-[56px] shadow-sm overflow-hidden" style={{backgroundColor: '#fbbc04'}}>
+              <div className="pl-5 pr-3 shrink-0 flex items-center h-full">
+                <span className="text-white font-black text-[15px] whitespace-nowrap">今日の収支</span>
+              </div>
+              <div className="flex-1 flex items-center bg-white rounded-xl mx-3 h-9 px-3 focus-within:ring-2 focus-within:ring-white/80">
+                <span className="text-gray-400 font-bold text-base shrink-0 mr-1">¥</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={(dailyBalance && dailyBalance[targetDateStr] !== undefined && dailyBalance[targetDateStr] !== '') ? dailyBalance[targetDateStr] : ''}
+                  onChange={e => {
+                    const val = e.target.value.replace(/^0+(?=\d)/, '');
+                    setDailyBalance({ ...(dailyBalance || {}), [targetDateStr]: val });
+                  }}
+                  placeholder="0"
+                  className="flex-1 h-full text-base font-bold outline-none text-right bg-transparent text-slate-800 placeholder-gray-300"
+                  style={{WebkitAppearance: 'none'}}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* 荷物登録モーダル */}
           {showDeliveryModal && (
@@ -2665,6 +2689,9 @@
       };
       const updateScheduleField = (key, value) => updateField(key, value);
 
+      const dailyBalance = data?.dailyBalance || {};
+      const setDailyBalance = (val) => updateField('dailyBalance', val);
+
       let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
       let prevElectricSpent = 0, prevGasSpent = 0;
       let realCurrentFoodSpent = 0, realCurrentTransSpent = 0, realCurrentElectricSpent = 0, realCurrentGasSpent = 0;
@@ -3028,7 +3055,7 @@
       }
 
       const renderContent = () => {
-        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} displayDate={displayDate} setDisplayDate={setDisplayDate} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} monthlySpents={monthlySpents} toggleUtilityPaid={toggleUtilityPaid} />;
+        return <ScheduleTab scheduleData={scheduleData} updateScheduleField={updateScheduleField} expenses={expenses} handleAddData={handleAddData} currentYearMonth={currentYearMonth} todayDay={todayDay} scheduleDatePrev={scheduleDatePrev} scheduleDateNext={scheduleDateNext} showDeliveryModalGlobal={showDeliveryModalGlobal} onDeliveryModalClose={() => setShowDeliveryModalGlobal(false)} fixedCosts={fixedCosts} utilityPaid={utilityPaid} displayDate={displayDate} setDisplayDate={setDisplayDate} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} monthlySpents={monthlySpents} toggleUtilityPaid={toggleUtilityPaid} dailyBalance={dailyBalance} setDailyBalance={setDailyBalance} />;
       };
 
       const renderKakeiboContent = () => {

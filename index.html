@@ -621,7 +621,7 @@
           )}
 
           {/* ── 今日までの収支バー（固定・タブバーの直上） ── */}
-          <div className="fixed left-0 right-0 z-40 px-4" style={{bottom: '80px'}}>
+          <div className="fixed left-0 right-0 z-40 px-4" style={{bottom: 'calc(80px + max(env(safe-area-inset-bottom), 16px))'}}>
             <div className="flex items-center rounded-2xl h-[54px] shadow-lg overflow-hidden" style={{backgroundColor: '#fbbc04'}}>
               <div className="pl-5 pr-3 shrink-0 flex items-center h-full">
                 <span className="text-white font-black text-[14px] whitespace-nowrap">今日までの収支</span>

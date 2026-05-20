@@ -19,8 +19,8 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     * { -webkit-overflow-scrolling: touch; }
-    html, body { overflow: hidden; height: 100%; width: 100%; position: fixed; }
-    body { overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
+    html { overflow: hidden; height: 100%; }
+    body { overflow: hidden; height: 100%; overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
     .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
     /* 縦スクロール許可エリア（コンテンツ量に応じて限定的に適用） */

@@ -19,9 +19,12 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     * { -webkit-overflow-scrolling: touch; }
-    body { overscroll-behavior-y: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
+    html, body { overflow: hidden; height: 100%; width: 100%; position: fixed; }
+    body { overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
     .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
+    /* 縦スクロール許可エリア（コンテンツ量に応じて限定的に適用） */
+    .scroll-y-allowed { overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
     
     @keyframes pop {
       0% { transform: scale(0.9); opacity: 0.5; }
@@ -540,16 +543,17 @@
               <div className="flex items-center bg-white rounded-full h-9 overflow-hidden shrink-0 mr-3 ml-auto" style={{width: '46%'}}>
                 <span className="text-gray-400 font-bold text-base shrink-0 ml-3 mr-1">¥</span>
                 <input
-                  type="number"
+                  type="text"
                   inputMode="numeric"
-                  value={(dailyBalance && dailyBalance[targetDateStr] !== undefined && dailyBalance[targetDateStr] !== '') ? dailyBalance[targetDateStr] : ''}
+                  value={(dailyBalance && dailyBalance[targetDateStr] !== undefined && dailyBalance[targetDateStr] !== '')
+                    ? Number(dailyBalance[targetDateStr]).toLocaleString()
+                    : ''}
                   onChange={e => {
-                    const val = e.target.value.replace(/^0+(?=\d)/, '');
-                    setDailyBalance({ ...(dailyBalance || {}), [targetDateStr]: val });
+                    const raw = e.target.value.replace(/[^0-9]/g, '');
+                    setDailyBalance({ ...(dailyBalance || {}), [targetDateStr]: raw });
                   }}
                   placeholder="0"
                   className="w-0 flex-1 min-w-0 h-full text-sm font-bold outline-none text-right bg-transparent text-slate-800 placeholder-gray-300 pr-3"
-                  style={{WebkitAppearance: 'none'}}
                 />
               </div>
             </div>
@@ -2880,7 +2884,7 @@
                   }</span>
                 </div>
               )}
-              <div className="flex-1 overflow-y-auto">
+              <div className="scroll-y-allowed flex-1">
                 {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" lastEditedDate={lastEditedDate} />}
@@ -2896,7 +2900,7 @@
 
         // 家計簿ホーム
         return (
-          <div ref={walletScrollRef} className="flex flex-col h-screen w-full overflow-y-auto" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
+          <div ref={walletScrollRef} className="scroll-y-allowed flex flex-col h-screen w-full" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
             {/* ヘッダー */}
             <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
               <button onClick={() => setShowKakeiboPage(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
@@ -3074,7 +3078,7 @@
 
       return (
         <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full">
+          <div ref={scrollContainerRef} className="scroll-y-allowed flex-1 w-full">
             {renderContent()}
           </div>
           {/* ── タブバー: ‹ 設定 支出 Wallet › ── */}

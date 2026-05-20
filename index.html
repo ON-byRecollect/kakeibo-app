@@ -19,8 +19,19 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
     * { -webkit-overflow-scrolling: touch; }
-    html { overflow: hidden; height: 100%; }
-    body { overflow: hidden; height: 100%; overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
+    html {
+      height: 100%;
+      height: -webkit-fill-available;
+    }
+    body {
+      height: 100%;
+      min-height: -webkit-fill-available;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background-color: #f2f2f2;
+      -webkit-font-smoothing: antialiased;
+    }
+    #root { height: 100%; overflow: hidden; }
     .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
     /* 縦スクロール許可エリア（コンテンツ量に応じて限定的に適用） */
@@ -232,7 +243,7 @@
       };
 
       return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#f2f2f2] px-8">
+        <div className="h-full w-full flex flex-col items-center justify-center bg-[#f2f2f2] px-8">
           <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center">
             <h2 className="font-bold text-gray-600 mb-6">パスコードを入力</h2>
             
@@ -2597,7 +2608,7 @@
 
       if (loading) {
          return (
-            <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
+            <div className="h-full w-full flex items-center justify-center bg-gray-50">
                <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style={{borderColor: THEME, borderTopColor: 'transparent'}}></div>
             </div>
          );
@@ -2852,7 +2863,7 @@
         // サブページ表示中
         if (kakeiboSubPage) {
           return (
-            <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+            <div className="flex flex-col h-full w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
               {(kakeiboSubPage === 'fixed_all' || kakeiboSubPage === 'variable') ? (
                 <div className="bg-white px-4 pt-20 pb-3 border-b border-gray-100 sticky top-0 z-10 shrink-0">
                   <div className="flex items-center gap-2">
@@ -2900,7 +2911,7 @@
 
         // 家計簿ホーム
         return (
-          <div ref={walletScrollRef} className="scroll-y-allowed flex flex-col h-screen w-full" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
+          <div ref={walletScrollRef} className="scroll-y-allowed flex flex-col h-full w-full" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
             {/* ヘッダー */}
             <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
               <button onClick={() => setShowKakeiboPage(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
@@ -3077,7 +3088,7 @@
       const tabs = ['予定', '資産', '固定', '変動費', 'ローン', '累計'];
 
       return (
-        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
+        <div className="flex flex-col h-full w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
           <div ref={scrollContainerRef} className="scroll-y-allowed flex-1 w-full">
             {renderContent()}
           </div>

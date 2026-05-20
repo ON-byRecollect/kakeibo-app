@@ -533,7 +533,7 @@
 
           {/* ── 今日までの収支バー（野球の下・インライン） ── */}
           <div className="px-5 mb-3 flex justify-center">
-            <div className="flex items-center rounded-full h-[54px] shadow-sm overflow-hidden" style={{backgroundColor: THEME, width: '50%'}}>
+            <div className="flex items-center rounded-full h-[54px] shadow-sm overflow-hidden" style={{backgroundColor: THEME, width: '70%'}}>
               <div className="pl-6 pr-3 shrink-0 flex items-center h-full">
                 <span className="text-white font-black text-[14px] whitespace-nowrap">今日までの収支</span>
               </div>
@@ -3091,6 +3091,14 @@
 
               {/* 中央3アイコン */}
               <div className="flex items-center gap-8">
+
+                {/* 今日へ戻るボタン（カレンダー） */}
+                <button
+                  onClick={resetToToday}
+                  className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </button>
 
                 {/* 設定ボタン（歯車） */}
                 <button

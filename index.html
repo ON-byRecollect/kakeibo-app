@@ -468,7 +468,7 @@
       };
 
       return (
-        <div className="flex flex-col w-full min-h-full pb-[100px]" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+        <div className="flex flex-col w-full min-h-full pb-[160px]" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
 
           {/* ── ヘッダーエリア ── */}
           <div className="px-5 pt-20 pb-2">
@@ -620,13 +620,13 @@
             </div>
           )}
 
-          {/* ── 今日の収支メモ ── */}
-          <div className="px-5 mt-4">
-            <div className="flex items-center rounded-2xl h-[56px] shadow-sm overflow-hidden" style={{backgroundColor: '#fbbc04'}}>
+          {/* ── 今日までの収支バー（固定・タブバーの直上） ── */}
+          <div className="fixed left-0 right-0 z-40 px-4" style={{bottom: '80px'}}>
+            <div className="flex items-center rounded-2xl h-[54px] shadow-lg overflow-hidden" style={{backgroundColor: '#fbbc04'}}>
               <div className="pl-5 pr-3 shrink-0 flex items-center h-full">
-                <span className="text-white font-black text-[15px] whitespace-nowrap">今日の収支</span>
+                <span className="text-white font-black text-[14px] whitespace-nowrap">今日までの収支</span>
               </div>
-              <div className="flex-1 flex items-center bg-white rounded-xl mx-3 h-9 px-3 focus-within:ring-2 focus-within:ring-white/80">
+              <div className="flex items-center bg-white rounded-xl mr-3 h-9 px-3 ml-auto" style={{width: '45%'}}>
                 <span className="text-gray-400 font-bold text-base shrink-0 mr-1">¥</span>
                 <input
                   type="number"

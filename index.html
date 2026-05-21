@@ -20,9 +20,11 @@
   <style>
     * { -webkit-overflow-scrolling: touch; }
     * { -webkit-overflow-scrolling: touch; }
-    body { overscroll-behavior-y: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
+    body { overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
     .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
+    /* スクロール可能エリアのバウンス無効化 */
+    .no-bounce { overscroll-behavior-y: none; }
     
     @keyframes pop {
       0% { transform: scale(0.9); opacity: 0.5; }
@@ -923,7 +925,7 @@
 
       return (
         <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm px-4 pt-[8vh] pb-[140px]">
-          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-full overflow-y-auto box-border">
+          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-full overflow-y-auto no-bounce box-border">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">{editDelivery ? '荷物の編集' : '荷物の登録'}</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">
@@ -1238,7 +1240,7 @@
 
       return (
         <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm pt-[12vh] px-4">
-          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 pt-7 modal-enter shadow-2xl max-h-[82vh] overflow-y-auto box-border">
+          <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 pt-7 modal-enter shadow-2xl max-h-[82vh] overflow-y-auto no-bounce box-border">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">スケジュール設定</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">
@@ -1280,7 +1282,7 @@
                   </button>
                   {editAnime && <button onClick={() => { setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); }} className="w-full py-2 rounded-xl font-black text-sm text-slate-500 bg-slate-100 active:opacity-80">キャンセル</button>}
                 </div>
-                <div className="space-y-1 max-h-60 overflow-y-auto">
+                <div className="space-y-1 max-h-60 overflow-y-auto no-bounce">
                   {animes.map(a => (
                     <div key={a.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
                       <div className="flex-1 min-w-0 mr-2">
@@ -1316,7 +1318,7 @@
                   </button>
                   {editBaseball && <button onClick={() => { setEditBaseball(null); setNewBaseballTitle(''); setNewBaseballDate(''); setNewBaseballStadium('横浜'); }} className="w-full py-2 rounded-xl font-black text-sm text-slate-500 bg-slate-100 active:opacity-80">キャンセル</button>}
                 </div>
-                <div className="space-y-1 max-h-60 overflow-y-auto">
+                <div className="space-y-1 max-h-60 overflow-y-auto no-bounce">
                   {[...baseballs].sort((a,b) => a.dateRaw.localeCompare(b.dateRaw)).map(b => (
                     <div key={b.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
                       <div className="flex-1 min-w-0 mr-2">
@@ -1900,7 +1902,7 @@
           {/* 固定費編集モーダル */}
           {editFixedItem && (
             <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={e => { if(e.target === e.currentTarget) setEditFixedItem(null); }}>
-              <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+              <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto no-bounce">
                 <div className="flex justify-between items-center">
                   <h3 className="font-black text-lg text-gray-800">固定費を編集</h3>
                   <button onClick={() => setEditFixedItem(null)} className="text-gray-400 text-2xl leading-none">×</button>
@@ -2882,7 +2884,7 @@
                   }</span>
                 </div>
               )}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto no-bounce">
                 {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" lastEditedDate={lastEditedDate} />}
@@ -2898,7 +2900,7 @@
 
         // 家計簿ホーム
         return (
-          <div ref={walletScrollRef} className="flex flex-col h-screen w-full overflow-y-auto" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
+          <div ref={walletScrollRef} className="flex flex-col h-screen w-full overflow-y-auto no-bounce" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: '80px'}}>
             {/* ヘッダー */}
             <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10">
               <button onClick={() => setShowKakeiboPage(false)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60">
@@ -3076,7 +3078,7 @@
 
       return (
         <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full no-bounce">
             {renderContent()}
           </div>
           {/* ── タブバー: ‹ 設定 支出 Wallet › ── */}

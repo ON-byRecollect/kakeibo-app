@@ -897,6 +897,7 @@
       const [date, setDate] = useState(editDelivery?.deliveryDateRaw || defaultDate);
       const [timeSlot, setTimeSlot] = useState(editDelivery?.timeSlot || '指定なし');
       const [remark, setRemark] = useState(editDelivery?.remark || '');
+      const [remarkPreset, setRemarkPreset] = useState('');
       const [num, setNum] = useState(editDelivery?.num || '');
 
       const getTimeOptions = (c) => {
@@ -946,8 +947,8 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <select value={remark} onChange={e => setRemark(e.target.value)} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                <option value=""></option>
+              <select value={remarkPreset} onChange={e => { setRemarkPreset(e.target.value); if (e.target.value) setRemark(e.target.value); }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+                <option value="">── プリセットから選択 ──</option>
                 <option value="Ali Express">Ali Express</option>
                 <option value="Apple">Apple</option>
                 <option value="ELECOM">ELECOM</option>
@@ -960,8 +961,8 @@
                 <option value="ノジマ">ノジマ</option>
                 <option value="ブックオフ">ブックオフ</option>
                 <option value="ヨドバシカメラ">ヨドバシカメラ</option>
-                <option value="その他">その他</option>
               </select>
+              <input type="text" value={remark} onChange={e => { setRemark(e.target.value); setRemarkPreset(''); }} disabled={carrier === 'aeon' || carrier === 'trial'} placeholder="備考（手動入力）" className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`} />
               <input 
   type="text" 
   inputMode="numeric" 
@@ -1086,6 +1087,7 @@
       const [dDate, setDDate] = React.useState(today);
       const [dTimeSlot, setDTimeSlot] = React.useState('指定なし');
       const [dRemark, setDRemark] = React.useState('');
+      const [dRemarkPreset, setDRemarkPreset] = React.useState('');
       const [dNum, setDNum] = React.useState('');
       const timeOptionSets = {
         default: ["指定なし","8:00〜12:00","14:00〜16:00","16:00〜18:00","18:00〜20:00","19:00〜21:00"],
@@ -1098,7 +1100,7 @@
         const newData = { carrier: dCarrier, deliveryDateRaw: dDate, timeSlot: dTimeSlot, remark: dRemark, num: dNum };
         updateScheduleField('deliveries', [...deliveries, { ...newData, id: Date.now() }]);
         showAddToast();
-        setDCarrier('yamato'); setDDate(today); setDTimeSlot('指定なし'); setDRemark(''); setDNum('');
+        setDCarrier('yamato'); setDDate(today); setDTimeSlot('指定なし'); setDRemark(''); setDRemarkPreset(''); setDNum('');
       };
       return (
         <div className="space-y-3">
@@ -1116,8 +1118,8 @@
             <select value={dTimeSlot} onChange={e => setDTimeSlot(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               {getTimeOpts(dCarrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-            <select value={dRemark} onChange={e => setDRemark(e.target.value)} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
-              <option value=""></option>
+            <select value={dRemarkPreset} onChange={e => { setDRemarkPreset(e.target.value); if (e.target.value) setDRemark(e.target.value); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
+              <option value="">── プリセットから選択 ──</option>
               <option value="Ali Express">Ali Express</option>
               <option value="Apple">Apple</option>
               <option value="ELECOM">ELECOM</option>
@@ -1131,8 +1133,8 @@
               <option value="ノジマ">ノジマ</option>
               <option value="ブックオフ">ブックオフ</option>
               <option value="ヨドバシカメラ">ヨドバシカメラ</option>
-              <option value="その他">その他</option>
             </select>
+            <input type="text" value={dRemark} onChange={e => { setDRemark(e.target.value); setDRemarkPreset(''); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} placeholder="備考（手動入力）" className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`} />
             <input 
   type="text" 
   inputMode="numeric" 

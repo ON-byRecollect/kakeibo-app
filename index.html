@@ -26,6 +26,10 @@
     /* スクロール可能エリアのバウンス無効化 */
     .no-bounce { overscroll-behavior-y: none; }
     
+    /* 備考セレクト：未選択時（placeholder）のみグレー */
+    select.remark-select { color: #1e293b; }
+    select.remark-select.placeholder { color: #9ca3af; }
+
     @keyframes pop {
       0% { transform: scale(0.9); opacity: 0.5; }
       100% { transform: scale(1); opacity: 1; }
@@ -947,8 +951,8 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <select value={remarkPreset} onChange={e => { const v = e.target.value; setRemarkPreset(v); if (v !== '__manual__') setRemark(v); else setRemark(''); }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                <option value="">── 備考を選択 ──</option>
+              <select value={remarkPreset} onChange={e => { const v = e.target.value; setRemarkPreset(v); if (v !== '__manual__') setRemark(v); else setRemark(''); }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`remark-select${remarkPreset === '' ? ' placeholder' : ''} w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200'}`}>
+                <option value="" style={{color: '#9ca3af'}}>備考を選択</option>
                 <option value="Ali Express">Ali Express</option>
                 <option value="Apple">Apple</option>
                 <option value="ELECOM">ELECOM</option>
@@ -1121,8 +1125,8 @@
             <select value={dTimeSlot} onChange={e => setDTimeSlot(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               {getTimeOpts(dCarrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-            <select value={dRemarkPreset} onChange={e => { const v = e.target.value; setDRemarkPreset(v); if (v !== '__manual__') setDRemark(v); else setDRemark(''); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
-              <option value="">── 備考を選択 ──</option>
+            <select value={dRemarkPreset} onChange={e => { const v = e.target.value; setDRemarkPreset(v); if (v !== '__manual__') setDRemark(v); else setDRemark(''); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`remark-select${dRemarkPreset === '' ? ' placeholder' : ''} w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200'}`}>
+              <option value="" style={{color: '#9ca3af'}}>備考を選択</option>
               <option value="Ali Express">Ali Express</option>
               <option value="Apple">Apple</option>
               <option value="ELECOM">ELECOM</option>

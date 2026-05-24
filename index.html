@@ -2926,7 +2926,7 @@
                       {kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' : '変動費'}
                     </span>
                     {displayYearMonth !== currentYearMonth && (
-                      <button onClick={() => setDisplayDate(new Date())} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
+                      <button onClick={() => setDisplayDate(new Date())} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                       </button>
                     )}

@@ -897,11 +897,16 @@
         yodobashi: ["指定なし", "〜12:00", "〜14:00", "〜16:00", "〜18:00", "〜20:00", "〜21:00"]
       };
 
+      const REMARK_PRESETS = ['Ali Express','Apple','ELECOM','GEO','オフモール','じゃんぱら','セカスト','大黒屋','トレファク','ノジマ','ブックオフ','ヨドバシカメラ'];
       const [carrier, setCarrier] = useState(editDelivery?.carrier || 'yamato');
       const [date, setDate] = useState(editDelivery?.deliveryDateRaw || defaultDate);
       const [timeSlot, setTimeSlot] = useState(editDelivery?.timeSlot || '指定なし');
       const [remark, setRemark] = useState(editDelivery?.remark || '');
-      const [remarkPreset, setRemarkPreset] = useState('');
+      const [remarkPreset, setRemarkPreset] = useState(() => {
+        const r = editDelivery?.remark || '';
+        if (!r) return '';
+        return REMARK_PRESETS.includes(r) ? r : '__manual__';
+      });
       const [num, setNum] = useState(editDelivery?.num || '');
 
       const getTimeOptions = (c) => {

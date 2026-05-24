@@ -947,8 +947,8 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <select value={remarkPreset} onChange={e => { setRemarkPreset(e.target.value); if (e.target.value) setRemark(e.target.value); }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                <option value="">── プリセットから選択 ──</option>
+              <select value={remarkPreset} onChange={e => { const v = e.target.value; setRemarkPreset(v); if (v !== '__manual__') setRemark(v); else setRemark(''); }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+                <option value="">── 備考を選択 ──</option>
                 <option value="Ali Express">Ali Express</option>
                 <option value="Apple">Apple</option>
                 <option value="ELECOM">ELECOM</option>
@@ -961,8 +961,11 @@
                 <option value="ノジマ">ノジマ</option>
                 <option value="ブックオフ">ブックオフ</option>
                 <option value="ヨドバシカメラ">ヨドバシカメラ</option>
+                <option value="__manual__">手動入力</option>
               </select>
-              <input type="text" value={remark} onChange={e => { setRemark(e.target.value); setRemarkPreset(''); }} disabled={carrier === 'aeon' || carrier === 'trial'} placeholder="備考（手動入力）" className={`w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800'}`} />
+              {remarkPreset === '__manual__' && (
+                <input type="text" value={remark} onChange={e => setRemark(e.target.value)} autoFocus placeholder="備考を入力" className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none" />
+              )}
               <input 
   type="text" 
   inputMode="numeric" 
@@ -1118,8 +1121,8 @@
             <select value={dTimeSlot} onChange={e => setDTimeSlot(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
               {getTimeOpts(dCarrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-            <select value={dRemarkPreset} onChange={e => { setDRemarkPreset(e.target.value); if (e.target.value) setDRemark(e.target.value); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
-              <option value="">── プリセットから選択 ──</option>
+            <select value={dRemarkPreset} onChange={e => { const v = e.target.value; setDRemarkPreset(v); if (v !== '__manual__') setDRemark(v); else setDRemark(''); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`}>
+              <option value="">── 備考を選択 ──</option>
               <option value="Ali Express">Ali Express</option>
               <option value="Apple">Apple</option>
               <option value="ELECOM">ELECOM</option>
@@ -1133,8 +1136,11 @@
               <option value="ノジマ">ノジマ</option>
               <option value="ブックオフ">ブックオフ</option>
               <option value="ヨドバシカメラ">ヨドバシカメラ</option>
+              <option value="__manual__">手動入力</option>
             </select>
-            <input type="text" value={dRemark} onChange={e => { setDRemark(e.target.value); setDRemarkPreset(''); }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} placeholder="備考（手動入力）" className={`w-full border p-2.5 rounded-lg text-sm font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-slate-200 text-slate-800'}`} />
+            {dRemarkPreset === '__manual__' && (
+              <input type="text" value={dRemark} onChange={e => setDRemark(e.target.value)} autoFocus placeholder="備考を入力" className="w-full border border-slate-200 bg-white p-2.5 rounded-lg text-sm font-bold text-slate-800 outline-none" />
+            )}
             <input 
   type="text" 
   inputMode="numeric" 

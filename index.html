@@ -460,8 +460,17 @@
       const toggleDeliveryComplete = (id) => {
         setCompletedDeliveries(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
       };
-      const toggleAnimeComplete = (id) => {
-        setCompletedAnimes(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+      const getWeekStartStr = (dateStr) => {
+        const d = new Date(dateStr);
+        const day = d.getDay(); // 0=日, 1=月...
+        const diff = (day === 0) ? -6 : 1 - day; // 月曜日起点
+        const mon = new Date(d);
+        mon.setDate(d.getDate() + diff);
+        return getYYYYMMDD(mon);
+      };
+      const toggleAnimeComplete = (id, dateStr) => {
+        const key = `${id}_${getWeekStartStr(dateStr)}`;
+        setCompletedAnimes(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key]);
       };
       const toggleExpenseComplete = (id) => {
         setCompletedExpenses(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -628,11 +637,11 @@
             <div className="px-5 mb-3">
               <div className="bg-white rounded-2xl px-4 py-3 shadow-sm space-y-2">
                 {todaysAnimes.map(a => {
-                  const isCompleted = completedAnimes.includes(a.id);
+                  const isCompleted = completedAnimes.includes(`${a.id}_${getWeekStartStr(targetDateStr)}`);
                   return (
                     <div key={a.id} className="flex items-center gap-2">
                       <span
-                        onClick={() => toggleAnimeComplete(a.id)}
+                        onClick={() => toggleAnimeComplete(a.id, targetDateStr)}
                         className={`flex-1 text-[15px] font-bold text-slate-900 cursor-pointer active:opacity-60 truncate ${isCompleted ? 'completed-item' : ''}`}
                         style={{overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}}
                       >{a.title}</span>

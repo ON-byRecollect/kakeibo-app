@@ -425,7 +425,33 @@
         if (!d) return false;
         return d === targetDateStr || d === targetDateStr.slice(5);
       });
-      const todaysDeliveries = deliveries.filter(d => d.deliveryDateRaw === targetDateStr);
+      const todaysDeliveries = (() => {
+        const raw = deliveries.filter(d => d.deliveryDateRaw === targetDateStr);
+        const timeToNum = (slot) => {
+          if (!slot || slot === '指定なし') return -1;
+          const m = slot.match(/(\d+):(\d+)/);
+          return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : 9999;
+        };
+        // 同じ時間帯グループ内で配送会社をラウンドロビン
+        const groups = {};
+        raw.forEach(d => {
+          const key = timeToNum(d.timeSlot);
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(d);
+        });
+        const sorted = [];
+        Object.keys(groups).sort((a, b) => Number(a) - Number(b)).forEach(key => {
+          const group = groups[key];
+          const byCarrier = {};
+          const carrierOrder = [];
+          group.forEach(d => {
+            if (!byCarrier[d.carrier]) { byCarrier[d.carrier] = []; carrierOrder.push(d.carrier); }
+            byCarrier[d.carrier].push(d);
+          });
+          carrierOrder.forEach(c => byCarrier[c].forEach(d => sorted.push(d)));
+        });
+        return sorted;
+      })();
       const todaysAnimes = getAnimesForDate(targetDateStr);
 
       // 表示日の固定費（fixedCostsから表示日分を取得）

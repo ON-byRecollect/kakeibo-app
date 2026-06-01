@@ -481,7 +481,7 @@
 
       const carrierDisplayNames = { post: '日本郵便', yamato: 'ヤマト運輸', sagawa: '佐川急便', amazon: 'Amazon', yodobashi: 'ヨドバシ', trial: 'トライアル', aeon: 'イオン' };
       const carrierColors = { post: 'text-post', yamato: 'text-yamato', sagawa: 'text-sagawa', amazon: 'text-amazon', yodobashi: 'text-yodobashi', trial: 'text-trial', aeon: 'text-aeon' };
-      const urls = { post: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=", yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=", sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=", amazon: "https://www.amazon.co.jp/gp/your-account/order-history", yodobashi: "https://www.yodobashi.com/", trial: "https://www.trial-net.co.jp/", aeon: "https://www.aeon.com/" };
+      const urls = { post: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=", yamato: "https://member.kms.kuronekoyamato.co.jp/parcel/detail?pno=", sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=", amazon: "https://www.amazon.co.jp/gp/your-account/order-history", yodobashi: "https://www.yodobashi.com/", trial: "https://www.trial-net.co.jp/", aeon: "https://www.aeon.com/" };
 
       const toggleDeliveryComplete = (id) => {
         setCompletedDeliveries(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);

@@ -3310,6 +3310,29 @@
       );
     };
 
+    class ErrorBoundary extends React.Component {
+      constructor(props) { super(props); this.state = { error: null }; }
+      static getDerivedStateFromError(e) { return { error: e }; }
+      render() {
+        if (this.state.error) {
+          return React.createElement('div', {
+            style: { padding: '32px 20px', fontFamily: 'monospace', background: '#fff', minHeight: '100vh' }
+          },
+            React.createElement('h2', { style: { color: '#e53e3e', marginBottom: '16px', fontSize: '18px' } }, '⚠️ アプリエラー'),
+            React.createElement('p', { style: { fontSize: '13px', color: '#555', marginBottom: '12px' } }, '以下のエラーが発生しました。このメッセージをスクリーンショットして共有してください。'),
+            React.createElement('pre', {
+              style: { background: '#f7fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', fontSize: '11px', color: '#2d3748', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }
+            }, String(this.state.error) + '\n\n' + (this.state.error?.stack || '')),
+            React.createElement('button', {
+              onClick: () => window.location.reload(),
+              style: { marginTop: '20px', background: '#3182ce', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', fontSize: '15px', fontWeight: 'bold' }
+            }, '再読み込み')
+          );
+        }
+        return this.props.children;
+      }
+    }
+
     const AuthWrapper = () => {
       const [isLoggedIn, setIsLoggedIn] = useLocalStorage('kakeibo_app_locked_v1', false);
 
@@ -3346,7 +3369,7 @@
     };
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<AuthWrapper />);
+    root.render(React.createElement(ErrorBoundary, null, React.createElement(AuthWrapper)));
 
   </script>
   <script>

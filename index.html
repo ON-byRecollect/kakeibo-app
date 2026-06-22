@@ -1024,7 +1024,22 @@
               <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)} className="w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none">
                 {getTimeOptions(carrier).map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <select value={remarkPreset} onChange={e => { const v = e.target.value; setRemarkPreset(v); if (v !== '__manual__') setRemark(v); else setRemark(''); }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`remark-select${remarkPreset === '' ? ' placeholder' : ''} w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200'}`}>
+              <select value={remarkPreset} onChange={e => {
+                const v = e.target.value;
+                setRemarkPreset(v);
+                if (v !== '__manual__') setRemark(v); else setRemark('');
+                const autoRule = {
+                  'GEO': { carrier: 'post', timeSlot: '8:00〜12:00' },
+                  'セカスト': { carrier: 'post', timeSlot: '8:00〜12:00' },
+                  'じゃんぱら': { carrier: 'yamato', timeSlot: '8:00〜12:00' },
+                  'オフモール': { carrier: 'yamato', timeSlot: '8:00〜12:00' },
+                  'e⭐︎イヤホン': { carrier: 'yamato', timeSlot: '8:00〜12:00' },
+                  'Apple': { carrier: 'yamato', timeSlot: '8:00〜12:00' },
+                  'トレファク': { carrier: 'yamato', timeSlot: '8:00〜12:00' },
+                  'ノジマ': { carrier: 'sagawa', timeSlot: '8:00〜12:00' },
+                }[v];
+                if (autoRule) { setCarrier(autoRule.carrier); setTimeSlot(autoRule.timeSlot); }
+              }} disabled={carrier === 'aeon' || carrier === 'trial'} className={`remark-select${remarkPreset === '' ? ' placeholder' : ''} w-full box-border border p-3.5 rounded-xl text-base font-bold outline-none ${carrier === 'aeon' || carrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-slate-50 border-slate-200'}`}>
                 <option value="" style={{color: '#9ca3af'}}>備考を選択</option>
                 <option value="Ali Express">Ali Express</option>
                 <option value="Apple">Apple</option>

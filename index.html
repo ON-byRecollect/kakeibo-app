@@ -50,7 +50,7 @@
     body { overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
     .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
-    /* スクロール可能エリアバウンス無効化 */
+    /* スクロール可能エリアのバウンス無効化 */
     .no-bounce { overscroll-behavior-y: none; }
     
     /* 備考セレクト：未選択時（placeholder）のみグレー */
@@ -693,6 +693,9 @@
                   const isCompleted = completedAnimes.includes(`${a.id}_${getWeekStartStr(targetDateStr)}`);
                   return (
                     <div key={a.id} className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${a.platform === 'ABEMA' ? 'bg-black text-white' : 'bg-blue-600 text-white'}`}>
+                        {a.platform === 'ABEMA' ? 'A' : 'P'}
+                      </span>
                       <span
                         onClick={() => toggleAnimeComplete(a.id, targetDateStr)}
                         className={`flex-1 text-[15px] font-bold text-slate-900 cursor-pointer active:opacity-60 truncate ${isCompleted ? 'completed-item' : ''}`}
@@ -1334,6 +1337,7 @@
       const [newAnimeDate, setNewAnimeDate] = useState('');
       const [newAnimeWeekly, setNewAnimeWeekly] = useState(true);
       const [newAnimeWeeks, setNewAnimeWeeks] = useState(12);
+      const [newAnimePlatform, setNewAnimePlatform] = useState('Prime Video');
       // 野球管理
       const [editBaseball, setEditBaseball] = useState(null);
       const [newBaseballTitle, setNewBaseballTitle] = useState('');
@@ -1351,11 +1355,11 @@
 
       const saveAnime = () => {
         if (!newAnimeTitle || !newAnimeDate) return;
-        const newItem = { id: editAnime ? editAnime.id : Date.now(), title: newAnimeTitle, dateRaw: newAnimeDate, isWeekly: newAnimeWeekly, weeks: Number(newAnimeWeeks) };
+        const newItem = { id: editAnime ? editAnime.id : Date.now(), title: newAnimeTitle, dateRaw: newAnimeDate, isWeekly: newAnimeWeekly, weeks: Number(newAnimeWeeks), platform: newAnimePlatform };
         const updated = editAnime ? animes.map(a => a.id === editAnime.id ? newItem : a) : [...animes, newItem];
         updateScheduleField('animes', updated);
         if (!editAnime) showAddToast();
-        setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); setNewAnimeWeekly(true); setNewAnimeWeeks(12);
+        setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); setNewAnimeWeekly(true); setNewAnimeWeeks(12); setNewAnimePlatform('Prime Video');
       };
 
       const deleteAnime = (id) => {
@@ -1363,7 +1367,7 @@
       };
 
       const startEditAnime = (a) => {
-        setEditAnime(a); setNewAnimeTitle(a.title); setNewAnimeDate(a.dateRaw); setNewAnimeWeekly(a.isWeekly); setNewAnimeWeeks(a.weeks || 12);
+        setEditAnime(a); setNewAnimeTitle(a.title); setNewAnimeDate(a.dateRaw); setNewAnimeWeekly(a.isWeekly); setNewAnimeWeeks(a.weeks || 12); setNewAnimePlatform(a.platform || 'Prime Video');
       };
 
       const saveBaseball = () => {
@@ -1434,6 +1438,10 @@
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newAnimeTitle} onChange={e => setNewAnimeTitle(e.target.value)} placeholder="タイトル" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
+                  <select value={newAnimePlatform} onChange={e => setNewAnimePlatform(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
+                    <option value="Prime Video">Prime Video</option>
+                    <option value="ABEMA">ABEMA</option>
+                  </select>
                   <input type="date" value={newAnimeDate} onChange={e => setNewAnimeDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
                   <div className="flex gap-2 items-center">
                     <label className="flex items-center gap-1 text-sm font-bold">
@@ -1456,7 +1464,7 @@
                     <div key={a.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
                       <div className="flex-1 min-w-0 mr-2">
                         <p className="text-sm font-bold text-slate-800 truncate">{a.title}</p>
-                        <p className="text-xs text-slate-400">{a.dateRaw} {a.isWeekly ? `毎週${a.weeks}話` : '単発'}</p>
+                        <p className="text-xs text-slate-400">{a.dateRaw} {a.isWeekly ? `毎週${a.weeks}話` : '単発'} ・ {a.platform || 'Prime Video'}</p>
                       </div>
                       <div className="flex gap-1 shrink-0">
                         <button onClick={() => startEditAnime(a)} className="text-xs bg-white border border-slate-200 px-2 py-1 rounded-lg font-bold text-slate-600 active:opacity-70">編集</button>

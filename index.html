@@ -2848,6 +2848,40 @@
         }
       }, [data]);
 
+      // 既存アニメの配信サイト・日付修正（Prime Video → ABEMA、日付補正）
+      useEffect(() => {
+        if (!data) return;
+        const CORRECTIONS = [
+          { title: '黒猫と魔女の教室', dateRaw: '2026-04-18' },
+          { title: 'ようこそ実力至上主義の教室へ 4th Season', dateRaw: '2026-04-02' },
+          { title: '転生したらスライムだった件 第4期', dateRaw: '2026-04-05' },
+          { title: 'オタクに優しいギャルはいない!?', dateRaw: '2026-04-12' },
+          { title: 'クラスで2番目に可愛い女の子と友だちになった', dateRaw: '2026-04-12' },
+          { title: '最強の王様、二度目の人生は何をする？ Season2', dateRaw: '2026-04-06' },
+          { title: '姫騎士は蛮族の嫁', dateRaw: '2026-04-10' },
+          { title: '愛してるゲームを終わらせたい', dateRaw: '2026-04-15' },
+          { title: '自動販売機に生まれ変わった俺は迷宮を彷徨う 3rd season', dateRaw: '2026-04-02' },
+          { title: 'また殺されてしまったのですね、探偵様', dateRaw: '2026-04-07' },
+          { title: 'お隣の天使様にいつの間にか駄目人間にされていた件2', dateRaw: '2026-04-04' },
+          { title: 'LIAR GAME', dateRaw: '2026-04-07' },
+          { title: '悲劇の元凶となる最強外道ラスボス女王は民の為に尽くします。Season2', dateRaw: '2026-04-08' },
+          { title: '氷の城壁', dateRaw: '2026-04-11' },
+        ];
+        const corrMap = new Map(CORRECTIONS.map(c => [c.title, c.dateRaw]));
+        let changed = false;
+        const updated = (data?.animes || []).map(a => {
+          if (corrMap.has(a.title)) {
+            const correctDate = corrMap.get(a.title);
+            if (a.platform !== 'ABEMA' || a.dateRaw !== correctDate || a.weeks !== 30 || a.isWeekly !== true) {
+              changed = true;
+              return { ...a, platform: 'ABEMA', dateRaw: correctDate, weeks: 30, isWeekly: true };
+            }
+          }
+          return a;
+        });
+        if (changed) updateField('animes', updated);
+      }, [data]);
+
       if (loading) {
          return (
             <div className="h-screen w-screen flex items-center justify-center bg-gray-50">

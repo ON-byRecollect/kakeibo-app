@@ -2806,6 +2806,48 @@
 
       const { data, updateField, loading } = useSharedData();
 
+      // 新規アニメ一括登録（既存タイトルは重複しない）
+      useEffect(() => {
+        if (!data) return;
+        const NEW_ANIMES = [
+          { title: 'ヒロイン？聖女？いいえ、オールワークスメイドです（誇）！', dateRaw: '2026-06-25', platform: 'ABEMA' },
+          { title: '落第賢者の学院無双', dateRaw: '2026-06-26', platform: 'ABEMA' },
+          { title: '無自覚聖女は今日も無意識に力を垂れ流す', dateRaw: '2026-07-01', platform: 'ABEMA' },
+          { title: 'LV999の村人', dateRaw: '2026-07-02', platform: 'ABEMA' },
+          { title: 'ヘルモード ～やり込み好きのゲーマーは廃設定の異世界で無双する～ 2nd Season', dateRaw: '2026-07-04', platform: 'ABEMA' },
+          { title: '無職転生Ⅲ', dateRaw: '2026-07-05', platform: 'ABEMA' },
+          { title: '骸骨騎士様、只今異世界へお出掛け中Ⅱ', dateRaw: '2026-07-05', platform: 'ABEMA' },
+          { title: '正反対な君と僕 第2期', dateRaw: '2026-07-06', platform: 'ABEMA' },
+          { title: '世界最強の後衛', dateRaw: '2026-07-06', platform: 'ABEMA' },
+          { title: '最強出涸らし皇子の暗躍帝位争い', dateRaw: '2026-07-07', platform: 'ABEMA' },
+          { title: '転校先の清楚可憐な美少女が、昔男子と思って一緒に遊んだ幼馴染だった件', dateRaw: '2026-07-07', platform: 'ABEMA' },
+          { title: '捨てられ聖女の異世界ごはん旅', dateRaw: '2026-07-07', platform: 'ABEMA' },
+          { title: 'ブチ切れ令嬢は報復を誓いました。', dateRaw: '2026-07-07', platform: 'ABEMA' },
+          { title: '手札が多めのビクトリア', dateRaw: '2026-07-08', platform: 'ABEMA' },
+          { title: '乙女ゲー世界はモブに厳しい世界です２', dateRaw: '2026-07-09', platform: 'ABEMA' },
+          { title: '透明な夜に駆ける君と、目に見えない恋をした。', dateRaw: '2026-07-10', platform: 'ABEMA' },
+          { title: 'きみが死ぬまで恋をしたい', dateRaw: '2026-07-11', platform: 'ABEMA' },
+          { title: '幼女戦記Ⅱ', dateRaw: '2026-07-12', platform: 'ABEMA' },
+          { title: 'いびってこない義母と義姉', dateRaw: '2026-07-16', platform: 'ABEMA' },
+          { title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', platform: 'Prime Video' },
+          { title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', platform: 'Prime Video' },
+          { title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', platform: 'Prime Video' },
+        ];
+        const existingTitles = new Set((data?.animes || []).map(a => a.title));
+        const toAdd = NEW_ANIMES.filter(a => !existingTitles.has(a.title));
+        if (toAdd.length > 0) {
+          const seeded = toAdd.map((a, i) => ({
+            id: Date.now() + i,
+            title: a.title,
+            dateRaw: a.dateRaw,
+            isWeekly: true,
+            weeks: 30,
+            platform: a.platform
+          }));
+          updateField('animes', [...(data?.animes || []), ...seeded]);
+        }
+      }, [data]);
+
       if (loading) {
          return (
             <div className="h-screen w-screen flex items-center justify-center bg-gray-50">
@@ -2908,47 +2950,6 @@
       const dailyBalance = data?.dailyBalance || {};
       const setDailyBalance = (val) => updateField('dailyBalance', val);
 
-      // 新規アニメ一括登録（既存タイトルは重複しない）
-      useEffect(() => {
-        if (!data) return;
-        const NEW_ANIMES = [
-          { title: 'ヒロイン？聖女？いいえ、オールワークスメイドです（誇）！', dateRaw: '2026-06-25', platform: 'ABEMA' },
-          { title: '落第賢者の学院無双', dateRaw: '2026-06-26', platform: 'ABEMA' },
-          { title: '無自覚聖女は今日も無意識に力を垂れ流す', dateRaw: '2026-07-01', platform: 'ABEMA' },
-          { title: 'LV999の村人', dateRaw: '2026-07-02', platform: 'ABEMA' },
-          { title: 'ヘルモード ～やり込み好きのゲーマーは廃設定の異世界で無双する～ 2nd Season', dateRaw: '2026-07-04', platform: 'ABEMA' },
-          { title: '無職転生Ⅲ', dateRaw: '2026-07-05', platform: 'ABEMA' },
-          { title: '骸骨騎士様、只今異世界へお出掛け中Ⅱ', dateRaw: '2026-07-05', platform: 'ABEMA' },
-          { title: '正反対な君と僕 第2期', dateRaw: '2026-07-06', platform: 'ABEMA' },
-          { title: '世界最強の後衛', dateRaw: '2026-07-06', platform: 'ABEMA' },
-          { title: '最強出涸らし皇子の暗躍帝位争い', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '転校先の清楚可憐な美少女が、昔男子と思って一緒に遊んだ幼馴染だった件', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '捨てられ聖女の異世界ごはん旅', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: 'ブチ切れ令嬢は報復を誓いました。', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '手札が多めのビクトリア', dateRaw: '2026-07-08', platform: 'ABEMA' },
-          { title: '乙女ゲー世界はモブに厳しい世界です２', dateRaw: '2026-07-09', platform: 'ABEMA' },
-          { title: '透明な夜に駆ける君と、目に見えない恋をした。', dateRaw: '2026-07-10', platform: 'ABEMA' },
-          { title: 'きみが死ぬまで恋をしたい', dateRaw: '2026-07-11', platform: 'ABEMA' },
-          { title: '幼女戦記Ⅱ', dateRaw: '2026-07-12', platform: 'ABEMA' },
-          { title: 'いびってこない義母と義姉', dateRaw: '2026-07-16', platform: 'ABEMA' },
-          { title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', platform: 'Prime Video' },
-          { title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', platform: 'Prime Video' },
-          { title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', platform: 'Prime Video' },
-        ];
-        const existingTitles = new Set((data?.animes || []).map(a => a.title));
-        const toAdd = NEW_ANIMES.filter(a => !existingTitles.has(a.title));
-        if (toAdd.length > 0) {
-          const seeded = toAdd.map((a, i) => ({
-            id: Date.now() + i,
-            title: a.title,
-            dateRaw: a.dateRaw,
-            isWeekly: true,
-            weeks: 30,
-            platform: a.platform
-          }));
-          updateField('animes', [...(data?.animes || []), ...seeded]);
-        }
-      }, [data]);
 
       let foodSpent = 0, transSpent = 0, electricSpent = 0, gasSpent = 0;
       let prevElectricSpent = 0, prevGasSpent = 0;

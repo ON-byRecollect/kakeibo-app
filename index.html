@@ -968,7 +968,7 @@
         yodobashi: ["指定なし", "〜12:00", "〜14:00", "〜16:00", "〜18:00", "〜20:00", "〜21:00"]
       };
 
-      const REMARK_PRESETS = ['Ali Express','Apple','ELECOM','e⭐︎イヤホン','GEO','オフモール','じゃんぱら','セカスト','大黒屋','トレファク','ノジマ','ブックオフ','ヨドバシカメラ'];
+      const REMARK_PRESETS = ['Ali Express','Apple','ELECOM','e⭐︎イヤホン','GEO','オフモール','じゃんぱら','セカスト','大黒屋','トレファク','ノジマ','ブックオフ','ヤフオク!','ヨドバシカメラ'];
       const [carrier, setCarrier] = useState(editDelivery?.carrier || 'yamato');
       const [date, setDate] = useState(() => {
         if (editDelivery) return editDelivery.deliveryDateRaw;
@@ -1081,6 +1081,7 @@
                 <option value="トレファク">トレファク</option>
                 <option value="ノジマ">ノジマ</option>
                 <option value="ブックオフ">ブックオフ</option>
+                <option value="ヤフオク!">ヤフオク!</option>
                 <option value="ヨドバシカメラ">ヨドバシカメラ</option>
                 <option value="__manual__">手動入力</option>
               </select>
@@ -1273,6 +1274,7 @@
               <option value="トレファク">トレファク</option>
               <option value="ノジマ">ノジマ</option>
               <option value="ブックオフ">ブックオフ</option>
+              <option value="ヤフオク!">ヤフオク!</option>
               <option value="ヨドバシカメラ">ヨドバシカメラ</option>
               <option value="__manual__">手動入力</option>
             </select>

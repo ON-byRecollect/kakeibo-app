@@ -435,8 +435,7 @@
         animes.forEach(anime => {
           const baseDate = new Date(anime.dateRaw);
           if (anime.isWeekly) {
-            const endTime = baseDate.getTime() + ((anime.weeks - 1) * 7 * 24 * 60 * 60 * 1000);
-            if (new Date(targetStr).getDay() === baseDate.getDay() && targetTime >= baseDate.getTime() && targetTime <= endTime) {
+            if (new Date(targetStr).getDay() === baseDate.getDay() && targetTime >= baseDate.getTime()) {
               results.push(anime);
             }
           } else if (getYYYYMMDD(baseDate) === targetStr) {
@@ -761,40 +760,40 @@
     function getDefaultAnimes() {
       return [
         // ── 4月クール（残存分）──
-        { id: 3, title: '本好きの下剋上 領主の養女', dateRaw: '2026-04-05', isWeekly: true, weeks: 12 },
-        { id: 5, title: '転生したらスライムだった件 第4期', dateRaw: '2026-04-05', isWeekly: true, weeks: 12, platform: 'ABEMA' },
-        { id: 14, title: 'LIAR GAME', dateRaw: '2026-04-07', isWeekly: true, weeks: 12, platform: 'ABEMA' },
-        { id: 27, title: '黒猫と魔女の教室', dateRaw: '2026-04-18', isWeekly: true, weeks: 12, platform: 'ABEMA' },
+        { id: 3, title: '本好きの下剋上 領主の養女', dateRaw: '2026-04-05', isWeekly: true },
+        { id: 5, title: '転生したらスライムだった件 第4期', dateRaw: '2026-04-05', isWeekly: true, platform: 'ABEMA' },
+        { id: 14, title: 'LIAR GAME', dateRaw: '2026-04-07', isWeekly: true, platform: 'ABEMA' },
+        { id: 27, title: '黒猫と魔女の教室', dateRaw: '2026-04-18', isWeekly: true, platform: 'ABEMA' },
 
         // ── 7月クール新規（30週）──
-        { id: 101, title: 'ヒロイン？聖女？いいえ、オールワークスメイドです（誇）！', dateRaw: '2026-06-25', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 102, title: '落第賢者の学院無双', dateRaw: '2026-06-26', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 103, title: '無自覚聖女は今日も無意識に力を垂れ流す', dateRaw: '2026-07-01', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 104, title: 'LV999の村人', dateRaw: '2026-07-02', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 105, title: 'ヘルモード ～やり込み好きのゲーマーは廃設定の異世界で無双する～ 2nd Season', dateRaw: '2026-07-04', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 106, title: '無職転生Ⅲ', dateRaw: '2026-07-05', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 107, title: '骸骨騎士様、只今異世界へお出掛け中Ⅱ', dateRaw: '2026-07-05', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 108, title: '正反対な君と僕 第2期', dateRaw: '2026-07-06', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 109, title: '世界最強の後衛', dateRaw: '2026-07-06', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 110, title: '最強出涸らし皇子の暗躍帝位争い', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 111, title: '転校先の清楚可憐な美少女が、昔男子と思って一緒に遊んだ幼馴染だった件', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 112, title: '捨てられ聖女の異世界ごはん旅', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 113, title: 'ブチ切れ令嬢は報復を誓いました。', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 114, title: '手札が多めのビクトリア', dateRaw: '2026-07-08', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 115, title: '乙女ゲー世界はモブに厳しい世界です２', dateRaw: '2026-07-09', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 116, title: '透明な夜に駆ける君と、目に見えない恋をした。', dateRaw: '2026-07-10', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 117, title: 'きみが死ぬまで恋をしたい', dateRaw: '2026-07-11', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 118, title: '幼女戦記Ⅱ', dateRaw: '2026-07-12', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 119, title: 'いびってこない義母と義姉', dateRaw: '2026-07-16', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 120, title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', isWeekly: true, weeks: 30, platform: 'Prime Video' },
-        { id: 121, title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', isWeekly: true, weeks: 30, platform: 'Prime Video' },
-        { id: 122, title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', isWeekly: true, weeks: 30, platform: 'Prime Video' },
-        { id: 123, title: 'きみを愛する気はない、と言った次期公爵様がなぜか溺愛してきます', dateRaw: '2026-07-08', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 124, title: 'これ描いて死ね', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 125, title: '才女のお世話', dateRaw: '2026-07-05', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 126, title: '追放された転生重騎士はゲーム知識で無双する', dateRaw: '2026-07-02', isWeekly: true, weeks: 30, platform: 'ABEMA' },
-        { id: 127, title: '逃げ上手の若君 第二期', dateRaw: '2026-07-18', isWeekly: true, weeks: 30, platform: 'Prime Video' },
-        { id: 128, title: 'ヤニねこ', dateRaw: '2026-07-03', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 101, title: 'ヒロイン？聖女？いいえ、オールワークスメイドです（誇）！', dateRaw: '2026-06-25', isWeekly: true, platform: 'ABEMA' },
+        { id: 102, title: '落第賢者の学院無双', dateRaw: '2026-06-26', isWeekly: true, platform: 'ABEMA' },
+        { id: 103, title: '無自覚聖女は今日も無意識に力を垂れ流す', dateRaw: '2026-07-01', isWeekly: true, platform: 'ABEMA' },
+        { id: 104, title: 'LV999の村人', dateRaw: '2026-07-02', isWeekly: true, platform: 'ABEMA' },
+        { id: 105, title: 'ヘルモード ～やり込み好きのゲーマーは廃設定の異世界で無双する～ 2nd Season', dateRaw: '2026-07-04', isWeekly: true, platform: 'ABEMA' },
+        { id: 106, title: '無職転生Ⅲ', dateRaw: '2026-07-05', isWeekly: true, platform: 'ABEMA' },
+        { id: 107, title: '骸骨騎士様、只今異世界へお出掛け中Ⅱ', dateRaw: '2026-07-05', isWeekly: true, platform: 'ABEMA' },
+        { id: 108, title: '正反対な君と僕 第2期', dateRaw: '2026-07-06', isWeekly: true, platform: 'ABEMA' },
+        { id: 109, title: '世界最強の後衛', dateRaw: '2026-07-06', isWeekly: true, platform: 'ABEMA' },
+        { id: 110, title: '最強出涸らし皇子の暗躍帝位争い', dateRaw: '2026-07-07', isWeekly: true, platform: 'ABEMA' },
+        { id: 111, title: '転校先の清楚可憐な美少女が、昔男子と思って一緒に遊んだ幼馴染だった件', dateRaw: '2026-07-07', isWeekly: true, platform: 'ABEMA' },
+        { id: 112, title: '捨てられ聖女の異世界ごはん旅', dateRaw: '2026-07-07', isWeekly: true, platform: 'ABEMA' },
+        { id: 113, title: 'ブチ切れ令嬢は報復を誓いました。', dateRaw: '2026-07-07', isWeekly: true, platform: 'ABEMA' },
+        { id: 114, title: '手札が多めのビクトリア', dateRaw: '2026-07-08', isWeekly: true, platform: 'ABEMA' },
+        { id: 115, title: '乙女ゲー世界はモブに厳しい世界です２', dateRaw: '2026-07-09', isWeekly: true, platform: 'ABEMA' },
+        { id: 116, title: '透明な夜に駆ける君と、目に見えない恋をした。', dateRaw: '2026-07-10', isWeekly: true, platform: 'ABEMA' },
+        { id: 117, title: 'きみが死ぬまで恋をしたい', dateRaw: '2026-07-11', isWeekly: true, platform: 'ABEMA' },
+        { id: 118, title: '幼女戦記Ⅱ', dateRaw: '2026-07-12', isWeekly: true, platform: 'ABEMA' },
+        { id: 119, title: 'いびってこない義母と義姉', dateRaw: '2026-07-16', isWeekly: true, platform: 'ABEMA' },
+        { id: 120, title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', isWeekly: true, platform: 'Prime Video' },
+        { id: 121, title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', isWeekly: true, platform: 'Prime Video' },
+        { id: 122, title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', isWeekly: true, platform: 'Prime Video' },
+        { id: 123, title: 'きみを愛する気はない、と言った次期公爵様がなぜか溺愛してきます', dateRaw: '2026-07-08', isWeekly: true, platform: 'ABEMA' },
+        { id: 124, title: 'これ描いて死ね', dateRaw: '2026-07-07', isWeekly: true, platform: 'ABEMA' },
+        { id: 125, title: '才女のお世話', dateRaw: '2026-07-05', isWeekly: true, platform: 'ABEMA' },
+        { id: 126, title: '追放された転生重騎士はゲーム知識で無双する', dateRaw: '2026-07-02', isWeekly: true, platform: 'ABEMA' },
+        { id: 127, title: '逃げ上手の若君 第二期', dateRaw: '2026-07-18', isWeekly: true, platform: 'Prime Video' },
+        { id: 128, title: 'ヤニねこ', dateRaw: '2026-07-03', isWeekly: true, platform: 'ABEMA' },
       ];
     }
 

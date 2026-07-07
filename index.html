@@ -372,7 +372,7 @@
 
       // Firestore から取得したデータ
       const deliveries = scheduleData?.deliveries || [];
-      const animes = (scheduleData?.animes && scheduleData.animes.length > 0) ? scheduleData.animes : getDefaultAnimes();
+      const animes = getDefaultAnimes(); // アニメはコード直書き（表示専用・Firestore非依存）
       const baseballs = (scheduleData?.baseballs && scheduleData.baseballs.length > 0) ? scheduleData.baseballs : getDefaultBaseballs();
       const garbageRules = (scheduleData?.garbageRules && scheduleData.garbageRules.length > 0) ? scheduleData.garbageRules : getDefaultGarbageRules();
 
@@ -760,33 +760,45 @@
     // デフォルトデータ関数
     function getDefaultAnimes() {
       return [
-        { id: 1, title: '逃がした魚は大きかったが釣りあげた魚が大きすぎた件', dateRaw: '2026-04-02', isWeekly: true, weeks: 12 },
-        { id: 2, title: '自称悪役令嬢な婚約者の観察記録。', dateRaw: '2026-04-04', isWeekly: true, weeks: 12 },
+        // ── 4月クール（残存分）──
         { id: 3, title: '本好きの下剋上 領主の養女', dateRaw: '2026-04-05', isWeekly: true, weeks: 12 },
-        { id: 4, title: 'ようこそ実力至上主義の教室へ 4th Season', dateRaw: '2026-04-05', isWeekly: true, weeks: 12 },
-        { id: 5, title: '転生したらスライムだった件 第4期', dateRaw: '2026-04-05', isWeekly: true, weeks: 12 },
-        { id: 6, title: '最強の職業は勇者でも賢者でもなく鑑定士（仮）らしいですよ？', dateRaw: '2026-04-05', isWeekly: true, weeks: 12 },
-        { id: 23, title: '最強の王様、二度目の人生は何をする？ Season2', dateRaw: '2026-04-06', isWeekly: true, weeks: 12 },
-        { id: 9, title: '灰原くんの強くて青春ニューゲーム', dateRaw: '2026-04-06', isWeekly: true, weeks: 12 },
-        { id: 10, title: '自動販売機に生まれ変わった俺は迷宮を彷徨う 3rd season', dateRaw: '2026-04-07', isWeekly: true, weeks: 12 },
-        { id: 11, title: '異世界のんびり農家2', dateRaw: '2026-04-07', isWeekly: true, weeks: 12 },
-        { id: 12, title: 'また殺されてしまったのですね、探偵様', dateRaw: '2026-04-07', isWeekly: true, weeks: 12 },
-        { id: 13, title: 'お隣の天使様にいつの間にか駄目人間にされていた件2', dateRaw: '2026-04-07', isWeekly: true, weeks: 12 },
-        { id: 14, title: 'LIAR GAME', dateRaw: '2026-04-07', isWeekly: true, weeks: 12 },
-        { id: 24, title: 'カナン様はあくまでチョロい', dateRaw: '2026-04-08', isWeekly: true, weeks: 12 },
-        { id: 26, title: '氷の城壁', dateRaw: '2026-04-10', isWeekly: true, weeks: 12 },
-        { id: 15, title: '神の庭付き楠木邸', dateRaw: '2026-04-10', isWeekly: true, weeks: 12 },
-        { id: 25, title: 'オタクに優しいギャルはいない!?', dateRaw: '2026-04-12', isWeekly: true, weeks: 12 },
-        { id: 16, title: 'Re:ゼロから始める異世界生活 4th season', dateRaw: '2026-04-12', isWeekly: true, weeks: 12 },
-        { id: 17, title: 'クラスで2番目に可愛い女の子と友だちになった', dateRaw: '2026-04-12', isWeekly: true, weeks: 12 },
-        { id: 18, title: '姫騎士は蛮族の嫁', dateRaw: '2026-04-13', isWeekly: true, weeks: 12 },
-        { id: 19, title: '女神「異世界転生何になりたいですか」俺「勇者の肋骨で」', dateRaw: '2026-04-13', isWeekly: true, weeks: 12 },
-        { id: 20, title: '悲劇の元凶となる最強外道ラスボス女王は民の為に尽くします。 Season2', dateRaw: '2026-04-14', isWeekly: true, weeks: 12 },
-        { id: 21, title: '彼女、お借りします 第5期', dateRaw: '2026-04-15', isWeekly: true, weeks: 12 },
-        { id: 22, title: '夜桜さんちの大作戦 第2期', dateRaw: '2026-04-18', isWeekly: true, weeks: 12 },
-        { id: 27, title: '黒猫と魔女の教室', dateRaw: '2026-04-18', isWeekly: true, weeks: 12 }
+        { id: 5, title: '転生したらスライムだった件 第4期', dateRaw: '2026-04-05', isWeekly: true, weeks: 12, platform: 'ABEMA' },
+        { id: 14, title: 'LIAR GAME', dateRaw: '2026-04-07', isWeekly: true, weeks: 12, platform: 'ABEMA' },
+        { id: 27, title: '黒猫と魔女の教室', dateRaw: '2026-04-18', isWeekly: true, weeks: 12, platform: 'ABEMA' },
+
+        // ── 7月クール新規（30週）──
+        { id: 101, title: 'ヒロイン？聖女？いいえ、オールワークスメイドです（誇）！', dateRaw: '2026-06-25', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 102, title: '落第賢者の学院無双', dateRaw: '2026-06-26', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 103, title: '無自覚聖女は今日も無意識に力を垂れ流す', dateRaw: '2026-07-01', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 104, title: 'LV999の村人', dateRaw: '2026-07-02', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 105, title: 'ヘルモード ～やり込み好きのゲーマーは廃設定の異世界で無双する～ 2nd Season', dateRaw: '2026-07-04', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 106, title: '無職転生Ⅲ', dateRaw: '2026-07-05', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 107, title: '骸骨騎士様、只今異世界へお出掛け中Ⅱ', dateRaw: '2026-07-05', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 108, title: '正反対な君と僕 第2期', dateRaw: '2026-07-06', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 109, title: '世界最強の後衛', dateRaw: '2026-07-06', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 110, title: '最強出涸らし皇子の暗躍帝位争い', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 111, title: '転校先の清楚可憐な美少女が、昔男子と思って一緒に遊んだ幼馴染だった件', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 112, title: '捨てられ聖女の異世界ごはん旅', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 113, title: 'ブチ切れ令嬢は報復を誓いました。', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 114, title: '手札が多めのビクトリア', dateRaw: '2026-07-08', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 115, title: '乙女ゲー世界はモブに厳しい世界です２', dateRaw: '2026-07-09', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 116, title: '透明な夜に駆ける君と、目に見えない恋をした。', dateRaw: '2026-07-10', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 117, title: 'きみが死ぬまで恋をしたい', dateRaw: '2026-07-11', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 118, title: '幼女戦記Ⅱ', dateRaw: '2026-07-12', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 119, title: 'いびってこない義母と義姉', dateRaw: '2026-07-16', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 120, title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', isWeekly: true, weeks: 30, platform: 'Prime Video' },
+        { id: 121, title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', isWeekly: true, weeks: 30, platform: 'Prime Video' },
+        { id: 122, title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', isWeekly: true, weeks: 30, platform: 'Prime Video' },
+        { id: 123, title: 'きみを愛する気はない、と言った次期公爵様がなぜか溺愛してきます', dateRaw: '2026-07-08', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 124, title: 'これ描いて死ね', dateRaw: '2026-07-07', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 125, title: '才女のお世話', dateRaw: '2026-07-05', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 126, title: '追放された転生重騎士はゲーム知識で無双する', dateRaw: '2026-07-02', isWeekly: true, weeks: 30, platform: 'ABEMA' },
+        { id: 127, title: '逃げ上手の若君 第二期', dateRaw: '2026-07-18', isWeekly: true, weeks: 30, platform: 'Prime Video' },
+        { id: 128, title: 'ヤニねこ', dateRaw: '2026-07-03', isWeekly: true, weeks: 30, platform: 'ABEMA' },
       ];
     }
+
+
 
     const baseballTeams = ['巨人', 'ヤクルト', '阪神', '中日', '広島', 'オリックス', 'ロッテ', '楽天', 'ソフトバンク', '日本ハム', '西武'];
     const baseballStadiums = ['横浜', '神宮', '東京ドーム', 'マツダスタジアム', '甲子園', 'バンテリンドーム', 'ベルーナドーム', 'エスコンF', 'ZOZOマリン', '楽天モバイル', 'みずほPayPay', '京セラD大阪', 'ほっともっと神戸', '岐阜', 'ハードオフ新潟', '静岡'];
@@ -1329,17 +1341,9 @@
       const [tab, setTab] = useState('delivery');
       const [showDeliveryInSettings, setShowDeliveryInSettings] = useState(false);
       const [editDeliveryInSettings, setEditDeliveryInSettings] = useState(null);
-      const animes = (scheduleData?.animes && scheduleData.animes.length > 0) ? scheduleData.animes : getDefaultAnimes();
       const baseballs = (scheduleData?.baseballs && scheduleData.baseballs.length > 0) ? scheduleData.baseballs : getDefaultBaseballs();
       const garbageRules = (scheduleData?.garbageRules && scheduleData.garbageRules.length > 0) ? scheduleData.garbageRules : getDefaultGarbageRules();
 
-      // アニメ管理
-      const [editAnime, setEditAnime] = useState(null);
-      const [newAnimeTitle, setNewAnimeTitle] = useState('');
-      const [newAnimeDate, setNewAnimeDate] = useState('');
-      const [newAnimeWeekly, setNewAnimeWeekly] = useState(true);
-      const [newAnimeWeeks, setNewAnimeWeeks] = useState(12);
-      const [newAnimePlatform, setNewAnimePlatform] = useState('Prime Video');
       // 野球管理
       const [editBaseball, setEditBaseball] = useState(null);
       const [newBaseballTitle, setNewBaseballTitle] = useState('');
@@ -1354,23 +1358,6 @@
       const [newGarbageType, setNewGarbageType] = useState('weekly');
       const [newGarbageDays, setNewGarbageDays] = useState([]);
       const [newGarbageDates, setNewGarbageDates] = useState('');
-
-      const saveAnime = () => {
-        if (!newAnimeTitle || !newAnimeDate) return;
-        const newItem = { id: editAnime ? editAnime.id : Date.now(), title: newAnimeTitle, dateRaw: newAnimeDate, isWeekly: newAnimeWeekly, weeks: Number(newAnimeWeeks), platform: newAnimePlatform };
-        const updated = editAnime ? animes.map(a => a.id === editAnime.id ? newItem : a) : [...animes, newItem];
-        updateScheduleField('animes', updated);
-        if (!editAnime) showAddToast();
-        setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); setNewAnimeWeekly(true); setNewAnimeWeeks(12); setNewAnimePlatform('Prime Video');
-      };
-
-      const deleteAnime = (id) => {
-        if (window.confirm('削除しますか？')) updateScheduleField('animes', animes.filter(a => a.id !== id));
-      };
-
-      const startEditAnime = (a) => {
-        setEditAnime(a); setNewAnimeTitle(a.title); setNewAnimeDate(a.dateRaw); setNewAnimeWeekly(a.isWeekly); setNewAnimeWeeks(a.weeks || 12); setNewAnimePlatform(a.platform || 'Prime Video');
-      };
 
       const saveBaseball = () => {
         if (!newBaseballTitle || !newBaseballDate) return;
@@ -1425,7 +1412,7 @@
 
             {/* タブ */}
             <div className="flex gap-2 mb-4">
-              {[['delivery','荷物'],['anime','アニメ'],['baseball','野球'],['garbage','ゴミ']].map(([key, label]) => (
+              {[['delivery','荷物'],['baseball','野球'],['garbage','ゴミ']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`flex-1 py-2 rounded-full text-sm font-bold transition-colors ${tab === key ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={tab === key ? {backgroundColor: THEME} : {}}>
                   {label}
                 </button>
@@ -1434,49 +1421,6 @@
 
             {/* 荷物登録 */}
             {tab === 'delivery' && <DeliverySettingsForm scheduleData={scheduleData} updateScheduleField={updateScheduleField} THEME={THEME} />}
-
-            {/* アニメ設定 */}
-            {tab === 'anime' && (
-              <div className="space-y-3">
-                <div className="bg-slate-50 rounded-xl p-3 space-y-2">
-                  <input type="text" value={newAnimeTitle} onChange={e => setNewAnimeTitle(e.target.value)} placeholder="タイトル" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
-                  <select value={newAnimePlatform} onChange={e => setNewAnimePlatform(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
-                    <option value="Prime Video">Prime Video</option>
-                    <option value="ABEMA">ABEMA</option>
-                  </select>
-                  <input type="date" value={newAnimeDate} onChange={e => setNewAnimeDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none min-h-[44px]" style={{WebkitAppearance:'none', appearance:'none'}} />
-                  <div className="flex gap-2 items-center">
-                    <label className="flex items-center gap-1 text-sm font-bold">
-                      <input type="checkbox" checked={newAnimeWeekly} onChange={e => setNewAnimeWeekly(e.target.checked)} className="w-4 h-4" />毎週
-                    </label>
-                    {newAnimeWeekly && (
-                      <div className="flex items-center gap-1">
-                        <input type="number" value={newAnimeWeeks} onChange={e => setNewAnimeWeeks(e.target.value)} className="w-14 bg-white border border-slate-200 p-2 rounded-lg text-sm font-bold outline-none text-center" />
-                        <span className="text-sm font-bold text-slate-500">話</span>
-                      </div>
-                    )}
-                  </div>
-                  <button onClick={saveAnime} className="w-full py-2.5 rounded-xl font-black text-sm text-white active:opacity-80" style={{backgroundColor: THEME}}>
-                    {editAnime ? '更新する' : '追加する'}
-                  </button>
-                  {editAnime && <button onClick={() => { setEditAnime(null); setNewAnimeTitle(''); setNewAnimeDate(''); }} className="w-full py-2 rounded-xl font-black text-sm text-slate-500 bg-slate-100 active:opacity-80">キャンセル</button>}
-                </div>
-                <div className="space-y-1 max-h-60 overflow-y-auto no-bounce allow-scroll">
-                  {animes.map(a => (
-                    <div key={a.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-                      <div className="flex-1 min-w-0 mr-2">
-                        <p className="text-sm font-bold text-slate-800 truncate">{a.title}</p>
-                        <p className="text-xs text-slate-400">{a.dateRaw} {a.isWeekly ? `毎週${a.weeks}話` : '単発'} ・ {a.platform || 'Prime Video'}</p>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <button onClick={() => startEditAnime(a)} className="text-xs bg-white border border-slate-200 px-2 py-1 rounded-lg font-bold text-slate-600 active:opacity-70">編集</button>
-                        <button onClick={() => deleteAnime(a.id)} className="text-xs bg-[#ea4335] px-2 py-1 rounded-lg font-bold text-white active:opacity-70">削除</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* 野球設定 */}
             {tab === 'baseball' && (
@@ -2807,93 +2751,6 @@
       };
 
       const { data, updateField, loading } = useSharedData();
-
-      // アニメ一括登録・修正（1つのEffectにまとめて競合防止）
-      useEffect(() => {
-        if (!data) return;
-        const NEW_ANIMES = [
-          { title: 'ヒロイン？聖女？いいえ、オールワークスメイドです（誇）！', dateRaw: '2026-06-25', platform: 'ABEMA' },
-          { title: '落第賢者の学院無双', dateRaw: '2026-06-26', platform: 'ABEMA' },
-          { title: '無自覚聖女は今日も無意識に力を垂れ流す', dateRaw: '2026-07-01', platform: 'ABEMA' },
-          { title: 'LV999の村人', dateRaw: '2026-07-02', platform: 'ABEMA' },
-          { title: 'ヘルモード ～やり込み好きのゲーマーは廃設定の異世界で無双する～ 2nd Season', dateRaw: '2026-07-04', platform: 'ABEMA' },
-          { title: '無職転生Ⅲ', dateRaw: '2026-07-05', platform: 'ABEMA' },
-          { title: '骸骨騎士様、只今異世界へお出掛け中Ⅱ', dateRaw: '2026-07-05', platform: 'ABEMA' },
-          { title: '正反対な君と僕 第2期', dateRaw: '2026-07-06', platform: 'ABEMA' },
-          { title: '世界最強の後衛', dateRaw: '2026-07-06', platform: 'ABEMA' },
-          { title: '最強出涸らし皇子の暗躍帝位争い', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '転校先の清楚可憐な美少女が、昔男子と思って一緒に遊んだ幼馴染だった件', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '捨てられ聖女の異世界ごはん旅', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: 'ブチ切れ令嬢は報復を誓いました。', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '手札が多めのビクトリア', dateRaw: '2026-07-08', platform: 'ABEMA' },
-          { title: '乙女ゲー世界はモブに厳しい世界です２', dateRaw: '2026-07-09', platform: 'ABEMA' },
-          { title: '透明な夜に駆ける君と、目に見えない恋をした。', dateRaw: '2026-07-10', platform: 'ABEMA' },
-          { title: 'きみが死ぬまで恋をしたい', dateRaw: '2026-07-11', platform: 'ABEMA' },
-          { title: '幼女戦記Ⅱ', dateRaw: '2026-07-12', platform: 'ABEMA' },
-          { title: 'いびってこない義母と義姉', dateRaw: '2026-07-16', platform: 'ABEMA' },
-          { title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', platform: 'Prime Video' },
-          { title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', platform: 'Prime Video' },
-          { title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', platform: 'Prime Video' },
-          { title: 'きみを愛する気はない、と言った次期公爵様がなぜか溺愛してきます', dateRaw: '2026-07-08', platform: 'ABEMA' },
-          { title: 'これ描いて死ね', dateRaw: '2026-07-07', platform: 'ABEMA' },
-          { title: '才女のお世話', dateRaw: '2026-07-05', platform: 'ABEMA' },
-          { title: '追放された転生重騎士はゲーム知識で無双する', dateRaw: '2026-07-02', platform: 'ABEMA' },
-          { title: '逃げ上手の若君 第二期', dateRaw: '2026-07-18', platform: 'Prime Video' },
-          { title: 'ヤニねこ', dateRaw: '2026-07-03', platform: 'ABEMA' },
-          { title: '転生したらスライムだった件 第4期', dateRaw: '2026-07-05', platform: 'ABEMA' },
-          { title: '本好きの下剋上 領主の養女', dateRaw: '2026-07-12', platform: 'Prime Video' },
-          { title: '黒猫と魔女の教室', dateRaw: '2026-07-06', platform: 'ABEMA' },
-          { title: 'LIAR GAME', dateRaw: '2026-04-07', platform: 'ABEMA' },
-        ];
-        const CORRECTIONS = [
-          { title: '黒猫と魔女の教室', dateRaw: '2026-04-18' },
-          { title: 'ようこそ実力至上主義の教室へ 4th Season', dateRaw: '2026-04-02' },
-          { title: '転生したらスライムだった件 第4期', dateRaw: '2026-04-05' },
-          { title: 'オタクに優しいギャルはいない!?', dateRaw: '2026-04-12' },
-          { title: 'クラスで2番目に可愛い女の子と友だちになった', dateRaw: '2026-04-12' },
-          { title: '最強の王様、二度目の人生は何をする？ Season2', dateRaw: '2026-04-06' },
-          { title: '姫騎士は蛮族の嫁', dateRaw: '2026-04-10' },
-          { title: '愛してるゲームを終わらせたい', dateRaw: '2026-04-15' },
-          { title: '自動販売機に生まれ変わった俺は迷宮を彷徨う 3rd season', dateRaw: '2026-04-02' },
-          { title: 'また殺されてしまったのですね、探偵様', dateRaw: '2026-04-07' },
-          { title: 'お隣の天使様にいつの間にか駄目人間にされていた件2', dateRaw: '2026-04-04' },
-          { title: 'LIAR GAME', dateRaw: '2026-04-07' },
-          { title: '悲劇の元凶となる最強外道ラスボス女王は民の為に尽くします。Season2', dateRaw: '2026-04-08' },
-          { title: '氷の城壁', dateRaw: '2026-04-11' },
-        ];
-        const corrMap = new Map(CORRECTIONS.map(c => [c.title, c.dateRaw]));
-
-        // Step1: 既存リストをベースに修正を適用
-        let changed = false;
-        let current = (data?.animes || []).map(a => {
-          if (corrMap.has(a.title)) {
-            const correctDate = corrMap.get(a.title);
-            if (a.platform !== 'ABEMA' || a.dateRaw !== correctDate || a.weeks !== 30 || a.isWeekly !== true) {
-              changed = true;
-              return { ...a, platform: 'ABEMA', dateRaw: correctDate, weeks: 30, isWeekly: true };
-            }
-          }
-          return a;
-        });
-
-        // Step2: 新規追加（修正済みリストを基準に重複チェック）
-        const existingTitles = new Set(current.map(a => a.title));
-        const toAdd = NEW_ANIMES.filter(a => !existingTitles.has(a.title));
-        if (toAdd.length > 0) {
-          const seeded = toAdd.map((a, i) => ({
-            id: Date.now() + i,
-            title: a.title,
-            dateRaw: a.dateRaw,
-            isWeekly: true,
-            weeks: 30,
-            platform: a.platform
-          }));
-          current = [...current, ...seeded];
-          changed = true;
-        }
-
-        if (changed) updateField('animes', current);
-      }, [data]);
 
       if (loading) {
          return (

@@ -2808,7 +2808,7 @@
 
       const { data, updateField, loading } = useSharedData();
 
-      // 新規アニメ一括登録（既存タイトルは重複しない）
+      // アニメ一括登録・修正（1つのEffectにまとめて競合防止）
       useEffect(() => {
         if (!data) return;
         const NEW_ANIMES = [
@@ -2834,25 +2834,17 @@
           { title: 'ここは俺に任せて先に行けと言ってから10年がたったら伝説になっていた。', dateRaw: '2026-07-04', platform: 'Prime Video' },
           { title: '領民0人スタートの辺境領主様', dateRaw: '2026-07-04', platform: 'Prime Video' },
           { title: '片田舎のおっさん、剣聖になるII', dateRaw: '2026-07-10', platform: 'Prime Video' },
+          { title: 'きみを愛する気はない、と言った次期公爵様がなぜか溺愛してきます', dateRaw: '2026-07-08', platform: 'ABEMA' },
+          { title: 'これ描いて死ね', dateRaw: '2026-07-07', platform: 'ABEMA' },
+          { title: '才女のお世話', dateRaw: '2026-07-05', platform: 'ABEMA' },
+          { title: '追放された転生重騎士はゲーム知識で無双する', dateRaw: '2026-07-02', platform: 'ABEMA' },
+          { title: '逃げ上手の若君 第二期', dateRaw: '2026-07-18', platform: 'Prime Video' },
+          { title: 'ヤニねこ', dateRaw: '2026-07-03', platform: 'ABEMA' },
+          { title: '転生したらスライムだった件 第4期', dateRaw: '2026-07-05', platform: 'ABEMA' },
+          { title: '本好きの下剋上 領主の養女', dateRaw: '2026-07-12', platform: 'Prime Video' },
+          { title: '黒猫と魔女の教室', dateRaw: '2026-07-06', platform: 'ABEMA' },
+          { title: 'LIAR GAME', dateRaw: '2026-04-07', platform: 'ABEMA' },
         ];
-        const existingTitles = new Set((data?.animes || []).map(a => a.title));
-        const toAdd = NEW_ANIMES.filter(a => !existingTitles.has(a.title));
-        if (toAdd.length > 0) {
-          const seeded = toAdd.map((a, i) => ({
-            id: Date.now() + i,
-            title: a.title,
-            dateRaw: a.dateRaw,
-            isWeekly: true,
-            weeks: 30,
-            platform: a.platform
-          }));
-          updateField('animes', [...(data?.animes || []), ...seeded]);
-        }
-      }, [data]);
-
-      // 既存アニメの配信サイト・日付修正（Prime Video → ABEMA、日付補正）
-      useEffect(() => {
-        if (!data) return;
         const CORRECTIONS = [
           { title: '黒猫と魔女の教室', dateRaw: '2026-04-18' },
           { title: 'ようこそ実力至上主義の教室へ 4th Season', dateRaw: '2026-04-02' },
@@ -2870,8 +2862,10 @@
           { title: '氷の城壁', dateRaw: '2026-04-11' },
         ];
         const corrMap = new Map(CORRECTIONS.map(c => [c.title, c.dateRaw]));
+
+        // Step1: 既存リストをベースに修正を適用
         let changed = false;
-        const updated = (data?.animes || []).map(a => {
+        let current = (data?.animes || []).map(a => {
           if (corrMap.has(a.title)) {
             const correctDate = corrMap.get(a.title);
             if (a.platform !== 'ABEMA' || a.dateRaw !== correctDate || a.weeks !== 30 || a.isWeekly !== true) {
@@ -2881,7 +2875,24 @@
           }
           return a;
         });
-        if (changed) updateField('animes', updated);
+
+        // Step2: 新規追加（修正済みリストを基準に重複チェック）
+        const existingTitles = new Set(current.map(a => a.title));
+        const toAdd = NEW_ANIMES.filter(a => !existingTitles.has(a.title));
+        if (toAdd.length > 0) {
+          const seeded = toAdd.map((a, i) => ({
+            id: Date.now() + i,
+            title: a.title,
+            dateRaw: a.dateRaw,
+            isWeekly: true,
+            weeks: 30,
+            platform: a.platform
+          }));
+          current = [...current, ...seeded];
+          changed = true;
+        }
+
+        if (changed) updateField('animes', current);
       }, [data]);
 
       if (loading) {

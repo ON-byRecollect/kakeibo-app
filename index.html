@@ -1036,7 +1036,8 @@
                 const c = e.target.value;
                 setCarrier(c);
                 setTimeSlot('指定なし');
-                if (c === 'aeon' || c === 'trial') setRemark('食料品'); else setRemark('');
+                if (c === 'aeon' || c === 'trial') { setRemark('食料品'); setRemarkPreset(''); }
+                else if (remarkPreset !== '__manual__') { setRemark(''); }
                 if (!editDelivery) {
                   const base = new Date(defaultDate);
                   const offset = (c === 'aeon' || c === 'trial') ? 1 : 2;
@@ -1308,7 +1309,8 @@
               const c = e.target.value;
               setDCarrier(c);
               setDTimeSlot('指定なし');
-              if (c === 'aeon' || c === 'trial') setDRemark('食料品'); else setDRemark('');
+              if (c === 'aeon' || c === 'trial') { setDRemark('食料品'); setDRemarkPreset(''); }
+              else if (dRemarkPreset !== '__manual__') { setDRemark(''); }
               const base = new Date(today);
               base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
               setDDate(base.toISOString().slice(0,10));

@@ -184,7 +184,8 @@
       'T':  'bg-[#0246A1]',
       '現': 'bg-[#999999]',
       'P':  'bg-[#ea4335]',
-      'N':  'bg-[#ea4335]'
+      'N':  'bg-[#ea4335]',
+      'ac': 'bg-[#c62828]'
     };
 
     const THEME = '#009BE5';
@@ -317,7 +318,7 @@
             </div>
             <div className="flex items-center gap-1">
               <select value={localAccount} onChange={(e) => { setLocalAccount(e.target.value); handleBudgetChange(categoryKey, 'account', e.target.value); }} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-10" style={{focusBorderColor: THEME}}>
-                {['松','新','か','Ⅲ','P','IC'].map(a => <option key={a} value={a}>{a}</option>)}
+                {['松','新','か','Ⅲ','P','IC','ac'].map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <select value={localDate} onChange={(e) => { setLocalDate(e.target.value); handleBudgetChange(categoryKey, 'date', e.target.value); }} className="appearance-none text-center h-8 border border-gray-300 rounded-md px-1 text-xs outline-none bg-white text-gray-700 w-12">
                 <option value="-">-</option>{Array.from({length: 31}, (_, i) => i+1).map(d => <option key={d} value={d}>{d}</option>)}<option value="月末">月末</option>
@@ -567,7 +568,7 @@
               {todayExpenses.map(e => {
                 const isCompleted = completedExpenses.includes(e.id);
                 const acc = e.accountLabel;
-                const ACC_COLORS_MAP = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
+                const ACC_COLORS_MAP = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335', 'ac': '#c62828' };
                 const bgColor = ACC_COLORS_MAP[acc] || '#8cd2e6';
                 const txtColor = acc === 'Ⅲ' ? '#333333' : '#ffffff';
                 return (
@@ -1144,7 +1145,7 @@
       const [account, setAccount] = useState('');
 
       const categories = ['外食', '自炊', '交通'];
-      const accounts = ['松', '新', 'か', 'Ⅲ', 'P'];
+      const accounts = ['松', '新', 'か', 'Ⅲ', 'P', 'ac'];
       const isSubmitEnabled = amount !== '' && category !== '';
 
       const onSubmit = () => {
@@ -1518,10 +1519,11 @@
         { id: 'three', label: 'Ⅲ', color: '#f3f3f3', textColor: '#333333' },
         { id: 'p', label: 'P', color: '#ea4335' },
         { id: 'ic', label: 'IC', color: '#34a853' }, 
+        { id: 'ac', label: 'ac', color: '#c62828' },
         { id: 'gen', label: '現', color: '#999999' }
       ];
       
-      const ASSET_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
+      const ASSET_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335', 'ac': '#c62828' };
       const pointAccounts = [
         { id: 't', label: 'T', color: ASSET_HEX['T'] },
         { id: 'p', label: 'P', color: ASSET_HEX['P'] }, 
@@ -1710,7 +1712,7 @@
       const [editFixedSpecificYear, setEditFixedSpecificYear] = useState(String(new Date().getFullYear()));
 
       const expCategories = ['固定', '外食', '自炊', '交通'];
-      const expAccounts = ['松', '新', 'か', 'Ⅲ', 'P'];
+      const expAccounts = ['松', '新', 'か', 'Ⅲ', 'P', 'ac'];
       const expTimings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const expAnnualMonths = ['1','2','3','4','5','6','7','8','9','10','11','12'];
       const expDays = Array.from({ length: 31 }, (_, i) => i + 1).map(String).concat(['月末']);
@@ -2532,7 +2534,7 @@
       const [day, setDay] = useState('');
 
       const categories = ['固定', '外食', '自炊', '交通'];
-      const accounts = ['松', '新', 'か', 'Ⅲ', 'P', 'IC'];
+      const accounts = ['松', '新', 'か', 'Ⅲ', 'P', 'IC', 'ac'];
       
       const timings = ['今日', '今月', '来月', '再来月', '毎月', '毎年', '偶数月', '奇数月', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
       const annualMonths = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
@@ -2737,7 +2739,7 @@
       }
 
       const lastEditedDate = data?.lastEditedDate || '';
-      const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', gen: '' };
+      const cashAssets = data?.cashAssets || { yo: '', matsu: '', shin: '', ka: '', three: '', p: '', ic: '', ac: '', gen: '' };
       const setCashAssets = (val) => updateField('cashAssets', val);
 
       const pointAssets = data?.pointAssets || { t: '', p: '', nisa: '' };
@@ -2886,7 +2888,7 @@
       // ============================================================
 
       // 現金総収支の計算（AssetTabと同じロジック）
-      const ACC_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
+      const ACC_HEX = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335', 'ac': '#c62828' };
       const cashAccountsForHome = [
         { id: 'yo', label: '予', color: ACC_HEX['予'] },
         { id: 'matsu', label: '松', color: ACC_HEX['松'] },
@@ -2895,6 +2897,7 @@
         { id: 'three', label: 'Ⅲ', color: ACC_HEX['Ⅲ'] },
         { id: 'p', label: 'P', color: ACC_HEX['P'] },
         { id: 'ic', label: 'IC', color: ACC_HEX['IC'] },
+        { id: 'ac', label: 'ac', color: ACC_HEX['ac'] },
         { id: 'gen', label: '現', color: ACC_HEX['現'] }
       ];
 
@@ -3131,7 +3134,7 @@
                     <p className="text-slate-400 text-sm font-bold text-center py-2">未払いの固定費はありません</p>
                   )}
                   {unpaidFixedCosts.map(c => {
-                    const ACCOUNT_COLORS_LOCAL = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335' };
+                    const ACCOUNT_COLORS_LOCAL = { '予': '#000000', '松': '#4285f4', '新': '#fbbc04', 'か': '#ff6d01', 'Ⅲ': '#f3f3f3', 'P': '#ea4335', 'IC': '#34a853', '現': '#999999', 'T': '#0246A1', 'N': '#ea4335', 'ac': '#c62828' };
                     const bgColor = ACCOUNT_COLORS_LOCAL[c.accountLabel] || '#888';
                     return (
                       <div key={c.id} className="flex items-center gap-3">

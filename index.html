@@ -358,12 +358,91 @@
     // ==========================================
     // 予定タブ（スケジュール統合）
     // ==========================================
+    // ToDo・予定の追加モーダル。時間は <input type="time">（iOSでは1分刻みのドラムロール）。
+    const TodoModal = ({ defaultDate, onSave, onClose }) => {
+      const [kind, setKind] = React.useState('todo');   // 'todo' | 'plan'
+      const [text, setText] = React.useState('');
+      const [date, setDate] = React.useState(defaultDate);
+      const [priority, setPriority] = React.useState('B');
+      const [start, setStart] = React.useState('');
+      const [end, setEnd] = React.useState('');
+      const [place, setPlace] = React.useState('');
+      const PRI = { A: '#ea4335', B: '#4285f4', C: '#7cb342' };
+      const isOk = text.trim() !== '';
+      const submit = () => {
+        if (!isOk) return;
+        onSave({
+          id: Date.now(), kind, text: text.trim(), date, priority, done: false,
+          start: kind === 'plan' ? start : '',
+          end: kind === 'plan' ? end : '',
+          place: kind === 'plan' ? place.trim() : '',
+        });
+        showAddToast();
+        onClose();
+      };
+      return (
+        <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={onClose}>
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto no-bounce allow-scroll" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-black text-slate-800">ToDo・予定を追加</h3>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            {/* 種別トグル */}
+            <div className="flex gap-2 mb-4">
+              {[['todo','ToDo'],['plan','予定']].map(([k, label]) => (
+                <button key={k} onClick={() => setKind(k)} className={`flex-1 py-2.5 rounded-2xl text-sm font-bold transition-colors ${kind === k ? 'text-white' : 'bg-gray-100 text-gray-500'}`} style={kind === k ? { backgroundColor: THEME } : {}}>{label}</button>
+              ))}
+            </div>
+
+            {/* 内容 */}
+            <input type="text" value={text} onChange={e => setText(e.target.value)} placeholder={kind === 'todo' ? '例：クリーニングを取りに行く' : '例：打ち合わせ'} className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
+
+            {/* 日付 */}
+            <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">日付</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
+
+            {/* 優先度 */}
+            <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">優先度</label>
+            <div className="flex gap-2 mb-3">
+              {['A','B','C'].map(p => (
+                <button key={p} onClick={() => setPriority(p)} className="flex-1 py-2.5 rounded-2xl text-sm font-black transition-colors border-2" style={priority === p ? { backgroundColor: PRI[p], borderColor: PRI[p], color: '#fff' } : { borderColor: '#e2e8f0', color: PRI[p] }}>{p}</button>
+              ))}
+            </div>
+
+            {/* 予定のときだけ：時間・場所 */}
+            {kind === 'plan' && (
+              <>
+                <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">時間（任意）</label>
+                <div className="flex items-center gap-2 mb-3">
+                  <input type="time" value={start} onChange={e => setStart(e.target.value)} className="flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none" />
+                  <span className="text-slate-400 font-bold">〜</span>
+                  <input type="time" value={end} onChange={e => setEnd(e.target.value)} className="flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none" />
+                </div>
+                <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">場所（任意・タップでGoogleマップ）</label>
+                <input type="text" value={place} onChange={e => setPlace(e.target.value)} placeholder="例：東京駅" className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
+              </>
+            )}
+
+            <button onClick={submit} disabled={!isOk} className={`w-full h-14 rounded-2xl font-bold text-lg shadow-sm transition-all mt-1 ${isOk ? 'text-white' : 'bg-gray-100 text-gray-400'}`} style={isOk ? { backgroundColor: THEME } : {}}>追加する</button>
+          </div>
+        </div>
+      );
+    };
+
     const ScheduleTab = ({ scheduleData, updateScheduleField, expenses, handleAddData, currentYearMonth, todayDay, scheduleDatePrev, scheduleDateNext, showDeliveryModalGlobal, onDeliveryModalClose, fixedCosts, utilityPaid, displayDate, setDisplayDate, currentElectricBudget, currentGasBudget, monthlySpents, toggleUtilityPaid, dailyBalance, setDailyBalance }) => {
+      // 野球・アニメの表示切り替え。データ（Firestoreの baseballs / getDefaultAnimes）は残してあり、
+      // 復元したいときは true に戻すだけで元通りになる。
+      const SHOW_BASEBALL = false;
+      const SHOW_ANIME = false;
       const [currentTime, setCurrentTime] = useState('');
       const [showDeliveryModal, setShowDeliveryModal] = useState(false);
       const [showExpenseModal, setShowExpenseModal] = useState(false);
       const [editDelivery, setEditDelivery] = useState(null);
       const [showSettingsModal, setShowSettingsModal] = useState(false);
+      const [showTodoModal, setShowTodoModal] = useState(false);   // ToDo・予定の追加モーダル
       const [settingsTab, setSettingsTab] = useState('anime');
 
       // 完了状態（セッション内のみ保持、LocalStorage）
@@ -481,6 +560,36 @@
       })();
       const todaysAnimes = getAnimesForDate(targetDateStr);
 
+      // ToDo・予定の絞り込み。
+      //  ・予定(plan)  … 登録した日付にだけ出す
+      //  ・ToDo(todo)  … 登録日に出す。さらに未完了なら「実際の今日」に繰り越して出す
+      //                  （完了したら繰り越さない。過去日・未来日はその日に登録した分だけ）
+      const realTodayStr = getYYYYMMDD(new Date());
+      const priorityRank = { A: 0, B: 1, C: 2 };
+      const todaysTodos = (scheduleData?.todos || [])
+        .filter(t => {
+          if (t.date === targetDateStr) return true;
+          if (t.kind === 'todo' && !t.done && t.date < targetDateStr && targetDateStr === realTodayStr) return true;
+          return false;
+        })
+        .sort((a, b) =>
+          (priorityRank[a.priority] ?? 3) - (priorityRank[b.priority] ?? 3)
+          || String(a.start || '').localeCompare(String(b.start || ''))
+        );
+      const toggleTodoDone = (id) => {
+        const next = (scheduleData?.todos || []).map(t => t.id === id ? { ...t, done: !t.done } : t);
+        updateScheduleField('todos', next);
+      };
+      const deleteTodo = (id) => {
+        updateScheduleField('todos', (scheduleData?.todos || []).filter(t => t.id !== id));
+      };
+      // 優先度ごとの色（背景で直感的にわかるように）
+      const PRIORITY_STYLE = {
+        A: { bg: '#fdecea', bar: '#ea4335' },
+        B: { bg: '#e8f0fe', bar: '#4285f4' },
+        C: { bg: '#eef7e6', bar: '#7cb342' },
+      };
+
       // 表示日の固定費（fixedCostsから表示日分を取得）
       const displayYM = `${displayDate.getFullYear()}年${displayDate.getMonth()+1}月`;
       const displayDayNum = displayDate.getDate();
@@ -592,8 +701,8 @@
             <div className="flex justify-center items-baseline leading-none mb-1">
               <span className="font-black text-slate-900 leading-none" style={{fontSize: '5.5rem', letterSpacing: '-0.04em'}}>{currentTime}</span>
             </div>
-            {/* 行4: プロ野球（中央配置） */}
-            {todaysBaseballs.length > 0 ? (
+            {/* 行4: プロ野球（中央配置）※ SHOW_BASEBALL で非表示にしている */}
+            {SHOW_BASEBALL && todaysBaseballs.length > 0 ? (
               <div className="flex flex-col items-center gap-1 mb-4">
                 {todaysBaseballs.map(b => (
                   <div key={b.id} className="flex items-center gap-3 text-black">
@@ -660,8 +769,8 @@
             </div>
           )}
 
-          {/* ── アニメ放映日 ── */}
-          {todaysAnimes.length > 0 && (
+          {/* ── アニメ放映日 ── ※ SHOW_ANIME で非表示にしている */}
+          {SHOW_ANIME && todaysAnimes.length > 0 && (
             <div className="px-5 mb-3">
               <div className="bg-white rounded-2xl px-4 py-3 shadow-sm space-y-2">
                 {todaysAnimes.map(a => {
@@ -692,11 +801,69 @@
             </div>
           )}
 
-          {/* 何もない日 */}
-          {garbages.length === 0 && todaysBaseballs.length === 0 && todaysDeliveries.length === 0 && todaysAnimes.length === 0 && todayExpenses.length === 0 && (
+          {/* ── ToDo・予定 ── （アニメを出していた位置） */}
+          <div className="px-5 mb-3 space-y-2">
+            {todaysTodos.map(t => {
+              const ps = PRIORITY_STYLE[t.priority] || PRIORITY_STYLE.C;
+              const mapUrl = t.place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}` : '';
+              const timeText = (t.start || t.end) ? `${t.start || ''}${t.end ? '〜' + t.end : (t.start ? '〜' : '')}` : '';
+              return (
+                <div key={t.id} className="flex items-stretch rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: ps.bg }}>
+                  {/* 優先度の帯 */}
+                  <div className="w-1.5 shrink-0" style={{ backgroundColor: ps.bar }}></div>
+                  <div className="flex-1 min-w-0 px-3 py-3 flex items-center gap-3">
+                    {t.kind === 'todo' ? (
+                      /* ToDo：チェックで完了/未完了 */
+                      <button onClick={() => toggleTodoDone(t.id)} className="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 active:opacity-60" style={{ borderColor: ps.bar, backgroundColor: t.done ? ps.bar : 'transparent' }}>
+                        {t.done && <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+                      </button>
+                    ) : (
+                      /* 予定：優先度バッジ */
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black text-white shrink-0" style={{ backgroundColor: ps.bar }}>{t.priority}</span>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-[16px] font-bold text-slate-900 leading-snug ${t.kind === 'todo' && t.done ? 'completed-item' : ''}`} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.text}</div>
+                      {(timeText || t.place) && (
+                        <div className="flex items-center gap-2 mt-0.5 text-[12px] text-slate-500 font-bold">
+                          {timeText && <span className="shrink-0">{timeText}</span>}
+                          {t.place && (
+                            <a href={mapUrl} target="_blank" rel="noopener" className="flex items-center gap-0.5 text-sky-600 active:opacity-60 truncate" onClick={e => e.stopPropagation()}>
+                              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="2.5"/></svg>
+                              <span className="truncate">{t.place}</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {/* 削除 */}
+                    <button onClick={() => deleteTodo(t.id)} className="w-8 h-8 flex items-center justify-center text-slate-400 active:text-red-500 shrink-0">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><polyline points="3 6 5 6 21 6" strokeLinecap="round" strokeLinejoin="round"/><path strokeLinecap="round" strokeLinejoin="round" d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path strokeLinecap="round" strokeLinejoin="round" d="M10 11v6M14 11v6"/></svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {/* ＋ 追加ボタン */}
+            <button onClick={() => setShowTodoModal(true)} className="w-full flex items-center justify-center gap-1 py-2.5 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold active:bg-slate-50">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
+              <span className="text-sm">ToDo・予定を追加</span>
+            </button>
+          </div>
+
+          {/* 何もない日（野球・アニメは非表示にしたので判定から外し、ToDo・予定を加える） */}
+          {garbages.length === 0 && todaysDeliveries.length === 0 && todayExpenses.length === 0 && todaysTodos.length === 0 && (
             <div className="px-5">
               <p className="text-slate-400 font-bold text-sm tracking-widest text-center py-4">予定はありません</p>
             </div>
+          )}
+
+          {/* ToDo・予定の追加モーダル */}
+          {showTodoModal && (
+            <TodoModal
+              defaultDate={targetDateStr}
+              onSave={(item) => { updateScheduleField('todos', [...(scheduleData?.todos || []), item]); }}
+              onClose={() => setShowTodoModal(false)}
+            />
           )}
 
           {/* 荷物登録モーダル */}
@@ -1013,7 +1180,8 @@
                 setCarrier(c);
                 setTimeSlot('指定なし');
                 if (c === 'aeon' || c === 'trial') { setRemark('食料品'); setRemarkPreset(''); }
-                else if (remarkPreset !== '__manual__') { setRemark(''); }
+                // 品目を選んでいる場合は、その品目を備考に保つ（選択済みの品目まで消さない）。
+                else if (remarkPreset !== '__manual__') { setRemark(remarkPreset); }
                 if (!editDelivery) {
                   const base = new Date(defaultDate);
                   const offset = (c === 'aeon' || c === 'trial') ? 1 : 2;
@@ -1113,7 +1281,7 @@
     const QuickExpenseForm = ({ handleAddData, currentYearMonth, todayDay, onClose, selectedDate }) => {
       const [amount, setAmount] = React.useState('');
       const [category, setCategory] = React.useState('外食');
-      const categories = ['外食', '自炊', '交通'];
+      const categories = ['外食', '自炊'];
       const isOk = amount !== '' && Number(amount) > 0;
       const onSubmit = () => {
         if (!isOk) return;
@@ -1286,7 +1454,10 @@
               setDCarrier(c);
               setDTimeSlot('指定なし');
               if (c === 'aeon' || c === 'trial') { setDRemark('食料品'); setDRemarkPreset(''); }
-              else if (dRemarkPreset !== '__manual__') { setDRemark(''); }
+              // 品目を選んでいる場合は、その品目を備考に保つ。以前は setDRemark('') で
+              // 選択済みの品目まで消えていた（ヤフオク等を選んだ後に業者を変えると備考が空になるバグ）。
+              // 品目未選択（イオン/トライアルで食料品が入った後など）は preset が '' なので従来どおり空になる。
+              else if (dRemarkPreset !== '__manual__') { setDRemark(dRemarkPreset); }
               const base = new Date(today);
               base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
               setDDate(base.toISOString().slice(0,10));
@@ -1381,13 +1552,15 @@
         <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-start justify-center backdrop-blur-sm pt-[12vh] px-4">
           <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 pt-7 modal-enter shadow-2xl max-h-[82vh] overflow-y-auto no-bounce allow-scroll box-border">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">スケジュール設定</h3>
+              <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">荷物の登録</h3>
               <button onClick={onClose} className="bg-slate-100 p-2 rounded-full text-slate-500 active:bg-slate-200">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
 
-            {/* タブ */}
+            {/* タブは荷物だけにしたので帯は出さない。野球・ゴミの編集は下で false で止めている
+                （コード・データは残してあるので、復元したいときは SHOW_SCHEDULE_EDIT を戻す）。 */}
+            {false && (
             <div className="flex gap-2 mb-4">
               {[['delivery','荷物'],['baseball','野球'],['garbage','ゴミ']].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key)} className={`flex-1 py-2 rounded-full text-sm font-bold transition-colors ${tab === key ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={tab === key ? {backgroundColor: THEME} : {}}>
@@ -1395,12 +1568,13 @@
                 </button>
               ))}
             </div>
+            )}
 
-            {/* 荷物登録 */}
-            {tab === 'delivery' && <DeliverySettingsForm scheduleData={scheduleData} updateScheduleField={updateScheduleField} THEME={THEME} />}
+            {/* 荷物登録（このモーダルは荷物専用にしたので常に表示） */}
+            <DeliverySettingsForm scheduleData={scheduleData} updateScheduleField={updateScheduleField} THEME={THEME} />
 
-            {/* 野球設定 */}
-            {tab === 'baseball' && (
+            {/* 野球設定（アプリ上からは編集不可にした。false で止めているだけでコード・データは残す） */}
+            {false && tab === 'baseball' && (
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <select value={newBaseballTitle} onChange={e => setNewBaseballTitle(e.target.value)} className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none">
@@ -1435,8 +1609,8 @@
               </div>
             )}
 
-            {/* ゴミ設定 */}
-            {tab === 'garbage' && (
+            {/* ゴミ設定（アプリ上からは編集不可にした。false で止めているだけでコード・データは残す） */}
+            {false && tab === 'garbage' && (
               <div className="space-y-3">
                 <div className="bg-slate-50 rounded-xl p-3 space-y-2">
                   <input type="text" value={newGarbageName} onChange={e => setNewGarbageName(e.target.value)} placeholder="ゴミの種類（例：燃えるゴミ）" className="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-sm font-bold outline-none" />
@@ -2825,7 +2999,8 @@
         deliveries: data?.deliveries || [],
         animes: data?.animes || [],
         baseballs: data?.baseballs || [],
-        garbageRules: data?.garbageRules || []
+        garbageRules: data?.garbageRules || [],
+        todos: data?.todos || []   // ToDo・予定（新機能）
       };
       const updateScheduleField = (key, value) => updateField(key, value);
 
@@ -3240,7 +3415,7 @@
                 {/* 今日へ戻るボタン（ホーム） */}
                 <button
                   onClick={resetToToday}
-                  className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+                  className="w-14 h-14 flex items-center justify-center text-slate-800 active:opacity-50"
                 >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 </button>
@@ -3248,27 +3423,36 @@
                 {/* 設定ボタン（ダンボール） */}
                 <button
                   onClick={() => { setShowScheduleSettings(true); setShowSettingsMenu(false); }}
-                  className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+                  className="w-14 h-14 flex items-center justify-center text-slate-800 active:opacity-50"
                 >
+                  {/* 配送トラック */}
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a1 1 0 00-1 1v11a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1z"/>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7l2-4h14l2 4"/>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 11h6"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 6a1 1 0 011-1h9a1 1 0 011 1v9H3z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 8h3.5a1 1 0 01.8.4l2.5 3.3a1 1 0 01.2.6V15h-7z"/>
+                    <circle cx="7" cy="17.5" r="1.6"/>
+                    <circle cx="17.5" cy="17.5" r="1.6"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.6 17.5h7.3M3 15h1.4M20 15h1"/>
                   </svg>
                 </button>
 
                 {/* 支出ボタン（ペン） */}
                 <button
                   onClick={() => setShowQuickExpense(true)}
-                  className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+                  className="w-14 h-14 flex items-center justify-center text-slate-800 active:opacity-50"
                 >
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"/><path strokeLinecap="round" strokeLinejoin="round" d="M17.586 3.586a2 2 0 112.828 2.828L12 15l-4 1 1-4 8.586-8.414z"/></svg>
+                  {/* フォークとスプーン */}
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 3v5a2 2 0 004 0V3"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 8v13"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 3c-1.7 0-3 1.8-3 4s1.3 4 3 4V3z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 11v10"/>
+                  </svg>
                 </button>
 
                 {/* Walletボタン（クレジットカード） */}
                 <button
                   onClick={() => { setShowKakeiboPage(true); setKakeiboSubPage(null); }}
-                  className="w-14 h-14 rounded-full border-2 border-slate-800 flex items-center justify-center text-slate-800 active:opacity-50"
+                  className="w-14 h-14 flex items-center justify-center text-slate-800 active:opacity-50"
                 >
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
                     <rect x="2" y="5" width="20" height="14" rx="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -3334,7 +3518,7 @@
             <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={() => setShowQuickExpense(false)}>
               <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-lg font-black text-slate-800">支出を入力</h3>
+                  <h3 className="text-lg font-black text-slate-800">今日の食費</h3>
                   <button onClick={() => setShowQuickExpense(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>

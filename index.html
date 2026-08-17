@@ -194,7 +194,7 @@
     const AccountIcon = ({ label, bgColor, textColor }) => {
       const tColor = textColor ? textColor : (label === 'Ⅲ' ? 'text-gray-800' : 'text-white');
       return (
-        <div className={`w-9 h-9 flex items-center justify-center font-bold rounded-full ${bgColor} ${tColor} shrink-0`}>{label}</div>
+        <div className={`w-9 h-9 flex items-center justify-center font-bold rounded-xl ${bgColor} ${tColor} shrink-0`}>{label}</div>
       );
     };
 
@@ -402,7 +402,7 @@
 
             {/* 日付 */}
             <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">日付</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none mb-3 min-h-[52px]" style={{WebkitAppearance: 'none', appearance: 'none'}} />
 
             {/* 優先度 */}
             <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">優先度</label>
@@ -417,9 +417,9 @@
               <>
                 <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">時間（任意）</label>
                 <div className="flex items-center gap-2 mb-3">
-                  <input type="time" value={start} onChange={e => setStart(e.target.value)} className="flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none" />
+                  <input type="time" value={start} onChange={e => setStart(e.target.value)} className="flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]" style={{WebkitAppearance: 'none', appearance: 'none'}} />
                   <span className="text-slate-400 font-bold">〜</span>
-                  <input type="time" value={end} onChange={e => setEnd(e.target.value)} className="flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none" />
+                  <input type="time" value={end} onChange={e => setEnd(e.target.value)} className="flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]" style={{WebkitAppearance: 'none', appearance: 'none'}} />
                 </div>
                 <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">場所（任意・タップでGoogleマップ）</label>
                 <input type="text" value={place} onChange={e => setPlace(e.target.value)} placeholder="例：東京駅" className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
@@ -1766,7 +1766,7 @@
                 <div className="space-y-2">
                   {pointAccounts.map((acc) => (
                     <div key={acc.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: '#ffffff'}}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: '#ffffff'}}>
                         {acc.label}
                       </div>
                       <div className="w-1/2 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
@@ -1797,7 +1797,7 @@
                 <div className="space-y-2">
                   {borrowingAccounts.map((acc) => (
                     <div key={acc.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.textColor || '#ffffff'}}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.textColor || '#ffffff'}}>
                         {acc.label}
                       </div>
                       <div className="w-1/2 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
@@ -1828,7 +1828,7 @@
                 <div className="space-y-2">
                   {safePhysicalAssets.map((item, idx) => (
                     <div key={item.id} className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white" style={{backgroundColor: '#009BE5'}}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0 text-white" style={{backgroundColor: '#009BE5'}}>
                         {idx + 1}
                       </div>
                       <input
@@ -2530,7 +2530,7 @@
                            <div key={loan.id} className="border-b border-gray-100 pb-4">
                               {/* 1行目: アイコン + 残債 + 済/総 + 月々 (横幅統一) */}
                               <div className="flex items-center gap-2 mb-2">
-                                 <div className={`w-9 h-9 flex items-center justify-center font-bold text-white rounded-full text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
+                                 <div className={`w-9 h-9 flex items-center justify-center font-bold text-white rounded-xl text-[10px] leading-tight text-center shrink-0 ${loan.color}`}>
                                     {loan.lender}
                                  </div>
                                  {/* 残債入力 */}
@@ -3244,7 +3244,7 @@
                     const hasBalance = acc.id !== 'yo';
                     return (
                       <div key={acc.id} className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {acc.label}
                         </div>
                         <div className="w-0 flex-1 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
@@ -3313,7 +3313,7 @@
                     const bgColor = ACCOUNT_COLORS_LOCAL[c.accountLabel] || '#888';
                     return (
                       <div key={c.id} className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: bgColor, color: c.accountLabel === 'Ⅲ' ? '#333333' : '#ffffff'}}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: bgColor, color: c.accountLabel === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {c.accountLabel}
                         </div>
                         <span className="flex-1 text-slate-800 font-bold text-sm">{c.name}</span>

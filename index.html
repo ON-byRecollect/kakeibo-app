@@ -830,29 +830,31 @@
               const mapUrl = t.place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}` : '';
               const timeText = (t.start || t.end) ? `${t.start || ''}${t.end ? '〜' + t.end : (t.start ? '〜' : '')}` : '';
               return (
-                <div key={t.id} className={`flex items-stretch rounded-2xl overflow-hidden shadow-sm ${isPlan ? 'border border-slate-200' : ''}`} style={{ backgroundColor: isPlan ? '#ffffff' : ps.bg }}>
-                  {/* 優先度の帯（ToDo のみ。予定は白背景で帯なし） */}
-                  {!isPlan && <div className="w-1.5 shrink-0" style={{ backgroundColor: ps.bar }}></div>}
-                  <div onClick={() => setEditingTodo(t)} className="flex-1 min-w-0 px-3 py-3 flex items-center gap-3 cursor-pointer active:opacity-70">
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-[16px] font-bold text-slate-900 leading-snug ${t.kind === 'todo' && t.done ? 'completed-item' : ''}`} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.text}</div>
-                      {(timeText || t.place) && (
-                        <div className="flex items-center gap-2 mt-0.5 text-[12px] text-slate-500 font-bold">
-                          {timeText && <span className="shrink-0">{timeText}</span>}
-                          {t.place && (
-                            <a href={mapUrl} target="_blank" rel="noopener" className="flex items-center gap-0.5 text-sky-600 active:opacity-60 truncate" onClick={e => e.stopPropagation()}>
-                              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="2.5"/></svg>
-                              <span className="truncate">{t.place}</span>
-                            </a>
-                          )}
-                        </div>
-                      )}
+                <div key={t.id} className={`rounded-2xl shadow-sm flex items-center gap-3 px-4 py-3 min-h-[72px] ${isPlan ? 'border border-slate-200' : ''}`} style={{ backgroundColor: isPlan ? '#ffffff' : ps.bg }}>
+                  {isPlan ? (
+                    /* 予定：左に時刻(黒)＋場所、右にスペースを使って内容（左揃え・最大2行） */
+                    <div onClick={() => setEditingTodo(t)} className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer active:opacity-70">
+                      <div className="flex flex-col justify-center w-[95px] shrink-0">
+                        {timeText && <div className="text-[13px] font-bold text-slate-900 leading-tight whitespace-nowrap">{timeText}</div>}
+                        {t.place && (
+                          <a href={mapUrl} target="_blank" rel="noopener" className="flex items-center gap-0.5 text-[12px] font-bold text-sky-600 active:opacity-60 truncate mt-0.5" onClick={e => e.stopPropagation()}>
+                            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="2.5"/></svg>
+                            <span className="truncate">{t.place}</span>
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 text-[17px] font-bold text-slate-800 text-left leading-snug" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.text}</div>
                     </div>
-                    {/* 削除 */}
-                    <button onClick={(e) => { e.stopPropagation(); deleteTodo(t.id); }} className="w-8 h-8 flex items-center justify-center text-slate-400 active:text-red-500 shrink-0">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8"/></svg>
-                    </button>
-                  </div>
+                  ) : (
+                    /* ToDo：内容のみ（帯なし） */
+                    <div onClick={() => setEditingTodo(t)} className="flex-1 min-w-0 cursor-pointer active:opacity-70">
+                      <div className={`text-[16px] font-bold text-slate-900 leading-snug ${t.done ? 'completed-item' : ''}`} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.text}</div>
+                    </div>
+                  )}
+                  {/* 削除 */}
+                  <button onClick={(e) => { e.stopPropagation(); deleteTodo(t.id); }} className="w-8 h-8 flex items-center justify-center text-slate-400 active:text-slate-600 shrink-0">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8"/></svg>
+                  </button>
                 </div>
               );
             })}

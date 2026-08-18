@@ -386,7 +386,7 @@
         <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={onClose}>
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto no-bounce allow-scroll" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-slate-800">{editItem ? 'ToDo・予定を編集' : 'ToDo・予定を追加'}</h3>
+              <h3 className="text-lg font-black text-slate-800">{editItem ? 'ToDo/予定を編集' : 'ToDo/予定を追加'}</h3>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
@@ -406,13 +406,17 @@
             <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">日付</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none mb-3 min-h-[52px]" style={{WebkitAppearance: 'none', appearance: 'none'}} />
 
-            {/* 優先度 */}
-            <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">優先度</label>
-            <div className="flex gap-2 mb-3">
-              {['A','B','C'].map(p => (
-                <button key={p} onClick={() => setPriority(p)} className="flex-1 py-2.5 rounded-2xl text-sm font-black transition-colors border-2" style={priority === p ? { backgroundColor: PRI[p], borderColor: PRI[p], color: '#fff' } : { borderColor: '#e2e8f0', color: PRI[p] }}>{p}</button>
-              ))}
-            </div>
+            {/* 優先度（ToDo のときだけ） */}
+            {kind === 'todo' && (
+              <>
+                <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">優先度</label>
+                <div className="flex gap-2 mb-3">
+                  {['A','B','C'].map(p => (
+                    <button key={p} onClick={() => setPriority(p)} className="flex-1 py-2.5 rounded-2xl text-sm font-black transition-colors border-2" style={priority === p ? { backgroundColor: PRI[p], borderColor: PRI[p], color: '#fff' } : { borderColor: '#e2e8f0', color: PRI[p] }}>{p}</button>
+                  ))}
+                </div>
+              </>
+            )}
 
             {/* 予定のときだけ：時間・場所 */}
             {kind === 'plan' && (
@@ -575,10 +579,26 @@
           if (t.kind === 'todo' && !t.done && t.date < targetDateStr && targetDateStr === realTodayStr) return true;
           return false;
         })
-        .sort((a, b) =>
-          (priorityRank[a.priority] ?? 3) - (priorityRank[b.priority] ?? 3)
-          || String(a.start || '').localeCompare(String(b.start || ''))
-        );
+        .sort((a, b) => {
+          // 上から「ToDo リスト」→「予定」の順
+          const kindRank = t => t.kind === 'todo' ? 0 : 1;
+          if (kindRank(a) !== kindRank(b)) return kindRank(a) - kindRank(b);
+          if (a.kind === 'todo') {
+            // ToDo：優先度 A→B→C の順
+            return (priorityRank[a.priority] ?? 3) - (priorityRank[b.priority] ?? 3);
+          }
+          // 予定：(a) 開始時間が早い順（開始未入力は下に）
+          const as = a.start || '', bs = b.start || '';
+          if (as !== bs) {
+            if (!as) return 1;
+            if (!bs) return -1;
+            return as.localeCompare(bs);
+          }
+          // 開始が同じ：(c) 終了未入力を一番上に → (b) 終了が早い順
+          const ae = a.end || '', be = b.end || '';
+          if ((ae === '') !== (be === '')) return ae === '' ? -1 : 1;
+          return ae.localeCompare(be);
+        });
       const toggleTodoDone = (id) => {
         const next = (scheduleData?.todos || []).map(t => t.id === id ? { ...t, done: !t.done } : t);
         updateScheduleField('todos', next);
@@ -805,13 +825,14 @@
           {/* ── ToDo・予定 ── （アニメを出していた位置） */}
           <div className="px-5 mb-3 space-y-2">
             {todaysTodos.map(t => {
+              const isPlan = t.kind === 'plan';
               const ps = PRIORITY_STYLE[t.priority] || PRIORITY_STYLE.C;
               const mapUrl = t.place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}` : '';
               const timeText = (t.start || t.end) ? `${t.start || ''}${t.end ? '〜' + t.end : (t.start ? '〜' : '')}` : '';
               return (
-                <div key={t.id} className="flex items-stretch rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: ps.bg }}>
-                  {/* 優先度の帯 */}
-                  <div className="w-1.5 shrink-0" style={{ backgroundColor: ps.bar }}></div>
+                <div key={t.id} className={`flex items-stretch rounded-2xl overflow-hidden shadow-sm ${isPlan ? 'border border-slate-200' : ''}`} style={{ backgroundColor: isPlan ? '#ffffff' : ps.bg }}>
+                  {/* 優先度の帯（ToDo のみ。予定は白背景で帯なし） */}
+                  {!isPlan && <div className="w-1.5 shrink-0" style={{ backgroundColor: ps.bar }}></div>}
                   <div onClick={() => setEditingTodo(t)} className="flex-1 min-w-0 px-3 py-3 flex items-center gap-3 cursor-pointer active:opacity-70">
                     <div className="flex-1 min-w-0">
                       <div className={`text-[16px] font-bold text-slate-900 leading-snug ${t.kind === 'todo' && t.done ? 'completed-item' : ''}`} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.text}</div>
@@ -838,7 +859,7 @@
             {/* ＋ 追加ボタン */}
             <button onClick={() => setShowTodoModal(true)} className="w-full flex items-center justify-center gap-1 py-2.5 text-slate-400 font-bold active:opacity-60">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
-              <span className="text-sm">ToDo・予定を追加</span>
+              <span className="text-sm">ToDo/予定を追加</span>
             </button>
           </div>
 

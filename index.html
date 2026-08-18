@@ -193,8 +193,10 @@
 
     const AccountIcon = ({ label, bgColor, textColor }) => {
       const tColor = textColor ? textColor : (label === 'Ⅲ' ? 'text-gray-800' : 'text-white');
+      // みんなの銀行（Ⅲ）は背景が白に近く見えづらいため、黒い外枠で囲う
+      const border = label === 'Ⅲ' ? ' border border-slate-900' : '';
       return (
-        <div className={`w-9 h-9 flex items-center justify-center font-bold rounded-xl ${bgColor} ${tColor} shrink-0`}>{label}</div>
+        <div className={`w-9 h-9 flex items-center justify-center font-bold rounded-xl ${bgColor} ${tColor}${border} shrink-0`}>{label}</div>
       );
     };
 
@@ -373,7 +375,8 @@
         if (!isOk) return;
         onSave({
           id: editItem ? editItem.id : Date.now(),
-          kind, text: text.trim(), date, priority,
+          // 日付未入力（任意）の場合は入力当日（表示中の日）を採用し、当日以降ずっと繰り越し表示する
+          kind, text: text.trim(), date: date || defaultDate, priority,
           done: editItem ? !!editItem.done : false,
           start: kind === 'plan' ? start : '',
           end: kind === 'plan' ? end : '',
@@ -402,8 +405,8 @@
             {/* 内容 */}
             <input type="text" value={text} onChange={e => setText(e.target.value)} placeholder={kind === 'todo' ? '例：クリーニングを取りに行く' : '例：打ち合わせ'} className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
 
-            {/* 日付 */}
-            <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">日付</label>
+            {/* 日付（ToDo は任意） */}
+            <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">{kind === 'todo' ? '日付（任意）' : '日付'}</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold text-slate-800 outline-none mb-3 min-h-[52px]" style={{WebkitAppearance: 'none', appearance: 'none'}} />
 
             {/* 優先度（ToDo のときだけ） */}
@@ -576,7 +579,9 @@
       const todaysTodos = (scheduleData?.todos || [])
         .filter(t => {
           if (t.date === targetDateStr) return true;
-          if (t.kind === 'todo' && !t.done && t.date < targetDateStr && targetDateStr === realTodayStr) return true;
+          // ToDo はチェックボックス廃止（完了＝削除）。データが残る限り未消化として、実際の今日に繰り越して表示。
+          // 日付未入力（t.date === ''）も '' < targetDateStr が成立するため、登録当日以降ずっと今日に表示され続ける。
+          if (t.kind === 'todo' && t.date < targetDateStr && targetDateStr === realTodayStr) return true;
           return false;
         })
         .sort((a, b) => {
@@ -675,10 +680,10 @@
       };
 
       return (
-        <div className="flex flex-col w-full min-h-full pb-[100px]" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+        <div className="flex flex-col w-full min-h-full pb-[160px]" style={{backgroundColor: '#f5f5f7', fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
 
-          {/* ── ヘッダーエリア ── */}
-          <div className="px-5 pt-20 pb-2">
+          {/* ── ヘッダーエリア（現在時刻より上＝日付・支出・時計は常に固定表示） ── */}
+          <div className="px-5 pt-20 pb-2 sticky top-0 z-20" style={{backgroundColor: '#f5f5f7'}}>
 
             {/* 行1: 日付 + ゴミ（左寄せ・横並び） */}
             <div className="flex items-center gap-3 w-full mb-3 px-12">
@@ -712,7 +717,7 @@
                     }
                   }} className={`flex items-center gap-2 cursor-pointer active:opacity-60`}>
                     {acc && (
-                      <span className="w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0" style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
+                      <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0${acc === 'Ⅲ' ? ' border border-slate-900' : ''}`} style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
                     )}
                     <span className="text-[1.2rem] font-bold text-slate-800 flex-1">{e.name || e.category}</span>
                     <span className="text-[1.2rem] font-bold text-slate-800">¥{e.amount.toLocaleString()}</span>
@@ -762,18 +767,6 @@
                         <div className="text-[20px] font-black text-slate-800 truncate flex-1 leading-none flex items-center h-full">{d.remark}</div>
                       )}
                     </div>
-                    {/* コピーアイコン */}
-                    {d.num && (
-                      <button
-                        onClick={() => { navigator.clipboard && navigator.clipboard.writeText(d.num).then(showCopyToast); }}
-                        className="w-9 h-9 flex items-center justify-center text-slate-400 active:text-slate-600 shrink-0"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                        </svg>
-                      </button>
-                    )}
                     {/* 削除アイコン */}
                     <button
                       onClick={() => deleteDelivery(d.id)}
@@ -1151,6 +1144,8 @@
         base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
         return getYYYYMMDD(base);
       });
+      // 日付を手動で変更したら、業者/品目の自動調整で上書きしない（手動入力を最優先）。
+      const [dateEdited, setDateEdited] = useState(!!editDelivery);
       const [timeSlot, setTimeSlot] = useState(editDelivery?.timeSlot || '指定なし');
       const [remark, setRemark] = useState(editDelivery?.remark || '');
       const [remarkPreset, setRemarkPreset] = useState(() => {
@@ -1194,7 +1189,7 @@
               </button>
             </div>
             <div className="space-y-3.5">
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]"style={{WebkitAppearance: 'none', appearance: 'none'}} />
+              <input type="date" value={date} onChange={e => { setDate(e.target.value); setDateEdited(true); }} className="w-full max-w-full box-border bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none min-h-[52px]"style={{WebkitAppearance: 'none', appearance: 'none'}} />
               <select value={carrier} onChange={e => {
                 const c = e.target.value;
                 setCarrier(c);
@@ -1202,7 +1197,7 @@
                 if (c === 'aeon' || c === 'trial') { setRemark('食料品'); setRemarkPreset(''); }
                 // 品目を選んでいる場合は、その品目を備考に保つ（選択済みの品目まで消さない）。
                 else if (remarkPreset !== '__manual__') { setRemark(remarkPreset); }
-                if (!editDelivery) {
+                if (!editDelivery && !dateEdited) {
                   const base = new Date(defaultDate);
                   const offset = (c === 'aeon' || c === 'trial') ? 1 : 2;
                   base.setDate(base.getDate() + offset);
@@ -1237,7 +1232,7 @@
                 if (autoRule) {
                   setCarrier(autoRule.carrier);
                   setTimeSlot(autoRule.timeSlot);
-                  if (!editDelivery) {
+                  if (!editDelivery && !dateEdited) {
                     const base = new Date(defaultDate);
                     base.setDate(base.getDate() + 2);
                     setDate(getYYYYMMDD(base));
@@ -1390,6 +1385,8 @@
         base.setDate(base.getDate() + 2);
         return base.toISOString().slice(0,10);
       });
+      // 日付を手動で変更したら、業者/品目の自動調整で上書きしない（手動入力を最優先）。
+      const [dDateEdited, setDDateEdited] = React.useState(false);
       const [dTimeSlot, setDTimeSlot] = React.useState('指定なし');
       const [dRemark, setDRemark] = React.useState('');
       const [dRemarkPreset, setDRemarkPreset] = React.useState('');
@@ -1408,12 +1405,13 @@
         setDCarrier('yamato');
         const base = new Date(today); base.setDate(base.getDate() + 2);
         setDDate(base.toISOString().slice(0,10));
+        setDDateEdited(false);
         setDTimeSlot('指定なし'); setDRemark(''); setDRemarkPreset(''); setDNum('');
       };
       return (
         <div className="space-y-3">
           <div className="space-y-3">
-            <input type="date" value={dDate} onChange={e => setDDate(e.target.value)} className="w-full max-w-full box-border bg-white border border-gray-300 px-4 h-14 rounded-2xl text-base font-bold outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
+            <input type="date" value={dDate} onChange={e => { setDDate(e.target.value); setDDateEdited(true); }} className="w-full max-w-full box-border bg-white border border-gray-300 px-4 h-14 rounded-2xl text-base font-bold outline-none" style={{WebkitAppearance:'none', appearance:'none'}} />
             <select value={dRemarkPreset} onChange={e => {
               const v = e.target.value;
               setDRemarkPreset(v);
@@ -1431,9 +1429,11 @@
               if (autoRule) {
                 setDCarrier(autoRule.carrier);
                 setDTimeSlot(autoRule.timeSlot);
-                const base = new Date(today);
-                base.setDate(base.getDate() + 2);
-                setDDate(base.toISOString().slice(0,10));
+                if (!dDateEdited) {
+                  const base = new Date(today);
+                  base.setDate(base.getDate() + 2);
+                  setDDate(base.toISOString().slice(0,10));
+                }
               }
             }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`remark-select${dRemarkPreset === '' ? ' placeholder' : ''} w-full border px-4 h-14 rounded-2xl text-base font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-gray-300'}`}>
               <option value="" style={{color: '#9ca3af'}}>品目を選択</option>
@@ -1478,9 +1478,11 @@
               // 選択済みの品目まで消えていた（ヤフオク等を選んだ後に業者を変えると備考が空になるバグ）。
               // 品目未選択（イオン/トライアルで食料品が入った後など）は preset が '' なので従来どおり空になる。
               else if (dRemarkPreset !== '__manual__') { setDRemark(dRemarkPreset); }
-              const base = new Date(today);
-              base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
-              setDDate(base.toISOString().slice(0,10));
+              if (!dDateEdited) {
+                const base = new Date(today);
+                base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
+                setDDate(base.toISOString().slice(0,10));
+              }
             }} className="w-full bg-white border border-gray-300 px-4 h-14 rounded-2xl text-base font-bold outline-none">
               <option value="yamato">ヤマト運輸</option>
               <option value="post">日本郵便</option>
@@ -3264,7 +3266,7 @@
                     const hasBalance = acc.id !== 'yo';
                     return (
                       <div key={acc.id} className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0${acc.label === 'Ⅲ' ? ' border border-slate-900' : ''}`} style={{backgroundColor: acc.color, color: acc.label === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {acc.label}
                         </div>
                         <div className="w-0 flex-1 flex items-center h-9 rounded-xl px-3 bg-slate-50 focus-within:ring-1 focus-within:ring-sky-400" style={{border: '1px solid #e2e8f0'}}>
@@ -3330,7 +3332,7 @@
                     const bgColor = ACCOUNT_COLORS_LOCAL[c.accountLabel] || '#888';
                     return (
                       <div key={c.id} className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0" style={{backgroundColor: bgColor, color: c.accountLabel === 'Ⅲ' ? '#333333' : '#ffffff'}}>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0${c.accountLabel === 'Ⅲ' ? ' border border-slate-900' : ''}`} style={{backgroundColor: bgColor, color: c.accountLabel === 'Ⅲ' ? '#333333' : '#ffffff'}}>
                           {c.accountLabel}
                         </div>
                         <span className="flex-1 text-slate-800 font-bold text-sm">{c.name}</span>

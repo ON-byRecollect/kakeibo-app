@@ -830,7 +830,7 @@
               const mapUrl = t.place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}` : '';
               const timeText = (t.start || t.end) ? `${t.start || ''}${t.end ? '〜' + t.end : (t.start ? '〜' : '')}` : '';
               return (
-                <div key={t.id} className={`rounded-2xl shadow-sm flex items-center gap-3 px-4 py-3 min-h-[72px] ${isPlan ? 'border border-slate-200' : ''}`} style={{ backgroundColor: isPlan ? '#ffffff' : ps.bg }}>
+                <div key={t.id} className="rounded-2xl shadow-sm flex items-center gap-3 px-4 py-3 min-h-[72px]" style={{ backgroundColor: isPlan ? '#ffffff' : ps.bg }}>
                   {isPlan ? (
                     /* 予定：左に時刻(黒)＋場所、右にスペースを使って内容（左揃え・最大2行） */
                     <div onClick={() => setEditingTodo(t)} className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer active:opacity-70">

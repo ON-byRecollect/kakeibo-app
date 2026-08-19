@@ -3607,6 +3607,15 @@
     // iOSバウンス・ブレ完全防止
     // body全体のtouchmoveをブロックし、.allow-scrollクラスの要素内のみ通過させる
     document.addEventListener('touchmove', function(e) {
+      // 入力欄でのテキスト選択・カーソル移動を妨げない：
+      //  ・input / textarea / contenteditable 上の touchmove はネイティブに通す
+      //  ・選択範囲がある（ハンドルをドラッグ中）ときも通す
+      // これをしないと、モーダルがスクロールしない高さのとき touchmove が抑止され、
+      // スマホで選択ハンドルを動かせず「2文字しか選べない／全選択しかできない」不具合になる。
+      const tgt = e.target;
+      if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) return;
+      const sel = window.getSelection && window.getSelection();
+      if (sel && !sel.isCollapsed) return;
       let el = e.target;
       while (el && el !== document.body) {
         if (el.classList && el.classList.contains('allow-scroll')) {

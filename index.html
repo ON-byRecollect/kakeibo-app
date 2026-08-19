@@ -585,8 +585,8 @@
           return false;
         })
         .sort((a, b) => {
-          // 上から「ToDo リスト」→「予定」の順
-          const kindRank = t => t.kind === 'todo' ? 0 : 1;
+          // 上から「予定」→「ToDo リスト」の順
+          const kindRank = t => t.kind === 'plan' ? 0 : 1;
           if (kindRank(a) !== kindRank(b)) return kindRank(a) - kindRank(b);
           if (a.kind === 'todo') {
             // ToDo：優先度 A→B→C の順

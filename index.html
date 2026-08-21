@@ -392,6 +392,8 @@
       const [start, setStart] = React.useState(editItem ? (editItem.start || '') : '');
       const [end, setEnd] = React.useState(editItem ? (editItem.end || '') : '');
       const [place, setPlace] = React.useState(editItem ? (editItem.place || '') : '');
+      // 買い物のチェックリスト（{text, checked}）。デフォルトで1つ表示し、追加・削除できる。
+      const [checklist, setChecklist] = React.useState(editItem && Array.isArray(editItem.checklist) && editItem.checklist.length ? editItem.checklist : [{ text: '', checked: false }]);
       const PRI = { A: '#ea4335', B: '#4285f4', C: '#7cb342' };
       const isOk = text.trim() !== '';
       const submit = () => {
@@ -401,9 +403,10 @@
           // 日付未入力（任意）の場合は入力当日（表示中の日）を採用し、当日以降ずっと繰り越し表示する
           kind, text: text.trim(), date: date || defaultDate, priority,
           done: editItem ? !!editItem.done : false,
-          start: kind === 'plan' ? start : '',
-          end: kind === 'plan' ? end : '',
-          place: kind === 'plan' ? place.trim() : '',
+          start: (kind === 'plan' || kind === 'shopping') ? start : '',
+          end: (kind === 'plan' || kind === 'shopping') ? end : '',
+          place: (kind === 'plan' || kind === 'shopping') ? place.trim() : '',
+          checklist: kind === 'shopping' ? checklist.filter(c => (c.text || '').trim() !== '').map(c => ({ text: c.text.trim(), checked: !!c.checked })) : [],
         });
         window.showToast(editItem ? '保存しました' : '追加しました');
         onClose();
@@ -412,7 +415,7 @@
         <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={onClose}>
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto no-bounce allow-scroll" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-slate-800">{editItem ? 'ToDo/予定を編集' : 'ToDo/予定を追加'}</h3>
+              <h3 className="text-lg font-black text-slate-800">{editItem ? 'ToDo/予定/買い物を編集' : 'ToDo/予定/買い物を追加'}</h3>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
@@ -420,13 +423,13 @@
 
             {/* 種別トグル */}
             <div className="flex gap-2 mb-4">
-              {[['todo','ToDo'],['plan','予定']].map(([k, label]) => (
+              {[['todo','ToDo'],['plan','予定'],['shopping','買い物']].map(([k, label]) => (
                 <button key={k} onClick={() => setKind(k)} className={`flex-1 py-2.5 rounded-2xl text-sm font-bold transition-colors ${kind === k ? 'text-white' : 'bg-gray-100 text-gray-500'}`} style={kind === k ? { backgroundColor: THEME } : {}}>{label}</button>
               ))}
             </div>
 
             {/* 内容 */}
-            <input type="text" value={text} onChange={e => setText(e.target.value)} placeholder={kind === 'todo' ? '例：クリーニングを取りに行く' : '例：打ち合わせ'} className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
+            <input type="text" value={text} onChange={e => setText(e.target.value)} placeholder={kind === 'todo' ? '例：クリーニングを取りに行く' : kind === 'shopping' ? '例：スーパーで買い物' : '例：打ち合わせ'} className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
 
             {/* 日付（ToDo は任意） */}
             <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">{kind === 'todo' ? '日付（任意）' : '日付'}</label>
@@ -444,8 +447,8 @@
               </>
             )}
 
-            {/* 予定のときだけ：時間・場所 */}
-            {kind === 'plan' && (
+            {/* 予定・買い物のときだけ：時間・場所 */}
+            {(kind === 'plan' || kind === 'shopping') && (
               <>
                 <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">時間（任意）</label>
                 <div className="flex items-center gap-2 mb-3">
@@ -455,6 +458,30 @@
                 </div>
                 <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">場所（任意・タップでGoogleマップ）</label>
                 <input type="text" value={place} onChange={e => setPlace(e.target.value)} placeholder="例：東京駅" className="w-full box-border border border-slate-200 bg-slate-50 p-3.5 rounded-xl text-base font-bold text-slate-800 outline-none mb-3" />
+              </>
+            )}
+
+            {/* 買い物のときだけ：チェックリスト（買うもの）。デフォルト1つ、追加・削除可 */}
+            {kind === 'shopping' && (
+              <>
+                <label className="text-xs font-bold text-slate-400 mb-1 block ml-1">買うもの（チェックリスト）</label>
+                <div className="space-y-2 mb-3">
+                  {checklist.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <button type="button" onClick={() => setChecklist(checklist.map((x, j) => j === i ? { ...x, checked: !x.checked } : x))} className={`w-7 h-7 rounded-md border-2 flex items-center justify-center shrink-0 ${c.checked ? 'border-transparent text-white' : 'border-slate-300 text-transparent'}`} style={c.checked ? { backgroundColor: THEME } : {}}>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      </button>
+                      <input type="text" value={c.text} onChange={e => setChecklist(checklist.map((x, j) => j === i ? { ...x, text: e.target.value } : x))} placeholder="例：牛乳" className={`flex-1 box-border border border-slate-200 bg-slate-50 p-3 rounded-xl text-base font-bold outline-none min-h-[48px] ${c.checked ? 'text-slate-400' : 'text-slate-800'}`} />
+                      <button type="button" onClick={() => setChecklist(checklist.filter((_, j) => j !== i))} className="w-7 h-7 flex items-center justify-center text-slate-400 active:text-slate-600 shrink-0">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => setChecklist([...checklist, { text: '', checked: false }])} className="w-full flex items-center justify-center gap-1 py-2 text-slate-400 font-bold active:opacity-60 border-2 border-dashed border-slate-200 rounded-xl">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.4}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
+                    <span className="text-sm">項目を追加</span>
+                  </button>
+                </div>
               </>
             )}
 
@@ -609,7 +636,7 @@
         })
         .sort((a, b) => {
           // 上から「予定」→「ToDo リスト」の順
-          const kindRank = t => t.kind === 'plan' ? 0 : 1;
+          const kindRank = t => t.kind === 'plan' ? 0 : t.kind === 'shopping' ? 1 : 2;
           if (kindRank(a) !== kindRank(b)) return kindRank(a) - kindRank(b);
           if (a.kind === 'todo') {
             // ToDo：優先度 A→B→C の順
@@ -633,6 +660,15 @@
       };
       const deleteTodo = (id) => {
         updateScheduleField('todos', (scheduleData?.todos || []).filter(t => t.id !== id));
+      };
+      // 買い物チェックリストの項目チェックをホーム画面から切り替える（Firestoreに保存＝共有）
+      const toggleChecklistItem = (id, idx) => {
+        const next = (scheduleData?.todos || []).map(t => {
+          if (t.id !== id) return t;
+          const cl = (t.checklist || []).map((c, i) => i === idx ? { ...c, checked: !c.checked } : c);
+          return { ...t, checklist: cl };
+        });
+        updateScheduleField('todos', next);
       };
       // 優先度ごとの色（背景で直感的にわかるように）
       const PRIORITY_STYLE = {
@@ -845,6 +881,42 @@
               const ps = PRIORITY_STYLE[t.priority] || PRIORITY_STYLE.C;
               const mapUrl = t.place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.place)}` : '';
               const timeText = (t.start || t.end) ? `${t.start || ''}${t.end ? '〜' + t.end : (t.start ? '〜' : '')}` : '';
+              if (t.kind === 'shopping') {
+                const cl = Array.isArray(t.checklist) ? t.checklist : [];
+                return (
+                  <div key={t.id} className="rounded-2xl shadow-sm bg-white px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <div onClick={() => setEditingTodo(t)} className="flex-1 min-w-0 flex items-start gap-3 cursor-pointer active:opacity-70">
+                        <div className="flex flex-col justify-center w-[95px] shrink-0">
+                          {timeText && <div className="text-[13px] font-bold text-slate-900 leading-tight whitespace-nowrap">{timeText}</div>}
+                          {t.place && (
+                            <a href={mapUrl} target="_blank" rel="noopener" className="flex items-center gap-0.5 text-[12px] font-bold text-sky-600 active:opacity-60 truncate mt-0.5" onClick={e => e.stopPropagation()}>
+                              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="2.5"/></svg>
+                              <span className="truncate">{t.place}</span>
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 text-[17px] font-bold text-slate-800 text-left leading-snug" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.text}</div>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); deleteTodo(t.id); }} className="w-8 h-8 flex items-center justify-center text-slate-400 active:text-slate-600 shrink-0">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><circle cx="12" cy="12" r="9"/><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8"/></svg>
+                      </button>
+                    </div>
+                    {cl.length > 0 && (
+                      <div className="mt-2.5 pl-1 space-y-2">
+                        {cl.map((c, i) => (
+                          <div key={i} onClick={() => toggleChecklistItem(t.id, i)} className="flex items-center gap-2.5 cursor-pointer active:opacity-70">
+                            <span className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${c.checked ? 'border-transparent' : 'border-slate-300'}`} style={c.checked ? { backgroundColor: THEME, color: '#fff' } : { color: 'transparent' }}>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </span>
+                            <span className={`text-[15px] font-bold ${c.checked ? 'text-slate-400' : 'text-slate-900'}`}>{c.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               return (
                 <div key={t.id} className="rounded-2xl shadow-sm flex items-center gap-3 px-4 py-3 min-h-[72px]" style={{ backgroundColor: isPlan ? '#ffffff' : ps.bg }}>
                   {isPlan ? (
@@ -877,7 +949,7 @@
             {/* ＋ 追加ボタン */}
             <button onClick={() => setShowTodoModal(true)} className="w-full flex items-center justify-center gap-1 py-2.5 text-slate-400 font-bold active:opacity-60">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
-              <span className="text-sm">ToDo/予定を追加</span>
+              <span className="text-sm">ToDo/予定/買い物を追加</span>
             </button>
           </div>
 

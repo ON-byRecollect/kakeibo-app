@@ -430,9 +430,9 @@
       return ReactDOM.createPortal((
         // document.body へポータル：スクロール領域の -webkit-overflow-scrolling による
         // スタッキングコンテキストから抜け出し、タブバー(z-50)より確実に前面へ。
-        // 上寄せ＋下部にタブバー分の余白を確保し、保存ボタンがタブバーに潜らないようにする。
+        // 中央表示。下部にタブバー分の余白を確保し、保存ボタンがタブバーに潜らないようにする。
         // オーバーレイが全面を覆うため、開いている間はタブバーもタップできない（＝操作不可）。
-        <div className="fixed inset-0 bg-black/50 z-[80] flex items-start justify-center px-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }} onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center px-6" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }} onClick={onClose}>
           <div className="bg-white w-full max-w-sm rounded-3xl modal-enter shadow-2xl max-h-full flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             {/* ヘッダー（固定・スクロールしない） */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">

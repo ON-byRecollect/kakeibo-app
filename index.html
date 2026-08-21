@@ -2956,23 +2956,27 @@
       const utilityBudgets = data?.utilityBudgets || {};
       const utilityPaid = data?.utilityPaid || { electric: [], gas: [] };
 
-      const currentElectricBudget = utilityBudgets[displayYearMonth]?.electric || safeBudgets.electric;
-      const currentGasBudget = utilityBudgets[displayYearMonth]?.gas || safeBudgets.gas;
+      // 電気・ガスの引き落とし日が未設定('-'や空)のときは既定日にフォールバック（電気=23, ガス=25）。
+      // 実際の日付（数字や「月末」）が入っていればその手動値を優先する。
+      const normUtilDate = (b, defDate) => (b && b.date && b.date !== '-') ? b : { ...(b || {}), date: defDate };
+
+      const currentElectricBudget = normUtilDate(utilityBudgets[displayYearMonth]?.electric || safeBudgets.electric, '23');
+      const currentGasBudget = normUtilDate(utilityBudgets[displayYearMonth]?.gas || safeBudgets.gas, '25');
       const currentFoodBudget = utilityBudgets[displayYearMonth]?.food || safeBudgets.food;
       const currentTransportBudget = utilityBudgets[displayYearMonth]?.transport || safeBudgets.transport;
 
       const prevYM = getPrevYearMonth(displayYearMonth);
-      const prevElectricBudget = utilityBudgets[prevYM]?.electric || safeBudgets.electric;
-      const prevGasBudget = utilityBudgets[prevYM]?.gas || safeBudgets.gas;
+      const prevElectricBudget = normUtilDate(utilityBudgets[prevYM]?.electric || safeBudgets.electric, '23');
+      const prevGasBudget = normUtilDate(utilityBudgets[prevYM]?.gas || safeBudgets.gas, '25');
 
       const prevCurrentYM = getPrevYearMonth(currentYearMonth);
-      const realCurrentElectricBudget = utilityBudgets[currentYearMonth]?.electric || safeBudgets.electric;
-      const realCurrentGasBudget = utilityBudgets[currentYearMonth]?.gas || safeBudgets.gas;
+      const realCurrentElectricBudget = normUtilDate(utilityBudgets[currentYearMonth]?.electric || safeBudgets.electric, '23');
+      const realCurrentGasBudget = normUtilDate(utilityBudgets[currentYearMonth]?.gas || safeBudgets.gas, '25');
       const realCurrentFoodBudget = utilityBudgets[currentYearMonth]?.food || safeBudgets.food;
       const realCurrentTransportBudget = utilityBudgets[currentYearMonth]?.transport || safeBudgets.transport;
 
-      const prevRealCurrentElectricBudget = utilityBudgets[prevCurrentYM]?.electric || safeBudgets.electric;
-      const prevRealCurrentGasBudget = utilityBudgets[prevCurrentYM]?.gas || safeBudgets.gas;
+      const prevRealCurrentElectricBudget = normUtilDate(utilityBudgets[prevCurrentYM]?.electric || safeBudgets.electric, '23');
+      const prevRealCurrentGasBudget = normUtilDate(utilityBudgets[prevCurrentYM]?.gas || safeBudgets.gas, '25');
 
       const handleBudgetChange = (category, field, value) => {
         const monthData = utilityBudgets[displayYearMonth] || { ...safeBudgets };

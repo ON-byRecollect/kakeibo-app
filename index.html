@@ -162,6 +162,29 @@
         return () => unsubscribe();
       }, []);
 
+      // 食費口座の一括移行（一度きり）：保存済みの食費の引き落とし口座を「みんなの銀行」(Ⅲ)へ上書きする。
+      // フラグ _foodAcctMigratedV1 を保存して二度目以降は実行しない（以後は手動変更が優先される）。
+      const foodMigrateRef = useRef(false);
+      useEffect(() => {
+        if (data === null || foodMigrateRef.current || data._foodAcctMigratedV1) return;
+        foodMigrateRef.current = true;
+        const budgets = data.budgets;
+        const utilB = data.utilityBudgets || {};
+        const needBudget = !!(budgets && budgets.food && budgets.food.account !== 'Ⅲ');
+        const monthsToFix = Object.keys(utilB).filter(m => utilB[m] && utilB[m].food && utilB[m].food.account !== 'Ⅲ');
+        const payload = { _foodAcctMigratedV1: true };
+        if (needBudget) payload.budgets = { ...budgets, food: { ...budgets.food, account: 'Ⅲ' } };
+        if (monthsToFix.length) {
+          const nu = { ...utilB };
+          monthsToFix.forEach(m => { nu[m] = { ...nu[m], food: { ...nu[m].food, account: 'Ⅲ' } }; });
+          payload.utilityBudgets = nu;
+        }
+        const today = new Date();
+        const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
+        setData(prev => ({ ...prev, ...payload, lastEditedDate: dateStr }));
+        db.collection('shared_data').doc('family_account').set({ ...payload, lastEditedDate: dateStr }, { merge: true }).catch(err => console.error("食費口座の移行エラー:", err));
+      }, [data]);
+
       const updateField = (key, value) => {
         const today = new Date();
         const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');

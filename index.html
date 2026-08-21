@@ -3718,6 +3718,16 @@
       return <App onLogout={() => setIsLoggedIn(false)} />;
     };
 
+    // Service Worker 登録：HTMLをネットワーク優先で取得し、
+    // ホーム画面追加のWebアプリでも起動のたびに最新版が反映されるようにする。
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          if (reg && reg.update) { try { reg.update(); } catch (e) {} }
+        }).catch(function () {});
+      });
+    }
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(React.createElement(ErrorBoundary, null, React.createElement(AuthWrapper)));
 

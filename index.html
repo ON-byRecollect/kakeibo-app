@@ -2029,8 +2029,8 @@
       }
 
       const budgetItems = [
-        { id: 'budget-food', accountLabel: safeBudgets.food.account, color: ACCOUNT_COLORS[safeBudgets.food.account] || 'bg-gray-500', name: '食費', date: safeBudgets.food.date, remaining: Math.max(0, safeBudgets.food.amount - monthlySpents.food), isBudget: true, isUtility: false, targetYM: displayYearMonth },
-        { id: 'budget-transport', accountLabel: safeBudgets.transport.account, color: ACCOUNT_COLORS[safeBudgets.transport.account] || 'bg-gray-500', name: '交通費', date: safeBudgets.transport.date, remaining: Math.max(0, safeBudgets.transport.amount - monthlySpents.trans), isBudget: true, isUtility: false, targetYM: displayYearMonth }
+        { id: 'budget-food', accountLabel: safeBudgets.food.account, color: ACCOUNT_COLORS[safeBudgets.food.account] || 'bg-gray-500', name: '食費', date: safeBudgets.food.date, remaining: Math.max(0, safeBudgets.food.amount - monthlySpents.food), isBudget: true, isUtility: false, targetYM: displayYearMonth }
+        // 交通費（budget-transport）は表示から除外（データは safeBudgets.transport に温存）
       ];
 
       const utilityItems = [
@@ -2698,16 +2698,7 @@
                       <div className="text-[10px] text-gray-400">電気 {data.utility.electric.toLocaleString()} / ガス {data.utility.gas.toLocaleString()}</div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black" style={{backgroundColor: '#34a853'}}>交</div>
-                      <span className="text-sm font-bold text-gray-700">交通費</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-gray-800">¥{data.transport.toLocaleString()}</div>
-                      <div className="text-[10px] text-gray-400">予算 ¥{data.transportBudget.toLocaleString()}</div>
-                    </div>
-                  </div>
+                  {/* 交通費の行は非表示（交通費の入力・表示をすべて撤去。集計データは温存） */}
                 </div>
               </div>
             );
@@ -3157,8 +3148,8 @@
         ...(!utilityPaid.electric.includes(prevYMForUnpaid) ? [{ id: 'c-u-e', name: '電気(繰越)', date: prevRealCurrentElectricBudget.date, amountToSum: Math.max(0, prevRealCurrentElectricBudget.amount - prevRealCurrentMonthlySpents.electric), isCarry: true, accountLabel: prevRealCurrentElectricBudget.account }] : []),
         ...(!utilityPaid.gas.includes(prevYMForUnpaid) ? [{ id: 'c-u-g', name: 'ガス(繰越)', date: prevRealCurrentGasBudget.date, amountToSum: Math.max(0, prevRealCurrentGasBudget.amount - prevRealCurrentMonthlySpents.gas), isCarry: true, accountLabel: prevRealCurrentGasBudget.account }] : []),
         // 食費・交通費予算（残高）
-        { id: 'b-f', name: '食費', date: realCurrentFoodBudget.date, amountToSum: Math.max(0, realCurrentFoodBudget.amount - realCurrentMonthlySpents.food), isCarry: false, accountLabel: realCurrentFoodBudget.account },
-        { id: 'b-t', name: '交通費', date: realCurrentTransportBudget.date, amountToSum: Math.max(0, realCurrentTransportBudget.amount - realCurrentMonthlySpents.transport), isCarry: false, accountLabel: realCurrentTransportBudget.account }
+        { id: 'b-f', name: '食費', date: realCurrentFoodBudget.date, amountToSum: Math.max(0, realCurrentFoodBudget.amount - realCurrentMonthlySpents.food), isCarry: false, accountLabel: realCurrentFoodBudget.account }
+        // 交通費（b-t）は未払い集計・表示から除外（データは safeBudgets.transport に温存）
       ].filter(item => item.amountToSum > 0);
 
       const unpaidFixedCosts = [...allUnpaidItems]

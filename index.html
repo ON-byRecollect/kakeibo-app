@@ -2493,7 +2493,6 @@
             {/* 予算ブロック（2列グリッド） */}
             <div className="grid grid-cols-2 gap-2 mt-2">
               <IntegratedBudgetBlock title="食費" categoryKey="food" budgetData={safeBudgets.food} spent={monthlySpents.food} iconColor="bg-[#fbbc04]" iconColorHex="#fbbc04" handleBudgetChange={handleBudgetChange} />
-              <IntegratedBudgetBlock title="交通費" categoryKey="transport" budgetData={safeBudgets.transport} spent={monthlySpents.trans} iconColor="bg-[#34a853]" iconColorHex="#34a853" handleBudgetChange={handleBudgetChange} />
               <IntegratedBudgetBlock title="電気" categoryKey="electric" budgetData={currentElectricBudget} spent={monthlySpents.electric} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
               <IntegratedBudgetBlock title="ガス" categoryKey="gas" budgetData={currentGasBudget} spent={monthlySpents.gas} iconColor="bg-[#4285f4]" iconColorHex="#4285f4" handleBudgetChange={handleUtilityBudgetChange} hideProgress={true} />
             </div>
@@ -2956,9 +2955,10 @@
       const setExpenses = (val) => updateField('expenses', val);
 
       const safeBudgets = data?.budgets || {
-        food: { amount: 40000, account: 'P', date: '-' },
-        electric: { amount: 10000, account: '松', date: '25' },
-        gas: { amount: 5000, account: '松', date: '25' },
+        // 食費・電気・ガスの既定の引き落とし口座は「みんなの銀行」(Ⅲ)。手動で変更した場合はその値が保存・適用される。
+        food: { amount: 40000, account: 'Ⅲ', date: '-' },
+        electric: { amount: 10000, account: 'Ⅲ', date: '25' },
+        gas: { amount: 5000, account: 'Ⅲ', date: '25' },
         transport: { amount: 10000, account: 'IC', date: '-' }
       };
       

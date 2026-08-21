@@ -2,9 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,7 +11,13 @@
   
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
-  
+
+  <!-- 起動高速化：外部スクリプト/データ取得先へ事前接続（DNS/TLSを前倒し） -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+
   <script>
     window.onerror = function(msg, src, line, col, err) {
       var el = document.getElementById('root');
@@ -148,6 +153,14 @@
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    // 起動高速化：オフライン永続化（IndexedDBキャッシュ）を有効化。
+    // 2回目以降の起動では、onSnapshot がまずローカルキャッシュから即座に発火するため、
+    // ネットワーク待ちのローディングスピナーを待たずにホームが表示される（その後サーバー値で自動同期）。
+    // 複数タブ利用や非対応ブラウザでは reject されるが、その場合もオンラインで通常動作する。
+    try {
+      db.enablePersistence({ synchronizeTabs: true }).catch(function () {});
+    } catch (e) {}
 
     function useSharedData() {
       const [data, setData] = useState(null);
@@ -416,13 +429,17 @@
       };
       return (
         <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={onClose}>
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto no-bounce allow-scroll" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
+          <div className="bg-white w-full max-w-sm rounded-3xl modal-enter shadow-2xl max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* ヘッダー（固定・スクロールしない） */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
               <h3 className="text-lg font-black text-slate-800">{editItem ? 'ToDo/予定/買い物を編集' : 'ToDo/予定/買い物を追加'}</h3>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-slate-500 active:bg-gray-200">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
             </div>
+
+            {/* 入力エリア（中央のみスクロール：項目が増えても保存ボタンに届く） */}
+            <div className="px-6 pb-2 overflow-y-auto no-bounce allow-scroll flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
 
             {/* 種別トグル */}
             <div className="flex gap-2 mb-4">
@@ -488,7 +505,11 @@
               </>
             )}
 
-            <button onClick={submit} disabled={!isOk} className={`w-full h-14 rounded-2xl font-bold text-lg shadow-sm transition-all mt-1 ${isOk ? 'text-white' : 'bg-gray-100 text-gray-400'}`} style={isOk ? { backgroundColor: THEME } : {}}>{editItem ? '保存する' : '追加する'}</button>
+            </div>
+            {/* フッター（固定・常に表示：スクロールに関係なく保存できる） */}
+            <div className="px-6 pt-3 pb-6 shrink-0 border-t border-slate-100">
+              <button onClick={submit} disabled={!isOk} className={`w-full h-14 rounded-2xl font-bold text-lg shadow-sm transition-all ${isOk ? 'text-white' : 'bg-gray-100 text-gray-400'}`} style={isOk ? { backgroundColor: THEME } : {}}>{editItem ? '保存する' : '追加する'}</button>
+            </div>
           </div>
         </div>
       );

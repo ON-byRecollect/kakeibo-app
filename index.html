@@ -433,7 +433,7 @@
         // 中央表示。上下に同じ余白を確保して画面中央に置きつつ、下部はタブバー分を確保して
         // 保存ボタンがタブバーに潜らないようにする（上下対称なので視覚的にも中央）。
         // オーバーレイが全面を覆うため、開いている間はタブバーもタップできない（＝操作不可）。
-        <div className="fixed inset-0 bg-black/50 z-[80] flex items-center justify-center px-6" style={{ paddingTop: 'calc(env(safe-area-inset-bottom, 0px) + 100px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }} onClick={onClose}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center px-6" style={{ paddingTop: 'calc(env(safe-area-inset-bottom, 0px) + 100px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }} onClick={onClose}>
           <div className="bg-white w-full max-w-sm rounded-3xl modal-enter shadow-2xl max-h-full flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             {/* ヘッダー（固定・スクロールしない） */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
@@ -1304,8 +1304,10 @@
         onClose();
       };
 
-      return (
-        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center backdrop-blur-sm px-4 py-6">
+      return ReactDOM.createPortal((
+        // document.body へポータル：スクロール領域のスタッキングコンテキストから抜け出し、
+        // タブバー(z-50)より前面(z-80)へ。開いている間はタブバーもタップできない（＝操作不可）。
+        <div className="fixed inset-0 bg-slate-900/40 z-[80] flex items-center justify-center backdrop-blur-sm px-4 py-6">
           <div className="bg-white w-full sm:max-w-md rounded-[2rem] p-6 modal-enter shadow-2xl max-h-[85vh] overflow-y-auto no-bounce allow-scroll box-border">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-xl font-black text-slate-800 tracking-tight pl-2">{editDelivery ? '荷物の編集' : '荷物の登録'}</h3>
@@ -1413,7 +1415,7 @@
             </div>
           </div>
         </div>
-      );
+      ), document.body);
     };
 
     // 支出入力モーダル（予定タブから呼び出し）
@@ -2342,7 +2344,7 @@
 
           {/* 固定費編集モーダル */}
           {editFixedItem && (
-            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={e => { if(e.target === e.currentTarget) setEditFixedItem(null); }}>
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-4" onClick={e => { if(e.target === e.currentTarget) setEditFixedItem(null); }}>
               <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto no-bounce allow-scroll">
                 <div className="flex justify-between items-center">
                   <h3 className="font-black text-lg text-gray-800">固定費を編集</h3>
@@ -2568,7 +2570,7 @@
 
             {/* 編集モーダル */}
             {editingExpense && (
-              <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center px-6" onClick={() => setEditingExpense(null)}>
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center px-6" onClick={() => setEditingExpense(null)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-lg font-black text-slate-800">支出を編集</h3>
@@ -3645,7 +3647,7 @@
           )}
           {/* 簡易支出入力モーダル（中央ポップアップ） */}
           {showQuickExpense && (
-            <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center px-6" onClick={() => setShowQuickExpense(false)}>
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center px-6" onClick={() => setShowQuickExpense(false)}>
               <div className="bg-white w-full max-w-sm rounded-3xl p-6 modal-enter shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-lg font-black text-slate-800">今日の食費</h3>

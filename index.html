@@ -710,23 +710,28 @@
       const displayYM = `${displayDate.getFullYear()}年${displayDate.getMonth()+1}月`;
       const displayDayNum = displayDate.getDate();
       const lastDayOfMonth = new Date(displayDate.getFullYear(), displayDate.getMonth()+1, 0).getDate();
+      // 実際の今日を表示しているか（過去日・未来日を見ているときは繰り越さない）
+      const isViewingRealToday = targetDateStr === realTodayStr;
+      // 表示ルール：期日ちょうどの日は表示。さらに未払い（チェック未完了）のまま期日を過ぎた分は、
+      // 実際の今日を見ているときに限り「翌日以降も」繰り越して表示し続ける（支払い＝チェックで消える）。
+      const isDueOrOverdue = (dateNum) => dateNum === displayDayNum || (isViewingRealToday && dateNum < displayDayNum);
       const todayExpenses = (fixedCosts || []).filter(c => {
         if (!isCostVisibleInMonth(c, displayYM)) return false;
         if ((c.paidMonths || []).includes(displayYM)) return false;
         const dateNum = c.date === '月末' ? lastDayOfMonth : Number(c.date);
-        return dateNum === displayDayNum;
+        return isDueOrOverdue(dateNum);
       }).map(c => ({ id: c.id, accountLabel: c.accountLabel, name: c.name, amount: c.amount, type: 'fixed' }));
 
-      // 光熱費の追加
+      // 光熱費の追加（同様に、未払いのまま期日を過ぎた分は今日に繰り越して表示）
       if (currentElectricBudget && !utilityPaid.electric.includes(displayYM)) {
         const eDate = currentElectricBudget.date === '月末' ? lastDayOfMonth : Number(currentElectricBudget.date);
-        if (eDate === displayDayNum) {
+        if (isDueOrOverdue(eDate)) {
           todayExpenses.push({ id: 'u-e', accountLabel: currentElectricBudget.account, name: '電気', amount: Math.max(0, currentElectricBudget.amount - (monthlySpents?.electric || 0)), type: 'utility', category: 'electric' });
         }
       }
       if (currentGasBudget && !utilityPaid.gas.includes(displayYM)) {
         const gDate = currentGasBudget.date === '月末' ? lastDayOfMonth : Number(currentGasBudget.date);
-        if (gDate === displayDayNum) {
+        if (isDueOrOverdue(gDate)) {
           todayExpenses.push({ id: 'u-g', accountLabel: currentGasBudget.account, name: 'ガス', amount: Math.max(0, currentGasBudget.amount - (monthlySpents?.gas || 0)), type: 'utility', category: 'gas' });
         }
       }

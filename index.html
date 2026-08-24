@@ -1325,7 +1325,10 @@
               <select value={carrier} onChange={e => {
                 const c = e.target.value;
                 setCarrier(c);
-                setTimeSlot('指定なし');
+                // 業者変更で時間指定を無条件にリセットしていたため、先に時間を選んでいた場合や
+                // あとから業者を変えた場合に選択済みの時間が消える不具合があった。
+                // 新しい業者の時間候補に現在の選択が含まれていれば維持し、含まれない場合のみ「指定なし」に戻す。
+                setTimeSlot(prev => getTimeOptions(c).includes(prev) ? prev : '指定なし');
                 if (c === 'aeon' || c === 'trial') { setRemark('食料品'); setRemarkPreset(''); }
                 // 品目を選んでいる場合は、その品目を備考に保つ（選択済みの品目まで消さない）。
                 else if (remarkPreset !== '__manual__') { setRemark(remarkPreset); }

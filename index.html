@@ -2198,9 +2198,10 @@
         return sum;
       }, 0);
 
-      // その月に支払う金額の合計（チェックの有無に関係なく、一覧に表示されている各行の金額を合算）。
-      // 各行の表示額に合わせ、固定費は amount、予算・光熱費は remaining を用いる。
+      // その月に支払う金額の合計（チェックの有無に関係なく合算）。前月からの繰り越し行は除外し、
+      // 当月分のみを対象とする。各行の表示額に合わせ、固定費は amount、予算・光熱費は remaining を用いる。
       const grandTotalAmount = allDisplayItems.reduce((sum, item) => {
+        if (item.isCarryOver) return sum;
         const val = (item.isBudget || item.isUtility) ? (item.remaining || 0) : (item.amount || 0);
         return sum + val;
       }, 0);

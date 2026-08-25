@@ -784,7 +784,7 @@
           <div className="px-5 pt-20 pb-2 sticky top-0 z-20" style={{backgroundColor: '#f5f5f7'}}>
 
             {/* 行1: 日付 + ゴミ（左寄せ・横並び） */}
-            <div className="flex items-center gap-1.5 w-full mb-3 px-1">
+            <div className="flex items-center justify-center gap-1.5 w-full mb-3 px-1">
               <div className="flex items-baseline gap-0.5 shrink-0">
                 <span className="text-lg font-bold text-slate-700 leading-none mr-1">{getWareki(displayDate)}</span>
                 <span className="text-[1.8rem] font-bold text-slate-900 leading-none">
@@ -800,7 +800,7 @@
               </div>
             </div>
             {/* 行2: 今日の固定支出（左寄せ・インデント統一） */}
-            <div className="flex flex-col gap-2 mb-4 px-1" style={{minHeight: todayExpenses.length > 0 ? "auto" : "0"}}>
+            <div className="flex flex-col items-center gap-2 mb-4 px-1" style={{minHeight: todayExpenses.length > 0 ? "auto" : "0"}}>
               {todayExpenses.map(e => {
                 const isCompleted = completedExpenses.includes(e.id);
                 const acc = e.accountLabel;
@@ -818,8 +818,8 @@
                     {acc && (
                       <span className={`w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0${acc === 'Ⅲ' ? ' border border-slate-900' : ''}`} style={{backgroundColor: bgColor, color: txtColor}}>{acc}</span>
                     )}
-                    <span className="text-[1.2rem] font-bold text-slate-800 flex-1">{e.name || e.category}</span>
-                    <span className="text-[1.2rem] font-bold text-slate-800">¥{e.amount.toLocaleString()}</span>
+                    <span className="text-[1.2rem] font-bold text-slate-800">{e.name || e.category}</span>
+                    <span className="text-[1.2rem] font-bold text-slate-800 ml-1">¥{e.amount.toLocaleString()}</span>
                   </div>
                 );
               })}

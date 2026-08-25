@@ -784,23 +784,23 @@
           <div className="px-5 pt-20 pb-2 sticky top-0 z-20" style={{backgroundColor: '#f5f5f7'}}>
 
             {/* 行1: 日付 + ゴミ（左寄せ・横並び） */}
-            <div className="flex items-center gap-3 w-full mb-3 px-12">
-              <div className="flex items-baseline gap-1 shrink-0">
-                <span className="text-xl font-bold text-slate-700 leading-none mr-1">{getWareki(displayDate)}</span>
+            <div className="flex items-center gap-1.5 w-full mb-3 px-1">
+              <div className="flex items-baseline gap-0.5 shrink-0">
+                <span className="text-lg font-bold text-slate-700 leading-none mr-1">{getWareki(displayDate)}</span>
                 <span className="text-[1.8rem] font-bold text-slate-900 leading-none">
                   {displayDate.getMonth()+1}月{displayDate.getDate()}日
                 </span>
                 <span className="text-xl font-bold" style={{color: getDayColor(displayDate)}}>({dayNamesShort[displayDate.getDay()]})</span>
               </div>
-              {/* ゴミタグ（日付の右隣） */}
+              {/* ゴミタグ（日付の右隣・改行させない） */}
               <div className="flex gap-2 flex-wrap">
                 {garbages.map(g => (
-                  <span key={g.id} className={`${g.bg} text-white text-sm font-bold px-4 py-1.5 rounded-lg`}>{g.name}</span>
+                  <span key={g.id} className={`${g.bg} text-white text-sm font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shrink-0`}>{g.name}</span>
                 ))}
               </div>
             </div>
             {/* 行2: 今日の固定支出（左寄せ・インデント統一） */}
-            <div className="flex flex-col gap-2 mb-4 px-12" style={{minHeight: todayExpenses.length > 0 ? "auto" : "0"}}>
+            <div className="flex flex-col gap-2 mb-4 px-1" style={{minHeight: todayExpenses.length > 0 ? "auto" : "0"}}>
               {todayExpenses.map(e => {
                 const isCompleted = completedExpenses.includes(e.id);
                 const acc = e.accountLabel;

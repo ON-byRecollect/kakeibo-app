@@ -1613,7 +1613,10 @@
             <select value={dCarrier} onChange={e => {
               const c = e.target.value;
               setDCarrier(c);
-              setDTimeSlot('指定なし');
+              // 業者変更で時間指定を無条件にリセットしていたため、先に時間を選んでいた場合に
+              // 選択済みの時間が消える不具合があった。新しい業者の時間候補に現在の選択が
+              // 含まれていれば維持し、含まれない場合のみ「指定なし」に戻す（DeliveryModalと同じ挙動）。
+              setDTimeSlot(prev => getTimeOpts(c).includes(prev) ? prev : '指定なし');
               if (c === 'aeon' || c === 'trial') { setDRemark('食料品'); setDRemarkPreset(''); }
               // 品目を選んでいる場合は、その品目を備考に保つ。以前は setDRemark('') で
               // 選択済みの品目まで消えていた（ヤフオク等を選んだ後に業者を変えると備考が空になるバグ）。

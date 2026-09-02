@@ -593,6 +593,10 @@
         const isHoliday = garbageRules.some(r => r.type === 'holiday' && r.dates && r.dates.includes(ymdStr));
         if (isHoliday) return [];
 
+        // 2027年4月以降は回収日が変わる可能性があるため、2027年3月末までのみ表示する
+        // （YYYY-MM-DD はゼロ埋め・同一書式のため文字列比較で判定できる）
+        if (ymdStr > '2027-03-31') return [];
+
         garbageRules.forEach(rule => {
           if (rule.type === 'weekly') {
             if (rule.days && rule.days.includes(day)) {

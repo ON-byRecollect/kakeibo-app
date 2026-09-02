@@ -543,7 +543,10 @@
       const deliveries = scheduleData?.deliveries || [];
       const animes = getDefaultAnimes(); // アニメはコード直書き（表示専用・Firestore非依存）
       const baseballs = (scheduleData?.baseballs && scheduleData.baseballs.length > 0) ? scheduleData.baseballs : getDefaultBaseballs();
-      const garbageRules = (scheduleData?.garbageRules && scheduleData.garbageRules.length > 0) ? scheduleData.garbageRules : getDefaultGarbageRules();
+      // ゴミ出しはアプリ上の編集を無効化しており、コード側の定義（getDefaultGarbageRules）を
+      // 唯一の正とする。共有データ(Firestore)に古い garbageRules が残っていても、
+      // それは参照せず常に最新の既定ルールを表示する（保存データによる上書きを防ぐ）。
+      const garbageRules = getDefaultGarbageRules();
 
       // 外部からの日付変更（タブバーの矢印）
       useEffect(() => {
@@ -1683,7 +1686,10 @@
       const [showDeliveryInSettings, setShowDeliveryInSettings] = useState(false);
       const [editDeliveryInSettings, setEditDeliveryInSettings] = useState(null);
       const baseballs = (scheduleData?.baseballs && scheduleData.baseballs.length > 0) ? scheduleData.baseballs : getDefaultBaseballs();
-      const garbageRules = (scheduleData?.garbageRules && scheduleData.garbageRules.length > 0) ? scheduleData.garbageRules : getDefaultGarbageRules();
+      // ゴミ出しはアプリ上の編集を無効化しており、コード側の定義（getDefaultGarbageRules）を
+      // 唯一の正とする。共有データ(Firestore)に古い garbageRules が残っていても、
+      // それは参照せず常に最新の既定ルールを表示する（保存データによる上書きを防ぐ）。
+      const garbageRules = getDefaultGarbageRules();
 
       // 野球管理
       const [editBaseball, setEditBaseball] = useState(null);

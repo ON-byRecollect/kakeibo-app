@@ -587,7 +587,12 @@
         let garbages = [];
         const day = dateObj.getDay();
         const mdStr = String(dateObj.getMonth()+1).padStart(2,'0') + '-' + String(dateObj.getDate()).padStart(2,'0');
-        
+        const ymdStr = dateObj.getFullYear() + '-' + mdStr;
+
+        // 回収なしの特別日（年末年始など）は、曜日・隔週の判定に関わらず全て非表示にする
+        const isHoliday = garbageRules.some(r => r.type === 'holiday' && r.dates && r.dates.includes(ymdStr));
+        if (isHoliday) return [];
+
         garbageRules.forEach(rule => {
           if (rule.type === 'weekly') {
             if (rule.days && rule.days.includes(day)) {
@@ -1274,7 +1279,9 @@
         { id: 2, name: '燃やせない（有料）', bg: 'bg-[#4DA453]', text: 'text-white', type: 'biweekly', day: 2, anchor: '2026-09-08' },
         { id: 3, name: 'ダンボール', bg: 'bg-[#CFB790]', text: 'text-black', type: 'biweekly', day: 2, anchor: '2026-09-01' },
         { id: 4, name: '空き缶/空きびん', bg: 'bg-[#83B5D5]', text: 'text-black', type: 'weekly', days: [3] },
-        { id: 5, name: 'ペットボトル', bg: 'bg-[#D192B1]', text: 'text-black', type: 'weekly', days: [5] }
+        { id: 5, name: 'ペットボトル', bg: 'bg-[#D192B1]', text: 'text-black', type: 'weekly', days: [5] },
+        // 回収なし（年末年始）。この日は上記ルールに関わらず全て非表示。
+        { id: 6, name: '回収なし', type: 'holiday', dates: ['2026-12-30', '2026-12-31', '2027-01-01'] }
       ];
     }
 

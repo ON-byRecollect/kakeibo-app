@@ -117,6 +117,25 @@
   <script type="text/babel">
     const { useState, useEffect, useRef, useCallback } = React;
 
+    // === 日本標準時(JST)ヘルパー ===
+    // 端末のタイムゾーン設定に関わらず、常に JST(UTC+9) の「壁時計時刻」を
+    // ローカル日時として保持する Date を返す。返り値の
+    // getFullYear()/getMonth()/getDate()/getDay()/getHours()/getMinutes()
+    // はそのまま JST の値になるので、従来の new Date() と同じ感覚で使える。
+    // 注意: この Date の getTime()/toISOString()/toJSON() は実UTCとズレるため、
+    //       日付を文字列化するときは必ずローカルget系（または下の ymd()）を使うこと。
+    const nowJST = () => {
+      const p = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Tokyo', hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).formatToParts(new Date(Date.now())).reduce((o, x) => { o[x.type] = x.value; return o; }, {});
+      const hh = p.hour === '24' ? 0 : Number(p.hour); // 一部環境で 24 時表記になる対策
+      return new Date(Number(p.year), Number(p.month) - 1, Number(p.day), hh, Number(p.minute), Number(p.second));
+    };
+    // Date を "YYYY-MM-DD" に整形（ローカルget系ベース）。nowJST() と組み合わせると JST 日付になる。
+    const ymd = (dateObj) => `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
     window.showToast = (message) => {
       const popup = document.createElement('div');
       popup.textContent = message;
@@ -195,14 +214,14 @@
           monthsToFix.forEach(m => { nu[m] = { ...nu[m], food: { ...nu[m].food, account: 'Ⅲ' } }; });
           payload.utilityBudgets = nu;
         }
-        const today = new Date();
+        const today = nowJST();
         const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
         setData(prev => ({ ...prev, ...payload, lastEditedDate: dateStr }));
         db.collection('shared_data').doc('family_account').set({ ...payload, lastEditedDate: dateStr }, { merge: true }).catch(err => console.error("食費口座の移行エラー:", err));
       }, [data]);
 
       const updateField = (key, value) => {
-        const today = new Date();
+        const today = nowJST();
         const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
         setData(prev => ({ ...prev, [key]: value, lastEditedDate: dateStr }));
         db.collection('shared_data').doc('family_account').set({
@@ -564,7 +583,7 @@
       // 時刻更新
       useEffect(() => {
         const update = () => {
-          const now = new Date();
+          const now = nowJST();
           setCurrentTime(`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`);
         };
         update();
@@ -681,7 +700,7 @@
       //  ・予定(plan)  … 登録した日付にだけ出す
       //  ・ToDo(todo)  … 登録日に出す。さらに未完了なら「実際の今日」に繰り越して出す
       //                  （完了したら繰り越さない。過去日・未来日はその日に登録した分だけ）
-      const realTodayStr = getYYYYMMDD(new Date());
+      const realTodayStr = getYYYYMMDD(nowJST());
       const priorityRank = { A: 0, B: 1, C: 2 };
       const todaysTodos = (scheduleData?.todos || [])
         .filter(t => {
@@ -1306,7 +1325,7 @@
       const [date, setDate] = useState(() => {
         if (editDelivery) return editDelivery.deliveryDateRaw;
         const c = 'yamato';
-        const base = new Date(defaultDate);
+        const base = new Date(defaultDate + 'T00:00:00');
         base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
         return getYYYYMMDD(base);
       });
@@ -1369,7 +1388,7 @@
                 // 品目を選んでいる場合は、その品目を備考に保つ（選択済みの品目まで消さない）。
                 else if (remarkPreset !== '__manual__') { setRemark(remarkPreset); }
                 if (!editDelivery && !dateEdited) {
-                  const base = new Date(defaultDate);
+                  const base = new Date(defaultDate + 'T00:00:00');
                   const offset = (c === 'aeon' || c === 'trial') ? 1 : 2;
                   base.setDate(base.getDate() + offset);
                   setDate(getYYYYMMDD(base));
@@ -1404,7 +1423,7 @@
                   setCarrier(autoRule.carrier);
                   setTimeSlot(autoRule.timeSlot);
                   if (!editDelivery && !dateEdited) {
-                    const base = new Date(defaultDate);
+                    const base = new Date(defaultDate + 'T00:00:00');
                     base.setDate(base.getDate() + 2);
                     setDate(getYYYYMMDD(base));
                   }
@@ -1549,12 +1568,12 @@
     // スケジュール設定モーダル
     const DeliverySettingsForm = ({ scheduleData, updateScheduleField, THEME }) => {
       const deliveries = scheduleData?.deliveries || [];
-      const today = new Date().toISOString().slice(0,10);
+      const today = nowJST(); // 端末TZに依存せずJST基準の「今日」
       const [dCarrier, setDCarrier] = React.useState('yamato');
       const [dDate, setDDate] = React.useState(() => {
         const base = new Date(today);
         base.setDate(base.getDate() + 2);
-        return base.toISOString().slice(0,10);
+        return ymd(base);
       });
       // 日付を手動で変更したら、業者/品目の自動調整で上書きしない（手動入力を最優先）。
       const [dDateEdited, setDDateEdited] = React.useState(false);
@@ -1575,7 +1594,7 @@
         showAddToast();
         setDCarrier('yamato');
         const base = new Date(today); base.setDate(base.getDate() + 2);
-        setDDate(base.toISOString().slice(0,10));
+        setDDate(ymd(base));
         setDDateEdited(false);
         setDTimeSlot('指定なし'); setDRemark(''); setDRemarkPreset(''); setDNum('');
       };
@@ -1603,7 +1622,7 @@
                 if (!dDateEdited) {
                   const base = new Date(today);
                   base.setDate(base.getDate() + 2);
-                  setDDate(base.toISOString().slice(0,10));
+                  setDDate(ymd(base));
                 }
               }
             }} disabled={dCarrier === 'aeon' || dCarrier === 'trial'} className={`remark-select${dRemarkPreset === '' ? ' placeholder' : ''} w-full border px-4 h-14 rounded-2xl text-base font-bold outline-none ${dCarrier === 'aeon' || dCarrier === 'trial' ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-white border-gray-300'}`}>
@@ -1655,7 +1674,7 @@
               if (!dDateEdited) {
                 const base = new Date(today);
                 base.setDate(base.getDate() + ((c === 'aeon' || c === 'trial') ? 1 : 2));
-                setDDate(base.toISOString().slice(0,10));
+                setDDate(ymd(base));
               }
             }} className="w-full bg-white border border-gray-300 px-4 h-14 rounded-2xl text-base font-bold outline-none">
               <option value="yamato">ヤマト運輸</option>
@@ -2071,7 +2090,7 @@
       const [expAccount, setExpAccount] = useState('');
       const [expTiming, setExpTiming] = useState('');
       const [expAnnualMonth, setExpAnnualMonth] = useState('');
-      const [expSpecificYear, setExpSpecificYear] = useState(String(new Date().getFullYear()));
+      const [expSpecificYear, setExpSpecificYear] = useState(String(nowJST().getFullYear()));
       const [expDay, setExpDay] = useState('');
       const [showExpForm, setShowExpForm] = useState(false);
       // 固定費編集モーダルの状態
@@ -2082,7 +2101,7 @@
       const [editFixedAccount, setEditFixedAccount] = useState('');
       const [editFixedTiming, setEditFixedTiming] = useState('');
       const [editFixedAnnualMonth, setEditFixedAnnualMonth] = useState('');
-      const [editFixedSpecificYear, setEditFixedSpecificYear] = useState(String(new Date().getFullYear()));
+      const [editFixedSpecificYear, setEditFixedSpecificYear] = useState(String(nowJST().getFullYear()));
 
       const expCategories = ['固定', '外食', '自炊', '交通'];
       const expAccounts = ['松', '新', 'か', 'Ⅲ', 'P', 'ac'];
@@ -2098,16 +2117,16 @@
         let targetDay = expDay;
         let targetYearMonth = currentYearMonth;
         if (expTiming === '来月' || expTiming === '再来月') {
-          const d = new Date(); d.setMonth(d.getMonth() + (expTiming === '来月' ? 1 : 2));
+          const d = nowJST(); d.setMonth(d.getMonth() + (expTiming === '来月' ? 1 : 2));
           targetYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
         } else if (expTiming === '毎年') {
-          const d = new Date(); targetYearMonth = `${d.getFullYear()}年${expAnnualMonth}月`;
+          const d = nowJST(); targetYearMonth = `${d.getFullYear()}年${expAnnualMonth}月`;
         } else if (!isNaN(expTiming)) {
           targetYearMonth = `${expSpecificYear}年${expTiming}月`;
         }
         handleAddData({ amount: Number(expAmount), category: '固定', itemName: expItemName, accountLabel: expAccount, timing: expTiming, day: targetDay, yearMonth: targetYearMonth });
         showAddToast();
-        setExpAmount(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth(''); setExpSpecificYear(String(new Date().getFullYear()));
+        setExpAmount(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth(''); setExpSpecificYear(String(nowJST().getFullYear()));
       };
 
       const normalizeFixedDateForEdit = (item) => {
@@ -2131,8 +2150,8 @@
       const buildFixedYearMonthForEdit = (item, timing, annualMonth) => {
         const existingYM = item?.yearMonth || currentYearMonth;
         const yearMatch = String(existingYM).match(/(\d+)年/);
-        const year = yearMatch ? yearMatch[1] : String(new Date().getFullYear());
-        if (timing === '毎年') return `${year}年${annualMonth || item?.annualMonth || new Date().getMonth() + 1}月`;
+        const year = yearMatch ? yearMatch[1] : String(nowJST().getFullYear());
+        if (timing === '毎年') return `${year}年${annualMonth || item?.annualMonth || nowJST().getMonth() + 1}月`;
         if (!isNaN(Number(timing))) return `${year}年${timing}月`;
         return existingYM;
       };
@@ -2146,7 +2165,7 @@
         setEditFixedTiming(normalizeFixedTimingForEdit(item));
         setEditFixedAnnualMonth(item.annualMonth || '');
         const ymMatch = (item.yearMonth || '').match(/(\d+)年/);
-        setEditFixedSpecificYear(ymMatch ? ymMatch[1] : String(new Date().getFullYear()));
+        setEditFixedSpecificYear(ymMatch ? ymMatch[1] : String(nowJST().getFullYear()));
       };
 
       const saveEditFixed = () => {
@@ -2283,7 +2302,7 @@
                 {/* 頻度 */}
                 <div>
                   <label className="text-xs font-bold text-gray-500 mb-1 block">頻度・タイミング</label>
-                  <select value={expTiming} onChange={e => { setExpTiming(e.target.value); setExpDay(''); setExpAnnualMonth(''); setExpSpecificYear(String(new Date().getFullYear())); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
+                  <select value={expTiming} onChange={e => { setExpTiming(e.target.value); setExpDay(''); setExpAnnualMonth(''); setExpSpecificYear(String(nowJST().getFullYear())); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
                     <option value="">選択してください</option>
                     <optgroup label="定期">
                       <option value="毎月">毎月</option>
@@ -2305,7 +2324,7 @@
                     <label className="text-xs font-bold text-gray-500 mb-1 block">年を選択</label>
                     <div className="flex gap-2">
                       {[0,1,2,3].map(offset => {
-                        const y = String(new Date().getFullYear() + offset);
+                        const y = String(nowJST().getFullYear() + offset);
                         return (
                           <button key={y} onClick={() => setExpSpecificYear(y)} className={`flex-1 h-10 rounded-xl text-sm font-bold transition-colors ${expSpecificYear === y ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={expSpecificYear === y ? {backgroundColor: THEME} : {}}>{y}</button>
                         );
@@ -2445,7 +2464,7 @@
                 {/* 頻度・タイミング */}
                 <div>
                   <label className="text-xs font-bold text-gray-500 mb-1 block">頻度・タイミング</label>
-                  <select value={editFixedTiming} onChange={e => { setEditFixedTiming(e.target.value); setEditFixedDate(''); setEditFixedAnnualMonth(''); setEditFixedSpecificYear(String(new Date().getFullYear())); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
+                  <select value={editFixedTiming} onChange={e => { setEditFixedTiming(e.target.value); setEditFixedDate(''); setEditFixedAnnualMonth(''); setEditFixedSpecificYear(String(nowJST().getFullYear())); }} className="w-full h-11 border border-gray-300 rounded-xl px-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
                     <option value="">選択してください</option>
                     <optgroup label="定期">
                       <option value="毎月">毎月</option>
@@ -2467,7 +2486,7 @@
                     <label className="text-xs font-bold text-gray-500 mb-1 block">年を選択</label>
                     <div className="flex gap-2">
                       {[0,1,2,3].map(offset => {
-                        const y = String(new Date().getFullYear() + offset);
+                        const y = String(nowJST().getFullYear() + offset);
                         return (
                           <button key={y} onClick={() => setEditFixedSpecificYear(y)} className={`flex-1 h-10 rounded-xl text-sm font-bold transition-colors ${editFixedSpecificYear === y ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={editFixedSpecificYear === y ? {backgroundColor: THEME} : {}}>{y}</button>
                         );
@@ -2585,7 +2604,7 @@
                 if (day === null) return <div key={`empty-${idx}`} className="min-h-[4rem] border border-transparent"></div>;
 
                 const expense = dailyExpenses[day] || {};
-                const isToday = new Date().getFullYear() + '年' + (new Date().getMonth() + 1) + '月' === displayYearMonth && day === todayDay;
+                const isToday = nowJST().getFullYear() + '年' + (nowJST().getMonth() + 1) + '月' === displayYearMonth && day === todayDay;
                 const isSelected = selectedDay === day;
                 
                 const dayOfWeek = idx % 7;
@@ -2699,7 +2718,7 @@
     const LoanTab = ({ loans, setLoans }) => {
       
       const handleUpdate = (id, field, value) => {
-        const d = new Date();
+        const d = nowJST();
         const dateStr = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}時点`;
         
         setLoans(loans.map(loan => {
@@ -2932,14 +2951,14 @@
         
         let targetYearMonth = currentYearMonth;
         if (timing === '来月' || timing === '再来月') {
-          const d = new Date();
+          const d = nowJST();
           d.setMonth(d.getMonth() + (timing === '来月' ? 1 : 2));
           targetYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
         } else if (timing === '毎年') {
-          const d = new Date();
+          const d = nowJST();
           targetYearMonth = `${d.getFullYear()}年${annualMonth}月`;
         } else if (!isNaN(timing)) {
-          const d = new Date();
+          const d = nowJST();
           targetYearMonth = `${d.getFullYear()}年${timing}月`;
         }
 
@@ -3060,7 +3079,7 @@
       const [scheduleDateNext, setScheduleDateNext] = React.useState(0);
 
       const [displayDate, setDisplayDate] = useState(() => {
-        const now = new Date();
+        const now = nowJST();
         if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
         now.setHours(0,0,0,0);
         return now;
@@ -3080,7 +3099,7 @@
         };
       }, [activeTab]);
 
-      const d = new Date();
+      const d = nowJST();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
       const todayDay = d.getDate();
       const displayYearMonth = `${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`;
@@ -3097,7 +3116,7 @@
       };
 
       const resetToToday = () => {
-        const now = new Date();
+        const now = nowJST();
         if (now.getHours() >= 23) now.setDate(now.getDate() + 1);
         now.setHours(0,0,0,0);
         setDisplayDate(now);
@@ -3365,7 +3384,7 @@
       const unpaidTotal = allUnpaidItems.reduce((sum, item) => sum + item.amountToSum, 0);
 
       const todayStr = (() => {
-        const d = new Date();
+        const d = nowJST();
         return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
       })();
 
@@ -3384,7 +3403,7 @@
                       {kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' : '変動費'}
                     </span>
                     {displayYearMonth !== currentYearMonth && (
-                      <button onClick={() => setDisplayDate(new Date())} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}}>
+                      <button onClick={() => setDisplayDate(nowJST())} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                       </button>
                     )}

@@ -3213,18 +3213,31 @@
 
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
-          <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
-            <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            </button>
-            <span className="text-lg font-black text-slate-800 flex-1">本棚</span>
-            <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy} className="px-3 h-9 rounded-full text-sm font-bold text-white active:opacity-60 disabled:opacity-50 shrink-0" style={{ backgroundColor: THEME }}>
-              {busy ? '保存中…' : '表紙を追加'}
-            </button>
-            {books.length > 0 && (
-              <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60 shrink-0" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
-                {editMode ? '完了' : '編集'}
+          <div className="bg-white px-4 pt-20 pb-3 border-b border-gray-100 sticky top-0 z-10 shrink-0">
+            <div className="flex items-center gap-3">
+              <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
               </button>
+              <span className="text-lg font-black text-slate-800 flex-1">本棚</span>
+              <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy} className="px-3 h-9 rounded-full text-sm font-bold text-white active:opacity-60 disabled:opacity-50 shrink-0" style={{ backgroundColor: THEME }}>
+                {busy ? '保存中…' : '表紙を追加'}
+              </button>
+              {books.length > 0 && (
+                <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60 shrink-0" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
+                  {editMode ? '完了' : '編集'}
+                </button>
+              )}
+            </div>
+            {books.length > 0 && (
+              <div className="flex gap-2 mt-3">
+                {[['all', 'すべて'], ['done', '完結'], ['ongoing', '未完結']].map(([key, label]) => (
+                  <button key={key} onClick={() => setFilter(key)}
+                    className="flex-1 h-9 rounded-full text-sm font-bold active:opacity-70 transition-colors"
+                    style={filter === key ? { backgroundColor: THEME, color: '#fff' } : { backgroundColor: '#f1f5f9', color: '#475569' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
@@ -3233,17 +3246,6 @@
               <div className="text-center text-slate-400 text-sm py-16">読み込み中…</div>
             ) : (
               <>
-                {books.length > 0 && (
-                  <div className="flex gap-2 mb-4">
-                    {[['all', 'すべて'], ['done', '完結'], ['ongoing', '未完結']].map(([key, label]) => (
-                      <button key={key} onClick={() => setFilter(key)}
-                        className="flex-1 h-9 rounded-full text-sm font-bold active:opacity-70 transition-colors"
-                        style={filter === key ? { backgroundColor: THEME, color: '#fff' } : { backgroundColor: '#f1f5f9', color: '#475569' }}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                )}
                 <div className="grid grid-cols-3 gap-3">
                 {shownBooks.map((book) => (
                   <div key={book.id}

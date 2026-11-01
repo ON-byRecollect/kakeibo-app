@@ -3198,6 +3198,11 @@
           .catch(err => console.error('完結状態の更新エラー', err));
       };
 
+      const toggleRead = (book) => {
+        db.collection('bookshelf').doc(book.id).update({ read: !book.read })
+          .catch(err => console.error('読了状態の更新エラー', err));
+      };
+
       const deleteBook = async (book) => {
         if (!window.confirm('この本を削除しますか？（登録した詳細画像もすべて削除されます）')) return;
         try {
@@ -3263,6 +3268,17 @@
                     >
                       {book.completed ? '完結' : '未完結'}
                     </button>
+                    {!editMode && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleRead(book); }}
+                        className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center shadow"
+                        style={book.read ? { backgroundColor: '#f97316' } : { backgroundColor: '#94a3b8' }}
+                        aria-label={book.read ? '読み終わった' : 'まだ読み終わっていない'}>
+                        <svg className="w-4 h-4" fill="none" stroke="#ffffff" viewBox="0 0 24 24" strokeWidth={3} style={{ opacity: book.read ? 1 : 0.5 }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      </button>
+                    )}
                     {editMode && (
                       <button onClick={(e) => { e.stopPropagation(); deleteBook(book); }}
                         className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow active:opacity-70">

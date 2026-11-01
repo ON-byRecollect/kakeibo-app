@@ -3211,7 +3211,7 @@
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}
-                  className="aspect-[2/3] rounded-2xl border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
+                  className="aspect-[2/3] border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
                   {busy ? (
                     <span className="text-xs font-bold">保存中…</span>
                   ) : (
@@ -3222,7 +3222,7 @@
                   )}
                 </button>
                 {books.map((book) => (
-                  <div key={book.id} className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
+                  <div key={book.id} className="relative aspect-[2/3] overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
                     onClick={() => { if (!editMode) onOpenBook(book.id); }}>
                     {book.cover ? (
                       <img src={book.cover} alt="" className="w-full h-full object-cover" />
@@ -3264,6 +3264,7 @@
       const [busy, setBusy] = useState(false);
       const [viewer, setViewer] = useState(null);
       const fileRef = useRef(null);
+      const coverRef = useRef(null);
 
       useEffect(() => {
         const unsub = db.collection('bookshelf').doc(bookId).collection('details').orderBy('createdAt', 'desc').onSnapshot(
@@ -3294,6 +3295,20 @@
           .catch(err => console.error('詳細画像の削除エラー', err));
       };
 
+      // 表紙画像のみを差し替える（黒余白の自動トリミングも適用）
+      const handleReplaceCover = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        setBusy(true);
+        try {
+          const cover = await compressCover(file, 1000, 0.72);
+          await db.collection('bookshelf').doc(bookId).update({ cover });
+          if (window.showToast) window.showToast('表紙を変更しました');
+        } catch (err) { alert('表紙の変更に失敗しました：' + (err.message || err)); }
+        setBusy(false);
+      };
+
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
           <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
@@ -3301,8 +3316,11 @@
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
             <span className="text-lg font-black text-slate-800 flex-1">詳細</span>
+            <button onClick={() => coverRef.current && coverRef.current.click()} disabled={busy} className="px-3 h-9 rounded-full text-sm font-bold bg-slate-100 text-slate-600 active:opacity-60 disabled:opacity-50 shrink-0">
+              表紙を変更
+            </button>
             {details.length > 0 && (
-              <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
+              <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60 shrink-0" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
                 {editMode ? '完了' : '編集'}
               </button>
             )}
@@ -3314,7 +3332,7 @@
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}
-                  className="aspect-square rounded-2xl border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
+                  className="aspect-square border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
                   {busy ? <span className="text-xs font-bold">保存中…</span> : (
                     <>
                       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
@@ -3323,7 +3341,7 @@
                   )}
                 </button>
                 {details.map((d) => (
-                  <div key={d.id} className="relative aspect-square rounded-2xl overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
+                  <div key={d.id} className="relative aspect-square overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
                     onClick={() => { if (!editMode) setViewer(d); }}>
                     <img src={d.img} alt="" className="w-full h-full object-cover" />
                     {editMode && (
@@ -3336,12 +3354,10 @@
                 ))}
               </div>
             )}
-            {!loading && details.length === 0 && (
-              <p className="text-center text-slate-400 text-sm mt-6">「画像を追加」から挿絵や気になったページのスクリーンショットを保存できます。</p>
-            )}
           </div>
 
           <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAddDetails} />
+          <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleReplaceCover} />
 
           {viewer && ReactDOM.createPortal(
             <div className="fixed inset-0 z-[90] bg-black/90 flex items-center justify-center" onClick={() => setViewer(null)}>

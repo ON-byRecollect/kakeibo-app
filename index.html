@@ -3157,6 +3157,10 @@
       const fileRef = useRef(null);
       const replaceRef = useRef(null);      // 差し替え対象の本ID
       const replaceInputRef = useRef(null);
+      const dragIdRef = useRef(null);       // ドラッグ中の本ID
+      const orderIdsRef = useRef(null);     // ドラッグ中の並び（id配列）
+      const [dragId, setDragId] = useState(null);
+      const [orderIds, setOrderIds] = useState(null);
 
       useEffect(() => {
         const unsub = db.collection('bookshelf').orderBy('createdAt', 'desc').onSnapshot(
@@ -3209,7 +3213,54 @@
         } catch (err) { alert('削除に失敗しました：' + (err.message || err)); }
       };
 
-      const shownBooks = books.filter(b => filter === 'all' ? true : filter === 'done' ? b.completed : !b.completed);
+      // order（並び替えで付与）優先、無ければ createdAt の新しい順
+      const sortedBooks = [...books].sort((a, b) => (b.order ?? b.createdAt ?? 0) - (a.order ?? a.createdAt ?? 0));
+      const shownBooks = sortedBooks.filter(b => filter === 'all' ? true : filter === 'done' ? b.completed : !b.completed);
+      const canReorder = editMode && filter === 'all'; // 並び替えは「すべて」表示の編集中のみ
+      // ドラッグ中はローカルの並びを優先表示
+      const displayBooks = (canReorder && dragId && orderIds)
+        ? orderIds.map(id => sortedBooks.find(b => b.id === id)).filter(Boolean)
+        : shownBooks;
+
+      const beginDrag = (e, id) => {
+        if (!canReorder) return;
+        dragIdRef.current = id;
+        const ids = shownBooks.map(b => b.id);
+        orderIdsRef.current = ids;
+        setDragId(id); setOrderIds(ids);
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+      };
+      const moveDrag = (e) => {
+        if (!dragIdRef.current) return;
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const tile = el && el.closest('[data-bidx]');
+        if (!tile) return;
+        const idx = Number(tile.getAttribute('data-bidx'));
+        const cur = orderIdsRef.current;
+        const from = cur.indexOf(dragIdRef.current);
+        if (from === -1 || from === idx) return;
+        const next = cur.slice();
+        const [m] = next.splice(from, 1);
+        next.splice(idx, 0, m);
+        orderIdsRef.current = next;
+        setOrderIds(next);
+      };
+      const endDrag = async (e) => {
+        const id = dragIdRef.current;
+        const ids = orderIdsRef.current;
+        dragIdRef.current = null; orderIdsRef.current = null;
+        setDragId(null); setOrderIds(null);
+        try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+        if (!id || !ids) return;
+        const original = shownBooks.map(b => b.id);
+        if (ids.length === original.length && ids.every((v, i) => v === original[i])) return; // 変化なし
+        try {
+          const base = Date.now();
+          const batch = db.batch();
+          ids.forEach((bid, i) => batch.update(db.collection('bookshelf').doc(bid), { order: base - i }));
+          await batch.commit();
+        } catch (err) { console.error('並び替えの保存エラー', err); }
+      };
 
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
@@ -3241,6 +3292,9 @@
                     ))}
                   </div>
                 )}
+                {canReorder && shownBooks.length > 1 && (
+                  <p className="text-center text-[11px] text-slate-400 mb-3 -mt-1">ドラッグで並び替えできます</p>
+                )}
                 <div className="grid grid-cols-3 gap-3">
                 <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}
                   className="aspect-[2/3] border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
@@ -3253,9 +3307,15 @@
                     </>
                   )}
                 </button>
-                {shownBooks.map((book) => (
-                  <div key={book.id} className="relative aspect-[2/3] overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
-                    onClick={() => { if (!editMode) onOpenBook(book.id); }}>
+                {displayBooks.map((book, idx) => (
+                  <div key={book.id} data-bidx={idx}
+                    className={`relative aspect-[2/3] overflow-hidden bg-slate-200 shadow-sm ${dragId === book.id ? 'opacity-60 ring-2 ring-sky-400 z-10' : 'active:opacity-80'}`}
+                    style={{ touchAction: canReorder ? 'none' : undefined }}
+                    onClick={() => { if (!editMode) onOpenBook(book.id); }}
+                    onPointerDown={(e) => beginDrag(e, book.id)}
+                    onPointerMove={moveDrag}
+                    onPointerUp={endDrag}
+                    onPointerCancel={endDrag}>
                     {book.cover ? (
                       <img src={book.cover} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -3263,20 +3323,21 @@
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleCompleted(book); }}
+                      onPointerDown={(e) => e.stopPropagation()}
                       className="absolute top-1.5 right-1.5 px-2 py-[3px] rounded-full text-[10px] font-black shadow"
                       style={book.completed ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: 'rgba(255,255,255,0.92)', color: '#64748b'}}
                     >
                       {book.completed ? '完結' : '未完結'}
                     </button>
                     {editMode && (
-                      <button onClick={(e) => { e.stopPropagation(); deleteBook(book); }}
+                      <button onClick={(e) => { e.stopPropagation(); deleteBook(book); }} onPointerDown={(e) => e.stopPropagation()}
                         className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow active:opacity-70">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                       </button>
                     )}
                     {editMode && (
-                      <button onClick={(e) => { e.stopPropagation(); replaceRef.current = book.id; replaceInputRef.current && replaceInputRef.current.click(); }}
-                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-3 py-[4px] rounded-full bg-black/70 text-white text-[10px] font-bold active:opacity-70">
+                      <button onClick={(e) => { e.stopPropagation(); replaceRef.current = book.id; replaceInputRef.current && replaceInputRef.current.click(); }} onPointerDown={(e) => e.stopPropagation()}
+                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-[4px] rounded-full bg-black/70 text-white text-[10px] font-bold whitespace-nowrap leading-none active:opacity-70">
                         画像を変更
                       </button>
                     )}

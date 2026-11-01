@@ -3244,15 +3244,15 @@
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-3 gap-3 items-start">
+                <div className="grid grid-cols-3 gap-3">
                 {shownBooks.map((book) => (
                   <div key={book.id}
-                    className="relative overflow-hidden bg-white shadow-sm active:opacity-80"
+                    className="relative aspect-[7/10] overflow-hidden bg-white shadow-sm active:opacity-80"
                     onClick={() => { if (!editMode) onOpenBook(book.id); }}>
                     {book.cover ? (
-                      <img src={book.cover} alt="" className="block w-full h-auto" />
+                      <img src={book.cover} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full aspect-[2/3] flex items-center justify-center text-slate-400 text-xs">画像なし</div>
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">画像なし</div>
                     )}
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleCompleted(book); }}

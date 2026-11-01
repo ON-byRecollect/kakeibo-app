@@ -3051,6 +3051,248 @@
     };
 
     // ==========================================
+    // ==========================================
+    // 📚 本棚（Bookshelf）
+    // 画像は圧縮して Firestore の bookshelf コレクションに保存する。
+    // 家計簿本体の family_account ドキュメントとは別管理で、画像を1枚ずつ
+    // 別ドキュメント（本＝bookshelf/<id>、詳細＝そのサブコレクション details）に
+    // 保存するため、1ドキュメント1MB上限に掛からず、他端末とも同期される。
+    // ==========================================
+    const compressImage = (file, maxDim, quality) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if (w >= h) { if (w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; } }
+          else { if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; } }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); // 透過PNGを白背景に
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('画像を読み込めませんでした'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('ファイルを読み込めませんでした'));
+      reader.readAsDataURL(file);
+    });
+
+    // 1階層目：表紙一覧
+    const BookshelfView = ({ onOpenBook, onBack }) => {
+      const [books, setBooks] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [editMode, setEditMode] = useState(false);
+      const [busy, setBusy] = useState(false);
+      const fileRef = useRef(null);
+
+      useEffect(() => {
+        const unsub = db.collection('bookshelf').orderBy('createdAt', 'desc').onSnapshot(
+          (snap) => { setBooks(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); },
+          (err) => { console.error('本棚の取得エラー', err); setLoading(false); }
+        );
+        return () => unsub();
+      }, []);
+
+      const handleAddCover = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        setBusy(true);
+        try {
+          const cover = await compressImage(file, 1000, 0.72);
+          await db.collection('bookshelf').doc().set({ cover, completed: false, createdAt: Date.now() });
+        } catch (err) { alert('表紙の登録に失敗しました：' + (err.message || err)); }
+        setBusy(false);
+      };
+
+      const toggleCompleted = (book) => {
+        db.collection('bookshelf').doc(book.id).update({ completed: !book.completed })
+          .catch(err => console.error('完結状態の更新エラー', err));
+      };
+
+      const deleteBook = async (book) => {
+        if (!window.confirm('この本を削除しますか？（登録した詳細画像もすべて削除されます）')) return;
+        try {
+          const detailsSnap = await db.collection('bookshelf').doc(book.id).collection('details').get();
+          const batch = db.batch();
+          detailsSnap.forEach(d => batch.delete(d.ref));
+          batch.delete(db.collection('bookshelf').doc(book.id));
+          await batch.commit();
+        } catch (err) { alert('削除に失敗しました：' + (err.message || err)); }
+      };
+
+      return (
+        <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+          <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
+            <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span className="text-lg font-black text-slate-800 flex-1">本棚</span>
+            {books.length > 0 && (
+              <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
+                {editMode ? '完了' : '編集'}
+              </button>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto no-bounce allow-scroll px-4 py-5" style={{paddingBottom: '40px'}}>
+            {loading ? (
+              <div className="text-center text-slate-400 text-sm py-16">読み込み中…</div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}
+                  className="aspect-[2/3] rounded-2xl border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
+                  {busy ? (
+                    <span className="text-xs font-bold">保存中…</span>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
+                      <span className="text-[11px] font-bold mt-1">表紙を追加</span>
+                    </>
+                  )}
+                </button>
+                {books.map((book) => (
+                  <div key={book.id} className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
+                    onClick={() => { if (!editMode) onOpenBook(book.id); }}>
+                    {book.cover ? (
+                      <img src={book.cover} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">画像なし</div>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleCompleted(book); }}
+                      className="absolute top-1.5 right-1.5 px-2 py-[3px] rounded-full text-[10px] font-black shadow"
+                      style={book.completed ? {backgroundColor: '#16a34a', color: '#fff'} : {backgroundColor: 'rgba(255,255,255,0.92)', color: '#64748b'}}
+                    >
+                      {book.completed ? '完結' : '未完結'}
+                    </button>
+                    {editMode && (
+                      <button onClick={(e) => { e.stopPropagation(); deleteBook(book); }}
+                        className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow active:opacity-70">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {!loading && books.length === 0 && (
+              <p className="text-center text-slate-400 text-sm mt-6">「表紙を追加」から電子書籍の表紙を登録できます。</p>
+            )}
+          </div>
+
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAddCover} />
+        </div>
+      );
+    };
+
+    // 2階層目：詳細画像
+    const BookDetailView = ({ bookId, onBack }) => {
+      const [details, setDetails] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [editMode, setEditMode] = useState(false);
+      const [busy, setBusy] = useState(false);
+      const [viewer, setViewer] = useState(null);
+      const fileRef = useRef(null);
+
+      useEffect(() => {
+        const unsub = db.collection('bookshelf').doc(bookId).collection('details').orderBy('createdAt', 'desc').onSnapshot(
+          (snap) => { setDetails(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); },
+          (err) => { console.error('詳細画像の取得エラー', err); setLoading(false); }
+        );
+        return () => unsub();
+      }, [bookId]);
+
+      const handleAddDetails = async (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (!files.length) return;
+        setBusy(true);
+        try {
+          const base = Date.now();
+          for (let i = 0; i < files.length; i++) {
+            const img = await compressImage(files[i], 1400, 0.72);
+            await db.collection('bookshelf').doc(bookId).collection('details').doc().set({ img, createdAt: base + i });
+          }
+        } catch (err) { alert('画像の追加に失敗しました：' + (err.message || err)); }
+        setBusy(false);
+      };
+
+      const deleteDetail = (d) => {
+        setViewer(null);
+        db.collection('bookshelf').doc(bookId).collection('details').doc(d.id).delete()
+          .catch(err => console.error('詳細画像の削除エラー', err));
+      };
+
+      return (
+        <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
+          <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
+            <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span className="text-lg font-black text-slate-800 flex-1">詳細</span>
+            {details.length > 0 && (
+              <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
+                {editMode ? '完了' : '編集'}
+              </button>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-y-auto no-bounce allow-scroll px-4 py-5" style={{paddingBottom: '40px'}}>
+            {loading ? (
+              <div className="text-center text-slate-400 text-sm py-16">読み込み中…</div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}
+                  className="aspect-square rounded-2xl border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
+                  {busy ? <span className="text-xs font-bold">保存中…</span> : (
+                    <>
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
+                      <span className="text-[11px] font-bold mt-1">画像を追加</span>
+                    </>
+                  )}
+                </button>
+                {details.map((d) => (
+                  <div key={d.id} className="relative aspect-square rounded-2xl overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
+                    onClick={() => { if (!editMode) setViewer(d); }}>
+                    <img src={d.img} alt="" className="w-full h-full object-cover" />
+                    {editMode && (
+                      <button onClick={(e) => { e.stopPropagation(); deleteDetail(d); }}
+                        className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow active:opacity-70">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {!loading && details.length === 0 && (
+              <p className="text-center text-slate-400 text-sm mt-6">「画像を追加」から挿絵や気になったページのスクリーンショットを保存できます。</p>
+            )}
+          </div>
+
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAddDetails} />
+
+          {viewer && ReactDOM.createPortal(
+            <div className="fixed inset-0 z-[90] bg-black/90 flex items-center justify-center" onClick={() => setViewer(null)}>
+              <img src={viewer.img} alt="" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
+              <button onClick={() => setViewer(null)} className="absolute top-6 right-5 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center backdrop-blur active:opacity-70">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); deleteDetail(viewer); }} className="absolute bottom-8 left-1/2 -translate-x-1/2 px-5 h-11 rounded-full bg-red-500 text-white text-sm font-bold flex items-center gap-2 active:opacity-70">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 0v12a1 1 0 001 1h6a1 1 0 001-1V7"/></svg>
+                削除
+              </button>
+            </div>,
+            document.body
+          )}
+        </div>
+      );
+    };
+
     // 🚀 メインアプリケーション
     // ==========================================
     const App = ({ onLogout }) => {
@@ -3062,6 +3304,8 @@
       const [showQuickExpense, setShowQuickExpense] = React.useState(false);
       const [showKakeiboPage, setShowKakeiboPage] = React.useState(false);
       const [kakeiboSubPage, setKakeiboSubPage] = React.useState(null);
+      const [showBookshelf, setShowBookshelf] = React.useState(false);
+      const [bookshelfDetailId, setBookshelfDetailId] = React.useState(null);
       const walletScrollRef = useRef(null);
       const walletScrollPos = useRef(0);
       const goToWalletSubPage = (page) => {
@@ -3388,6 +3632,13 @@
         return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
       })();
 
+      if (showBookshelf) {
+        if (bookshelfDetailId) {
+          return <BookDetailView bookId={bookshelfDetailId} onBack={() => setBookshelfDetailId(null)} />;
+        }
+        return <BookshelfView onOpenBook={(id) => setBookshelfDetailId(id)} onBack={() => { setShowBookshelf(false); setBookshelfDetailId(null); }} />;
+      }
+
       if (showKakeiboPage) {
         // サブページ表示中
         if (kakeiboSubPage) {
@@ -3630,6 +3881,15 @@
                 style={{ color: '#cbd5e1' }}
               >
                 <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+
+              {/* 本棚（開いた本） */}
+              <button
+                onClick={() => { setShowBookshelf(true); setBookshelfDetailId(null); }}
+                className="flex-1 flex items-center justify-center py-4 active:opacity-50"
+                style={{ color: '#475569' }}
+              >
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
               </button>
 
               {/* ホーム（今日へ戻る） */}

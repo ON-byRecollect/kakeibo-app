@@ -3155,6 +3155,8 @@
       const [busy, setBusy] = useState(false);
       const [filter, setFilter] = useState('all'); // 'all' | 'done' | 'ongoing'
       const fileRef = useRef(null);
+      const replaceRef = useRef(null);      // 差し替え対象の本ID
+      const replaceInputRef = useRef(null);
 
       useEffect(() => {
         const unsub = db.collection('bookshelf').orderBy('createdAt', 'desc').onSnapshot(
@@ -3173,6 +3175,21 @@
           const cover = await compressCover(file, 1000, 0.72);
           await db.collection('bookshelf').doc().set({ cover, completed: false, createdAt: Date.now() });
         } catch (err) { alert('表紙の登録に失敗しました：' + (err.message || err)); }
+        setBusy(false);
+      };
+
+      // 編集モードで表紙画像のみを差し替える（黒余白の自動トリミングも適用）
+      const handleReplaceCover = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        const id = replaceRef.current;
+        e.target.value = ''; replaceRef.current = null;
+        if (!file || !id) return;
+        setBusy(true);
+        try {
+          const cover = await compressCover(file, 1000, 0.72);
+          await db.collection('bookshelf').doc(id).update({ cover });
+          if (window.showToast) window.showToast('表紙を変更しました');
+        } catch (err) { alert('表紙の変更に失敗しました：' + (err.message || err)); }
         setBusy(false);
       };
 
@@ -3257,6 +3274,12 @@
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                       </button>
                     )}
+                    {editMode && (
+                      <button onClick={(e) => { e.stopPropagation(); replaceRef.current = book.id; replaceInputRef.current && replaceInputRef.current.click(); }}
+                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-3 py-[4px] rounded-full bg-black/70 text-white text-[10px] font-bold active:opacity-70">
+                        画像を変更
+                      </button>
+                    )}
                   </div>
                 ))}
                 </div>
@@ -3271,6 +3294,7 @@
           </div>
 
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAddCover} />
+          <input ref={replaceInputRef} type="file" accept="image/*" className="hidden" onChange={handleReplaceCover} />
         </div>
       );
     };
@@ -3283,7 +3307,6 @@
       const [busy, setBusy] = useState(false);
       const [viewer, setViewer] = useState(null);
       const fileRef = useRef(null);
-      const coverRef = useRef(null);
 
       useEffect(() => {
         const unsub = db.collection('bookshelf').doc(bookId).collection('details').orderBy('createdAt', 'desc').onSnapshot(
@@ -3314,20 +3337,6 @@
           .catch(err => console.error('詳細画像の削除エラー', err));
       };
 
-      // 表紙画像のみを差し替える（黒余白の自動トリミングも適用）
-      const handleReplaceCover = async (e) => {
-        const file = e.target.files && e.target.files[0];
-        e.target.value = '';
-        if (!file) return;
-        setBusy(true);
-        try {
-          const cover = await compressCover(file, 1000, 0.72);
-          await db.collection('bookshelf').doc(bookId).update({ cover });
-          if (window.showToast) window.showToast('表紙を変更しました');
-        } catch (err) { alert('表紙の変更に失敗しました：' + (err.message || err)); }
-        setBusy(false);
-      };
-
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
           <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
@@ -3335,9 +3344,6 @@
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
             <span className="text-lg font-black text-slate-800 flex-1">詳細</span>
-            <button onClick={() => coverRef.current && coverRef.current.click()} disabled={busy} className="px-3 h-9 rounded-full text-sm font-bold bg-slate-100 text-slate-600 active:opacity-60 disabled:opacity-50 shrink-0">
-              表紙を変更
-            </button>
             {details.length > 0 && (
               <button onClick={() => setEditMode(v => !v)} className="px-4 h-9 rounded-full text-sm font-bold active:opacity-60 shrink-0" style={editMode ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: '#f1f5f9', color: '#475569'}}>
                 {editMode ? '完了' : '編集'}
@@ -3376,7 +3382,6 @@
           </div>
 
           <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAddDetails} />
-          <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleReplaceCover} />
 
           {viewer && ReactDOM.createPortal(
             <div className="fixed inset-0 z-[90] bg-black/90 flex items-center justify-center" onClick={() => setViewer(null)}>

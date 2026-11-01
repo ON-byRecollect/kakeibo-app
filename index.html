@@ -3373,7 +3373,7 @@
           <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleAddDetails} />
 
           {viewerIdx != null && details[viewerIdx] && ReactDOM.createPortal(
-            <div className="fixed inset-0 z-[90] bg-black/90 flex items-center justify-center"
+            <div className="fixed inset-0 z-[90] bg-black flex items-center justify-center"
               onClick={() => setViewerIdx(null)}
               onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
               onTouchEnd={(e) => {

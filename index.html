@@ -3153,6 +3153,7 @@
       const [loading, setLoading] = useState(true);
       const [editMode, setEditMode] = useState(false);
       const [busy, setBusy] = useState(false);
+      const [filter, setFilter] = useState('all'); // 'all' | 'done' | 'ongoing'
       const fileRef = useRef(null);
 
       useEffect(() => {
@@ -3191,6 +3192,8 @@
         } catch (err) { alert('削除に失敗しました：' + (err.message || err)); }
       };
 
+      const shownBooks = books.filter(b => filter === 'all' ? true : filter === 'done' ? b.completed : !b.completed);
+
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
           <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
@@ -3209,7 +3212,19 @@
             {loading ? (
               <div className="text-center text-slate-400 text-sm py-16">読み込み中…</div>
             ) : (
-              <div className="grid grid-cols-3 gap-3">
+              <>
+                {books.length > 0 && (
+                  <div className="flex gap-2 mb-4">
+                    {[['all', 'すべて'], ['done', '完結'], ['ongoing', '未完結']].map(([key, label]) => (
+                      <button key={key} onClick={() => setFilter(key)}
+                        className="flex-1 h-9 rounded-full text-sm font-bold active:opacity-70 transition-colors"
+                        style={filter === key ? { backgroundColor: THEME, color: '#fff' } : { backgroundColor: '#f1f5f9', color: '#475569' }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-3">
                 <button onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}
                   className="aspect-[2/3] border-2 border-dashed border-gray-300 bg-white flex flex-col items-center justify-center text-gray-400 active:bg-gray-50 disabled:opacity-50">
                   {busy ? (
@@ -3221,7 +3236,7 @@
                     </>
                   )}
                 </button>
-                {books.map((book) => (
+                {shownBooks.map((book) => (
                   <div key={book.id} className="relative aspect-[2/3] overflow-hidden bg-slate-200 shadow-sm active:opacity-80"
                     onClick={() => { if (!editMode) onOpenBook(book.id); }}>
                     {book.cover ? (
@@ -3232,7 +3247,7 @@
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleCompleted(book); }}
                       className="absolute top-1.5 right-1.5 px-2 py-[3px] rounded-full text-[10px] font-black shadow"
-                      style={book.completed ? {backgroundColor: '#16a34a', color: '#fff'} : {backgroundColor: 'rgba(255,255,255,0.92)', color: '#64748b'}}
+                      style={book.completed ? {backgroundColor: THEME, color: '#fff'} : {backgroundColor: 'rgba(255,255,255,0.92)', color: '#64748b'}}
                     >
                       {book.completed ? '完結' : '未完結'}
                     </button>
@@ -3244,7 +3259,11 @@
                     )}
                   </div>
                 ))}
-              </div>
+                </div>
+                {books.length > 0 && shownBooks.length === 0 && (
+                  <p className="text-center text-slate-400 text-sm mt-6">{filter === 'done' ? '完結済みの作品がありません。' : '未完結の作品がありません。'}</p>
+                )}
+              </>
             )}
             {!loading && books.length === 0 && (
               <p className="text-center text-slate-400 text-sm mt-6">「表紙を追加」から電子書籍の表紙を登録できます。</p>

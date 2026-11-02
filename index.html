@@ -56,6 +56,8 @@
     * { -webkit-overflow-scrolling: touch; }
     * { -webkit-overflow-scrolling: touch; }
     body { overscroll-behavior: none; background-color: #f2f2f2; -webkit-font-smoothing: antialiased; }
+    /* タップの取りこぼし・ダブルタップズーム遅延を防ぎ、ボタンの反応を安定させる */
+    button, a, select, [role="button"] { touch-action: manipulation; }
     .safe-area-pb { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
     ::-webkit-scrollbar { display: none; }
     /* スクロール可能エリアのバウンス無効化 */
@@ -4236,6 +4238,11 @@
       // スマホで選択ハンドルを動かせず「2文字しか選べない／全選択しかできない」不具合になる。
       const tgt = e.target;
       if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)) return;
+      // ボタン/リンク等の操作要素上の touchmove はブロックしない。
+      // iOSではタップ中にもわずかな touchmove が発生し、ここで preventDefault すると
+      // 続く click が取りこぼされ「戻るボタン等が時々反応しない」不具合になるため。
+      // これらの要素上はスクロールさせる必要もないので除外して問題ない。
+      if (tgt && typeof tgt.closest === 'function' && tgt.closest('button, a, select, [role="button"]')) return;
       const sel = window.getSelection && window.getSelection();
       if (sel && !sel.isCollapsed) return;
       let el = e.target;

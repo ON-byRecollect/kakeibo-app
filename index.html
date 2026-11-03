@@ -3210,7 +3210,44 @@
       reader.readAsDataURL(file);
     });
 
-    // 詳細画像用：白または黒の余白を自動で切り取ってイラスト部分だけを圧縮・リサイズする
+    // 電子書籍リーダーのスクショ等から「イラスト部分」だけを囲む範囲を求める。
+    // イラストは色みがある一方、リーダーのUI（上部のタイトル/時刻・下部の位置/％）や
+    // ページ余白はほぼ白・黒・グレーのモノクロなので、「彩度のある画素（＝イラスト）」が
+    // 一定割合以上含まれる行/列の外接矩形を返す。これによりUIチラシや左右の白余白を除外し、
+    // 余白寄りにある淡い光やイラストの一部は外接矩形の内側として保持される。
+    // 色みがほとんど無い（モノクロ原稿など）の場合は null を返し、呼び出し側で別方式にフォールバックする。
+    const findIllustrationCropBounds = (ctx, w, h) => {
+      let data;
+      try { data = ctx.getImageData(0, 0, w, h).data; }
+      catch (_) { return null; }
+      const SAT = 24; // (max-min) がこれ以上なら「色みのある画素」とみなす（UI文字のグレー/JPEGノイズを除外）
+      const rowCnt = new Array(h).fill(0);
+      const colCnt = new Array(w).fill(0);
+      for (let y = 0; y < h; y++) {
+        const base = y * w * 4;
+        for (let x = 0; x < w; x++) {
+          const i = base + x * 4;
+          const r = data[i], g = data[i + 1], b = data[i + 2];
+          const mx = r > g ? (r > b ? r : b) : (g > b ? g : b);
+          const mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+          if (mx - mn >= SAT) { rowCnt[y]++; colCnt[x]++; }
+        }
+      }
+      const rowNeed = Math.max(3, Math.floor(w * 0.02)); // 行幅の2%以上が色みでイラスト行
+      const colNeed = Math.max(3, Math.floor(h * 0.02));
+      let top = 0; while (top < h && rowCnt[top] < rowNeed) top++;
+      let bottom = h - 1; while (bottom > top && rowCnt[bottom] < rowNeed) bottom--;
+      let left = 0; while (left < w && colCnt[left] < colNeed) left++;
+      let right = w - 1; while (right > left && colCnt[right] < colNeed) right--;
+      if (!(right > left && bottom > top)) return null; // 色みが見つからない → フォールバック
+      const l = left / w, t = top / h, r = (right + 1) / w, b = (bottom + 1) / h;
+      // 検出領域が極端に小さい場合は誤検出とみなしてフォールバック
+      if ((r - l) < 0.15 || (b - t) < 0.15) return null;
+      return { l, t, r, b };
+    };
+
+    // 詳細画像用：イラスト部分だけを自動で切り取ってから圧縮・リサイズする
+    // まず色み（彩度）でイラスト範囲を検出し、モノクロ等で検出できなければ白/黒の余白トリミングにフォールバック
     const compressDetail = (file, maxDim, quality) => new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -3226,7 +3263,7 @@
             const sctx = sc.getContext('2d');
             sctx.fillStyle = '#ffffff'; sctx.fillRect(0, 0, sw, sh); // 透過PNGは白背景として判定
             sctx.drawImage(img, 0, 0, sw, sh);
-            const bnd = findMarginCropBounds(sctx, sw, sh);
+            const bnd = findIllustrationCropBounds(sctx, sw, sh) || findMarginCropBounds(sctx, sw, sh);
             // 元画像上の切り取り領域
             const cx = Math.round(bnd.l * nw), cy = Math.round(bnd.t * nh);
             const cw = Math.max(1, Math.round((bnd.r - bnd.l) * nw)), ch = Math.max(1, Math.round((bnd.b - bnd.t) * nh));

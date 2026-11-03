@@ -4210,12 +4210,12 @@
           </div>
           {/* ── タブバー: 各アイコンを独立した丸アイコンで表示（日付矢印は矢印単体・丸なし） ── */}
           <nav className="fixed bottom-0 w-full max-w-[100vw] z-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: 'env(safe-area-inset-bottom, 12px)'}}>
-            <div className="flex items-center justify-around px-1 pt-3 pb-2">
+            <div className="flex items-center justify-evenly pt-3 pb-2">
 
               {/* 本棚（開いた本） */}
               <button
                 onClick={() => { setShowBookshelf(true); setBookshelfDetailId(null); }}
-                className="flex-1 flex items-center justify-center py-2 active:opacity-50"
+                className="shrink-0 flex items-center justify-center py-2 active:opacity-50"
                 style={{ color: '#475569' }}
               >
                 <span className="w-[60px] h-[60px] rounded-full bg-white shadow-md flex items-center justify-center shrink-0">
@@ -4226,7 +4226,7 @@
               {/* 荷物登録（配送トラック） */}
               <button
                 onClick={() => { setShowScheduleSettings(true); setShowSettingsMenu(false); }}
-                className="flex-1 flex items-center justify-center py-2 active:opacity-50"
+                className="shrink-0 flex items-center justify-center py-2 active:opacity-50"
                 style={{ color: '#475569' }}
               >
                 <span className="w-[60px] h-[60px] rounded-full bg-white shadow-md flex items-center justify-center shrink-0">
@@ -4242,7 +4242,7 @@
               {/* ホーム（今日へ戻る） */}
               <button
                 onClick={() => { setShowKakeiboPage(false); resetToToday(); }}
-                className="flex-1 flex items-center justify-center py-2 active:opacity-50"
+                className="shrink-0 flex items-center justify-center py-2 active:opacity-50"
                 style={{ color: '#475569' }}
               >
                 <span className="w-[60px] h-[60px] rounded-full bg-white shadow-md flex items-center justify-center shrink-0">
@@ -4253,7 +4253,7 @@
               {/* 今日の食費（フォークとナイフ） */}
               <button
                 onClick={() => setShowQuickExpense(true)}
-                className="flex-1 flex items-center justify-center py-2 active:opacity-50"
+                className="shrink-0 flex items-center justify-center py-2 active:opacity-50"
                 style={{ color: '#475569' }}
               >
                 <span className="w-[60px] h-[60px] rounded-full bg-white shadow-md flex items-center justify-center shrink-0">
@@ -4269,7 +4269,7 @@
               {/* 家計簿（コイン・ドルマーク） */}
               <button
                 onClick={() => { setShowKakeiboPage(true); setKakeiboSubPage(null); }}
-                className="flex-1 flex items-center justify-center py-2 active:opacity-50"
+                className="shrink-0 flex items-center justify-center py-2 active:opacity-50"
                 style={{ color: showKakeiboPage ? THEME : '#475569' }}
               >
                 <span className="w-[60px] h-[60px] rounded-full bg-white shadow-md flex items-center justify-center shrink-0">

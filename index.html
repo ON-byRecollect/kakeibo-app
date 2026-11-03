@@ -3290,7 +3290,9 @@
       const [loading, setLoading] = useState(true);
       const [editMode, setEditMode] = useState(false);
       const [busy, setBusy] = useState(false);
-      const [filter, setFilter] = useState('all'); // 'all' | 'done' | 'ongoing'
+      // フィルターは「完結/未完結」と「未読/既読」の2軸を独立に持ち、組み合わせ可能にする
+      const [completeFilter, setCompleteFilter] = useState(null); // null | 'done' | 'ongoing'
+      const [readFilter, setReadFilter] = useState(null); // null | 'read' | 'unread'
       const fileRef = useRef(null);
       const replaceRef = useRef(null);      // 差し替え対象の本ID
       const replaceInputRef = useRef(null);
@@ -3352,12 +3354,30 @@
       };
 
       const shownBooks = books.filter(b => {
-        if (filter === 'done') return b.completed;
-        if (filter === 'ongoing') return !b.completed;
-        if (filter === 'read') return !!b.read;
-        if (filter === 'unread') return !b.read;
+        if (completeFilter === 'done' && !b.completed) return false;
+        if (completeFilter === 'ongoing' && b.completed) return false;
+        if (readFilter === 'read' && !b.read) return false;
+        if (readFilter === 'unread' && b.read) return false;
         return true;
       });
+
+      // 絞り込み0件時のメッセージ用ラベル（例：「完結・既読の作品がありません。」）
+      const activeFilterLabels = [];
+      if (completeFilter === 'done') activeFilterLabels.push('完結');
+      else if (completeFilter === 'ongoing') activeFilterLabels.push('未完結');
+      if (readFilter === 'read') activeFilterLabels.push('既読');
+      else if (readFilter === 'unread') activeFilterLabels.push('未読');
+      const emptyFilterMsg = activeFilterLabels.length ? `${activeFilterLabels.join('・')}の作品がありません。` : '作品がありません。';
+
+      // フィルターボタン定義（完結系＝テーマ色、未読/既読＝オレンジ。各軸はトグル、すべては全解除）
+      const ORANGE = '#f97316';
+      const filterButtons = [
+        { key: 'all', label: 'すべて', active: !completeFilter && !readFilter, color: THEME, onClick: () => { setCompleteFilter(null); setReadFilter(null); } },
+        { key: 'done', label: '完結', active: completeFilter === 'done', color: THEME, onClick: () => setCompleteFilter(f => f === 'done' ? null : 'done') },
+        { key: 'ongoing', label: '未完結', active: completeFilter === 'ongoing', color: THEME, onClick: () => setCompleteFilter(f => f === 'ongoing' ? null : 'ongoing') },
+        { key: 'unread', label: '未読', active: readFilter === 'unread', color: ORANGE, onClick: () => setReadFilter(f => f === 'unread' ? null : 'unread') },
+        { key: 'read', label: '既読', active: readFilter === 'read', color: ORANGE, onClick: () => setReadFilter(f => f === 'read' ? null : 'read') },
+      ];
 
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
@@ -3378,11 +3398,11 @@
             </div>
             {books.length > 0 && (
               <div className="flex gap-1.5 mt-3">
-                {[['all', 'すべて'], ['done', '完結'], ['ongoing', '未完結'], ['unread', '未読'], ['read', '既読']].map(([key, label]) => (
-                  <button key={key} onClick={() => setFilter(key)}
+                {filterButtons.map(b => (
+                  <button key={b.key} onClick={b.onClick}
                     className="flex-1 h-9 rounded-full text-[13px] font-bold whitespace-nowrap active:opacity-70 transition-colors"
-                    style={filter === key ? { backgroundColor: THEME, color: '#fff' } : { backgroundColor: '#f1f5f9', color: '#475569' }}>
-                    {label}
+                    style={b.active ? { backgroundColor: b.color, color: '#fff' } : { backgroundColor: '#f1f5f9', color: '#475569' }}>
+                    {b.label}
                   </button>
                 ))}
               </div>
@@ -3438,7 +3458,7 @@
                 ))}
                 </div>
                 {books.length > 0 && shownBooks.length === 0 && (
-                  <p className="text-center text-slate-400 text-sm mt-6">{filter === 'done' ? '完結済みの作品がありません。' : filter === 'ongoing' ? '未完結の作品がありません。' : filter === 'read' ? '既読の作品がありません。' : filter === 'unread' ? '未読の作品がありません。' : '作品がありません。'}</p>
+                  <p className="text-center text-slate-400 text-sm mt-6">{emptyFilterMsg}</p>
                 )}
               </>
             )}

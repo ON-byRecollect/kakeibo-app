@@ -2085,7 +2085,7 @@
     // ==========================================
     // 2. 固定タブ
     // ==========================================
-    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth, handleAddData, expenses, handleDeleteExpense, todayDay, subSection }) => {
+    const FixedTab = ({ fixedCosts, setFixedCosts, handleDeleteFixed, displayYearMonth, currentYearMonth, safeBudgets, currentElectricBudget, currentGasBudget, prevElectricBudget, prevGasBudget, utilityPaid, toggleUtilityPaid, monthlySpents, prevMonthlySpents, prevYM, prevMonth, nextMonth, handleAddData, expenses, handleDeleteExpense, todayDay, subSection, showFixedInput, setShowFixedInput }) => {
       // 支出入力フォームの状態
       const [expAmount, setExpAmount] = useState('');
       const [expCategory, setExpCategory] = useState('');
@@ -2130,6 +2130,7 @@
         handleAddData({ amount: Number(expAmount), category: '固定', itemName: expItemName, accountLabel: expAccount, timing: expTiming, day: targetDay, yearMonth: targetYearMonth });
         showAddToast();
         setExpAmount(''); setExpItemName(''); setExpAccount(''); setExpTiming(''); setExpDay(''); setExpAnnualMonth(''); setExpSpecificYear(String(nowJST().getFullYear()));
+        if (typeof setShowFixedInput === 'function') setShowFixedInput(false); // モーダルから登録した場合は閉じる
       };
 
       const normalizeFixedDateForEdit = (item) => {
@@ -2270,10 +2271,7 @@
         return sum + val;
       }, 0);
 
-      return (
-        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
-          {subSection === 'fixed_input' ? (
-            <div className="px-4 pt-5 pb-10">
+      const fixedInputCard = (
               <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
 
                 {/* 金額 */}
@@ -2363,6 +2361,13 @@
 
                 <button onClick={onExpSubmit} disabled={!expIsSubmitEnabled} className={`w-full h-12 rounded-xl font-bold text-lg shadow-sm transition-all ${expIsSubmitEnabled ? 'text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`} style={expIsSubmitEnabled ? {backgroundColor: THEME} : {}}>登録</button>
               </div>
+      );
+
+      return (
+        <div className="flex flex-col pb-44 w-full bg-gray-50 min-h-full">
+          {subSection === 'fixed_input' ? (
+            <div className="px-4 pt-5 pb-10">
+              {fixedInputCard}
             </div>
           ) : (
           <>
@@ -2531,6 +2536,20 @@
             </div>
           )}
           </>
+          )}
+          {subSection === 'fixed_all' && showFixedInput && ReactDOM.createPortal(
+            <div className="fixed inset-0 z-[80] bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => setShowFixedInput && setShowFixedInput(false)}>
+              <div className="bg-gray-50 w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] max-h-[88vh] overflow-y-auto no-bounce allow-scroll shadow-2xl" onClick={e => e.stopPropagation()} style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
+                <div className="flex items-center justify-between px-5 pt-5 pb-1 sticky top-0 bg-gray-50 z-10">
+                  <span className="text-lg font-black text-slate-800">固定費用を入力</span>
+                  <button onClick={() => setShowFixedInput && setShowFixedInput(false)} className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-slate-600 active:opacity-60 shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div className="px-4 pt-2 pb-4">{fixedInputCard}</div>
+              </div>
+            </div>,
+            document.body
           )}
         </div>
       );
@@ -3452,6 +3471,7 @@
       const [showQuickExpense, setShowQuickExpense] = React.useState(false);
       const [showKakeiboPage, setShowKakeiboPage] = React.useState(false);
       const [kakeiboSubPage, setKakeiboSubPage] = React.useState(null);
+      const [showFixedInput, setShowFixedInput] = React.useState(false); // すべての固定費用ページの入力モーダル
       const [showBookshelf, setShowBookshelf] = React.useState(false);
       const [bookshelfDetailId, setBookshelfDetailId] = React.useState(null);
       const walletScrollRef = useRef(null);
@@ -3461,6 +3481,7 @@
         setKakeiboSubPage(page);
       };
       const goBackFromWalletSubPage = () => {
+        setShowFixedInput(false);
         setKakeiboSubPage(null);
         setTimeout(() => {
           if (walletScrollRef.current) walletScrollRef.current.scrollTop = walletScrollPos.current;
@@ -3806,6 +3827,11 @@
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                       </button>
                     )}
+                    {kakeiboSubPage === 'fixed_all' && (
+                      <button onClick={() => setShowFixedInput(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}} aria-label="固定費用を入力">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14"/></svg>
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center justify-center gap-2 mt-2 px-1">
                     <button onClick={prevMonth} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold active:bg-sky-100 active:scale-90 transition-all duration-200" style={{color: THEME_DARK}}>＜</button>
@@ -3832,7 +3858,7 @@
                 {kakeiboSubPage === 'point' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="point" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'borrow' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="borrow" lastEditedDate={lastEditedDate} />}
                 {kakeiboSubPage === 'physical' && <AssetTab fixedCosts={fixedCosts} currentYearMonth={currentYearMonth} safeBudgets={safeBudgets} currentElectricBudget={realCurrentElectricBudget} currentGasBudget={realCurrentGasBudget} prevElectricBudget={prevRealCurrentElectricBudget} prevGasBudget={prevRealCurrentGasBudget} monthlySpents={realCurrentMonthlySpents} prevMonthlySpents={prevRealCurrentMonthlySpents} utilityPaid={utilityPaid} cashAssets={cashAssets} setCashAssets={setCashAssets} pointAssets={pointAssets} setPointAssets={setPointAssets} borrowingAssets={borrowingAssets} setBorrowingAssets={setBorrowingAssets} physicalAssets={physicalAssets} setPhysicalAssets={setPhysicalAssets} onLogout={onLogout} subSection="physical" lastEditedDate={lastEditedDate} />}
-                {kakeiboSubPage === 'fixed_all' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={{...safeBudgets, food: currentFoodBudget, transport: currentTransportBudget}} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_all" />}
+                {kakeiboSubPage === 'fixed_all' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={{...safeBudgets, food: currentFoodBudget, transport: currentTransportBudget}} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_all" showFixedInput={showFixedInput} setShowFixedInput={setShowFixedInput} />}
                 {kakeiboSubPage === 'fixed_input' && <FixedTab fixedCosts={fixedCosts} setFixedCosts={setFixedCosts} handleDeleteFixed={handleDeleteFixed} displayYearMonth={displayYearMonth} currentYearMonth={currentYearMonth} safeBudgets={{...safeBudgets, food: currentFoodBudget, transport: currentTransportBudget}} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} prevElectricBudget={prevElectricBudget} prevGasBudget={prevGasBudget} utilityPaid={utilityPaid} toggleUtilityPaid={toggleUtilityPaid} monthlySpents={monthlySpents} prevMonthlySpents={prevMonthlySpents} prevYM={prevYM} prevMonth={prevMonth} nextMonth={nextMonth} handleAddData={handleAddData} expenses={expenses} handleDeleteExpense={handleDeleteExpense} todayDay={todayDay} subSection="fixed_input" />}
                 {kakeiboSubPage === 'variable' && <VariableTab expenses={expenses} displayYearMonth={displayYearMonth} todayDay={todayDay} safeBudgets={{...safeBudgets, food: currentFoodBudget, transport: currentTransportBudget}} currentElectricBudget={currentElectricBudget} currentGasBudget={currentGasBudget} handleBudgetChange={handleBudgetChange} handleUtilityBudgetChange={handleUtilityBudgetChange} monthlySpents={monthlySpents} prevMonth={prevMonth} nextMonth={nextMonth} setExpenses={setExpenses} handleDeleteExpense={handleDeleteExpense} />}
                 {kakeiboSubPage === 'loan' && <LoanTab loans={loans} setLoans={setLoans} />}

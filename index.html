@@ -869,9 +869,15 @@
                 );
               })}
             </div>
-            {/* 行3: 時計（大・中央配置） */}
-            <div className="flex justify-center items-baseline leading-none mb-1">
-              <span className="font-black text-slate-900 leading-none" style={{fontSize: '5.5rem', letterSpacing: '-0.04em'}}>{currentTime}</span>
+            {/* 行3: 時計（大・中央配置）＋日付変更矢印（左右・固定位置。時計の時刻の幅に影響されない） */}
+            <div className="flex items-center justify-between mb-1 mx-auto w-full" style={{maxWidth: '340px'}}>
+              <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()-1); return n; })} className="shrink-0 flex items-center justify-center active:opacity-50" style={{color: '#94a3b8'}} aria-label="前日">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <span className="font-black text-slate-900 leading-none text-center flex-1 min-w-0" style={{fontSize: '5.5rem', letterSpacing: '-0.04em'}}>{currentTime}</span>
+              <button onClick={() => setDisplayDate(d => { const n = new Date(d); n.setDate(n.getDate()+1); return n; })} className="shrink-0 flex items-center justify-center active:opacity-50" style={{color: '#94a3b8'}} aria-label="翌日">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
             </div>
             {/* 行4: プロ野球（中央配置）※ SHOW_BASEBALL で非表示にしている */}
             {SHOW_BASEBALL && todaysBaseballs.length > 0 ? (
@@ -4206,15 +4212,6 @@
           <nav className="fixed bottom-0 w-full max-w-[100vw] z-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: 'env(safe-area-inset-bottom, 12px)'}}>
             <div className="flex items-center justify-around px-1 pt-3 pb-2">
 
-              {/* 前日（矢印単体・丸なし） */}
-              <button
-                onClick={() => { if (activeTab === '予定') { setScheduleDatePrev(p => p + 1); } }}
-                className="w-6 shrink-0 flex items-center justify-center py-2 active:opacity-50"
-                style={{ color: '#cbd5e1' }}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-              </button>
-
               {/* 本棚（開いた本） */}
               <button
                 onClick={() => { setShowBookshelf(true); setBookshelfDetailId(null); }}
@@ -4280,14 +4277,6 @@
                 </span>
               </button>
 
-              {/* 翌日（矢印単体・丸なし） */}
-              <button
-                onClick={() => { if (activeTab === '予定') { setScheduleDateNext(p => p + 1); } }}
-                className="w-6 shrink-0 flex items-center justify-center py-2 active:opacity-50"
-                style={{ color: '#cbd5e1' }}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-              </button>
             </div>
 
             {/* 設定メニュー（ポップアップ・荷物登録と設定編集を統合） */}

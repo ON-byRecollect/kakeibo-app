@@ -3139,6 +3139,42 @@
       return { l, t, r, b };
     };
 
+    // 画像の「白または黒の余白」の内側だけを囲む範囲を求める（詳細画像のイラスト抽出用）。
+    // 各辺から内側へ向かって「ほぼ白 or ほぼ黒で埋まった行/列（余白）」を削り、中身の外接矩形を返す。
+    // 返り値は 0〜1 の比率 {l, t, r, b}。検出できない/不自然な場合は全体を返す。
+    const findMarginCropBounds = (ctx, w, h) => {
+      let data;
+      try { data = ctx.getImageData(0, 0, w, h).data; }
+      catch (_) { return { l: 0, t: 0, r: 1, b: 1 }; }
+      const WHITE = 232; // RGB各値がこれ以上なら「白」とみなす（純白の余白＋圧縮ノイズを許容）
+      const BLACK = 24;  // RGB各値がこれ以下なら「黒」とみなす
+      // 白または黒＝余白（背景）とみなす画素
+      const isBG = (i) =>
+        (data[i] >= WHITE && data[i + 1] >= WHITE && data[i + 2] >= WHITE) ||
+        (data[i] <= BLACK && data[i + 1] <= BLACK && data[i + 2] <= BLACK);
+      const rowHasContent = (y) => {
+        const need = Math.max(2, Math.floor(w * 0.01)); // 1%以上が余白以外ならイラストの行
+        let cnt = 0;
+        for (let x = 0; x < w; x++) { if (!isBG((y * w + x) * 4)) { if (++cnt >= need) return true; } }
+        return false;
+      };
+      const colHasContent = (x) => {
+        const need = Math.max(2, Math.floor(h * 0.01));
+        let cnt = 0;
+        for (let y = 0; y < h; y++) { if (!isBG((y * w + x) * 4)) { if (++cnt >= need) return true; } }
+        return false;
+      };
+      let top = 0, bottom = h - 1, left = 0, right = w - 1;
+      while (top < bottom && !rowHasContent(top)) top++;
+      while (bottom > top && !rowHasContent(bottom)) bottom--;
+      while (left < right && !colHasContent(left)) left++;
+      while (right > left && !colHasContent(right)) right--;
+      let l = left / w, t = top / h, r = (right + 1) / w, b = (bottom + 1) / h;
+      // 不自然（反転・極端に小さい＝ほぼ単色画像など）なら切り取らず全体を使う
+      if (!(r > l && b > t) || (r - l) < 0.15 || (b - t) < 0.15) return { l: 0, t: 0, r: 1, b: 1 };
+      return { l, t, r, b };
+    };
+
     // 表紙用：黒い余白を自動で切り取ってから圧縮・リサイズする
     const compressCover = (file, maxDim, quality) => new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -3154,6 +3190,43 @@
             const sc = document.createElement('canvas'); sc.width = sw; sc.height = sh;
             const sctx = sc.getContext('2d'); sctx.drawImage(img, 0, 0, sw, sh);
             const bnd = findBlackCropBounds(sctx, sw, sh);
+            // 元画像上の切り取り領域
+            const cx = Math.round(bnd.l * nw), cy = Math.round(bnd.t * nh);
+            const cw = Math.max(1, Math.round((bnd.r - bnd.l) * nw)), ch = Math.max(1, Math.round((bnd.b - bnd.t) * nh));
+            // 出力サイズ（長辺を maxDim に収める）
+            let ow = cw, oh = ch;
+            if (Math.max(ow, oh) > maxDim) { const rr = maxDim / Math.max(ow, oh); ow = Math.max(1, Math.round(ow * rr)); oh = Math.max(1, Math.round(oh * rr)); }
+            const oc = document.createElement('canvas'); oc.width = ow; oc.height = oh;
+            const octx = oc.getContext('2d');
+            octx.fillStyle = '#ffffff'; octx.fillRect(0, 0, ow, oh);
+            octx.drawImage(img, cx, cy, cw, ch, 0, 0, ow, oh);
+            resolve(oc.toDataURL('image/jpeg', quality));
+          } catch (err) { reject(err); }
+        };
+        img.onerror = () => reject(new Error('画像を読み込めませんでした'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('ファイルを読み込めませんでした'));
+      reader.readAsDataURL(file);
+    });
+
+    // 詳細画像用：白または黒の余白を自動で切り取ってイラスト部分だけを圧縮・リサイズする
+    const compressDetail = (file, maxDim, quality) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const nw = img.naturalWidth, nh = img.naturalHeight;
+            // 検出は縮小版で高速に行い、切り取りは元画像から高精細で行う
+            const scanMax = 700;
+            let sw = nw, sh = nh;
+            if (Math.max(sw, sh) > scanMax) { const rr = scanMax / Math.max(sw, sh); sw = Math.max(1, Math.round(sw * rr)); sh = Math.max(1, Math.round(sh * rr)); }
+            const sc = document.createElement('canvas'); sc.width = sw; sc.height = sh;
+            const sctx = sc.getContext('2d');
+            sctx.fillStyle = '#ffffff'; sctx.fillRect(0, 0, sw, sh); // 透過PNGは白背景として判定
+            sctx.drawImage(img, 0, 0, sw, sh);
+            const bnd = findMarginCropBounds(sctx, sw, sh);
             // 元画像上の切り取り領域
             const cx = Math.round(bnd.l * nw), cy = Math.round(bnd.t * nh);
             const cw = Math.max(1, Math.round((bnd.r - bnd.l) * nw)), ch = Math.max(1, Math.round((bnd.b - bnd.t) * nh));
@@ -3369,7 +3442,7 @@
         try {
           const base = Date.now();
           for (let i = 0; i < files.length; i++) {
-            const img = await compressImage(files[i], 1400, 0.72);
+            const img = await compressDetail(files[i], 1400, 0.72);
             await db.collection('bookshelf').doc(bookId).collection('details').doc().set({ img, createdAt: base + i });
           }
         } catch (err) { alert('画像の追加に失敗しました：' + (err.message || err)); }

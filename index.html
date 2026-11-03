@@ -1510,7 +1510,7 @@
               <button key={cat} onClick={() => setCategory(cat)} className={`flex-1 py-3 rounded-2xl text-base font-bold transition-colors ${category === cat ? 'text-white' : 'bg-gray-100 text-gray-600'}`} style={category === cat ? {backgroundColor: THEME} : {}}>{cat}</button>
             ))}
           </div>
-          <button onClick={onSubmit} disabled={!isOk} className={`w-full h-14 rounded-2xl font-bold text-lg shadow-sm transition-all ${isOk ? 'text-white' : 'bg-gray-100 text-gray-400'}`} style={isOk ? {backgroundColor: THEME} : {}}>登録</button>
+          <button onClick={onSubmit} disabled={!isOk} className={`w-full h-14 rounded-2xl font-bold text-lg shadow-sm transition-all ${isOk ? 'text-white' : 'bg-gray-100 text-gray-400'}`} style={isOk ? {backgroundColor: '#f97316'} : {}}>登録</button>
         </div>
       );
     };

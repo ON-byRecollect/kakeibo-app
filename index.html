@@ -3880,10 +3880,18 @@
       })();
 
       if (showBookshelf) {
-        if (bookshelfDetailId) {
-          return <BookDetailView bookId={bookshelfDetailId} onBack={() => setBookshelfDetailId(null)} />;
-        }
-        return <BookshelfView onOpenBook={(id) => setBookshelfDetailId(id)} onBack={() => { setShowBookshelf(false); setBookshelfDetailId(null); }} />;
+        // 一覧(BookshelfView)は常にマウントしたままにし、詳細は上に重ねて表示する。
+        // こうすることで詳細から戻ったときに一覧のスクロール位置・フィルター等が保持される。
+        return (
+          <>
+            <BookshelfView onOpenBook={(id) => setBookshelfDetailId(id)} onBack={() => { setShowBookshelf(false); setBookshelfDetailId(null); }} />
+            {bookshelfDetailId && (
+              <div className="fixed inset-0 z-[70] bg-gray-50">
+                <BookDetailView bookId={bookshelfDetailId} onBack={() => setBookshelfDetailId(null)} />
+              </div>
+            )}
+          </>
+        );
       }
 
       if (showKakeiboPage) {

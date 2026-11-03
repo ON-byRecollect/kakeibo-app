@@ -3474,7 +3474,7 @@
     };
 
     // 2階層目：詳細画像
-    const BookDetailView = ({ bookId, onBack }) => {
+    const BookDetailView = ({ bookId, onBack, onHome }) => {
       const [details, setDetails] = useState([]);
       const [loading, setLoading] = useState(true);
       const [editMode, setEditMode] = useState(false);
@@ -3526,6 +3526,9 @@
                 {editMode ? '完了' : '編集'}
               </button>
             )}
+            <button onClick={onHome} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}} aria-label="ホームに戻る">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3 L3 11 v9 a1 1 0 001 1 h16 a1 1 0 001-1 v-9 Z"/></svg>
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto no-bounce allow-scroll px-4 py-5" style={{paddingBottom: '40px'}}>
@@ -3951,7 +3954,7 @@
             <BookshelfView onOpenBook={(id) => setBookshelfDetailId(id)} onBack={() => { setShowBookshelf(false); setBookshelfDetailId(null); }} />
             {bookshelfDetailId && (
               <div className="fixed inset-0 z-[70] bg-gray-50">
-                <BookDetailView bookId={bookshelfDetailId} onBack={() => setBookshelfDetailId(null)} />
+                <BookDetailView bookId={bookshelfDetailId} onBack={() => setBookshelfDetailId(null)} onHome={() => { setBookshelfDetailId(null); setShowBookshelf(false); resetToToday(); }} />
               </div>
             )}
           </>

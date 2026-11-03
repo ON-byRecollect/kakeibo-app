@@ -2879,7 +2879,12 @@
         if (e.category === '交通') monthlyDataMap[e.yearMonth].transport += e.amount;
       });
 
-      const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => b.month.localeCompare(a.month));
+      // 年月文字列（例: "2026年11月"）を数値キーに変換し、新しい年月が上に来るよう降順ソート
+      const ymKey = (ym) => {
+        const m = String(ym).match(/(\d+)年(\d+)月/);
+        return m ? Number(m[1]) * 100 + Number(m[2]) : 0;
+      };
+      const sortedMonths = Object.values(monthlyDataMap).sort((a, b) => ymKey(b.month) - ymKey(a.month));
 
       // 予算データを反映
       sortedMonths.forEach(data => {

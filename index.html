@@ -4024,9 +4024,7 @@
                       {kakeiboSubPage === 'fixed_all' ? 'すべての固定費用' : '変動費'}
                     </span>
                     {displayYearMonth !== currentYearMonth && (
-                      <button onClick={() => setDisplayDate(nowJST())} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}}>
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3 L3 11 v9 a1 1 0 001 1 h16 a1 1 0 001-1 v-9 Z"/></svg>
-                      </button>
+                      <button onClick={() => setDisplayDate(nowJST())} className="h-10 px-3 rounded-full flex items-center justify-center text-white text-xs font-black whitespace-nowrap active:opacity-60 shrink-0" style={{backgroundColor: THEME}}>今月に戻る</button>
                     )}
                     {kakeiboSubPage === 'fixed_all' && (
                       <button onClick={() => setShowFixedInput(true)} className="w-10 h-10 rounded-full flex items-center justify-center text-white active:opacity-60 shrink-0" style={{backgroundColor: THEME}} aria-label="固定費用を入力">

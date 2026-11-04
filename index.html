@@ -223,6 +223,41 @@
         db.collection('shared_data').doc('family_account').set({ ...payload, lastEditedDate: dateStr }, { merge: true }).catch(err => console.error("食費口座の移行エラー:", err));
       }, [data]);
 
+      // ガスの口座・引き落とし日の一括変更（一度きり）：2026年11月以降のガスを口座「か」・引き落とし日「20」に統一する。
+      // 2026年10月以前（過去）の表示・集計は変えないよう、過去の各月は現在の基準値を明示オーバーライドして
+      // 凍結してから基準(budgets.gas)を変更する。これにより「2026年11月以降だけ」か/20 になる。
+      // 金額は各月の値を維持。以降の未オーバーライド月は基準(か/20)を継承。フラグで二度目以降は実行しない。
+      const gasMigrateRef = useRef(false);
+      useEffect(() => {
+        if (data === null || gasMigrateRef.current || data._gasAcctDateMigratedV1) return;
+        gasMigrateRef.current = true;
+        const TARGET = 202611; // 2026年11月
+        const NEW_ACC = 'か', NEW_DATE = '20';
+        const ymKey = (ym) => { const m = String(ym).match(/(\d+)年(\d+)月/); return m ? Number(m[1]) * 100 + Number(m[2]) : 0; };
+        const baseGas = (data.budgets && data.budgets.gas) ? data.budgets.gas : { amount: 5000, account: 'Ⅲ', date: '25' };
+        const utilB = { ...(data.utilityBudgets || {}) };
+        // 既知の月＝オーバーライド済みの月 ∪ 支出のある月
+        const known = new Set(Object.keys(utilB));
+        (data.expenses || []).forEach(e => { if (e && e.yearMonth) known.add(e.yearMonth); });
+        known.forEach(m => {
+          const k = ymKey(m); if (!k) return;
+          if (k < TARGET) {
+            // 過去：ガスのオーバーライドが無ければ現在の基準値で凍結（基準変更後も現状維持）
+            if (!(utilB[m] && utilB[m].gas)) utilB[m] = { ...(utilB[m] || {}), gas: { ...baseGas } };
+          } else {
+            // 2026年11月以降：既存オーバーライドがあれば口座・日付を更新（金額は維持）
+            if (utilB[m] && utilB[m].gas) utilB[m] = { ...utilB[m], gas: { ...utilB[m].gas, account: NEW_ACC, date: NEW_DATE } };
+          }
+        });
+        // 基準を更新（オーバーライドの無い 2026年11月以降の月はこれを継承＝か/20）
+        const newBaseGas = { ...baseGas, account: NEW_ACC, date: NEW_DATE };
+        const payload = { _gasAcctDateMigratedV1: true, budgets: { ...(data.budgets || {}), gas: newBaseGas }, utilityBudgets: utilB };
+        const today = nowJST();
+        const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
+        setData(prev => ({ ...prev, ...payload, lastEditedDate: dateStr }));
+        db.collection('shared_data').doc('family_account').set({ ...payload, lastEditedDate: dateStr }, { merge: true }).catch(err => console.error("ガス口座/引落日の一括変更エラー:", err));
+      }, [data]);
+
       const updateField = (key, value) => {
         const today = nowJST();
         const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');

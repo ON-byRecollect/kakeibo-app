@@ -3122,16 +3122,23 @@
       catch (_) { return { l: 0, t: 0, r: 1, b: 1 }; }
       const BLACK = 24; // RGB各値がこれ以下なら「黒」とみなす（純黒の帯＋圧縮ノイズを許容）
       const isBlack = (i) => data[i] <= BLACK && data[i + 1] <= BLACK && data[i + 2] <= BLACK;
+      // 帯（レターボックス/ピラーボックス）の判定は、各辺の外側12%を除いた「中央帯」だけを見る。
+      // こうすることで、スクショ四隅のカメラ/ノッチ表示や時刻などの小さな非黒ブロックに
+      // 惑わされて黒帯の切り取りが途中で止まるのを防ぐ（帯本体は中央帯でも真っ黒なので確実に切れる）。
+      const bx0 = Math.floor(w * 0.12), bx1 = Math.ceil(w * 0.88);
+      const by0 = Math.floor(h * 0.12), by1 = Math.ceil(h * 0.88);
       const rowHasContent = (y) => {
-        const need = Math.max(2, Math.floor(w * 0.01)); // 1%以上が非黒なら中身の行
+        const span = Math.max(1, bx1 - bx0);
+        const need = Math.max(2, Math.floor(span * 0.02)); // 中央帯の2%以上が非黒なら中身の行
         let cnt = 0;
-        for (let x = 0; x < w; x++) { if (!isBlack((y * w + x) * 4)) { if (++cnt >= need) return true; } }
+        for (let x = bx0; x < bx1; x++) { if (!isBlack((y * w + x) * 4)) { if (++cnt >= need) return true; } }
         return false;
       };
       const colHasContent = (x) => {
-        const need = Math.max(2, Math.floor(h * 0.01));
+        const span = Math.max(1, by1 - by0);
+        const need = Math.max(2, Math.floor(span * 0.02));
         let cnt = 0;
-        for (let y = 0; y < h; y++) { if (!isBlack((y * w + x) * 4)) { if (++cnt >= need) return true; } }
+        for (let y = by0; y < by1; y++) { if (!isBlack((y * w + x) * 4)) { if (++cnt >= need) return true; } }
         return false;
       };
       let top = 0, bottom = h - 1, left = 0, right = w - 1;

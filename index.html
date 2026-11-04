@@ -139,75 +139,6 @@
     // Date を "YYYY-MM-DD" に整形（ローカルget系ベース）。nowJST() と組み合わせると JST 日付になる。
     const ymd = (dateObj) => `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
-    // ── 折りたたみ端末（iPhone Duo 等）向け：下部タブバーを縦サイドバーへ自動切替 ──
-    // Web からは確実な API が無いため、ビューポート幅・アスペクト比・画面内オフセット(screenX)
-    // から推定する。通常の iPhone/Android 利用を絶対に妨げないよう、判定が曖昧なときは 'bottom'。
-    //   戻り値: 'bottom'（通常）| 'left'（左端に縦表示）| 'right'（右端に縦表示）
-    // ※実機でのしきい値微調整が必要（この環境では実機検証不可）。
-    // 端末から取得できる各種メトリクスを1か所で読み取る（キャリブレーション表示にも使用）。
-    const readBarMetrics = () => {
-      const m = { vw:0, vh:0, sw:0, sh:0, ar:0, sx:0, dpr:1, vvw:0, vvh:0, vvLeft:0, fullWidth:true, layout:'bottom' };
-      try {
-        m.vw = window.innerWidth || 0;
-        m.vh = window.innerHeight || 0;
-        m.sw = (window.screen && window.screen.width) || m.vw;
-        m.sh = (window.screen && window.screen.height) || m.vh;
-        m.dpr = window.devicePixelRatio || 1;
-        m.ar = m.vh / Math.max(1, m.vw); // 縦横比（縦長ほど大きい）
-        m.sx = (typeof window.screenX === 'number' ? window.screenX
-               : (typeof window.screenLeft === 'number' ? window.screenLeft : 0));
-        if (window.visualViewport) {
-          m.vvw = Math.round(window.visualViewport.width);
-          m.vvh = Math.round(window.visualViewport.height);
-          m.vvLeft = Math.round(window.visualViewport.offsetLeft || 0);
-        }
-        m.layout = computeLayoutFromMetrics(m);
-      } catch (_) {}
-      return m;
-    };
-
-    // メトリクスから配置を判定。実機の値に合わせて下の BAR_CAL の各しきい値を調整する。
-    //   戻り値: 'bottom'（通常）| 'left'（左端に縦表示）| 'right'（右端に縦表示）
-    // 判定の要点：
-    //  - 通常スマホ縦持ちはアスペクト比が約2.1以上と非常に縦長 → これを除外して誤作動を防ぐ。
-    //  - アウター(~466px)とインナー全画面(~626px)は比率がほぼ同じなので画面幅(screen.width)で区別。
-    const BAR_CAL = {
-      outerMaxScreenW: 560,  // これ未満の画面幅＝アウターとみなす上限（インナー~626と分離）
-      foldableMaxAR:   1.85, // これ未満の縦横比＝折りたたみ系（通常スマホ縦~2.1を除外）
-      foldableMinAR:   0.80, // これ超＝正方形寄り（通常スマホ横~0.46/デスクトップを除外）
-      splitMaxRatio:   0.92, // 画面幅に対する占有率がこれ未満＝Split View（画面の一部）
-    };
-    const computeLayoutFromMetrics = (m) => {
-      try {
-        const { vw, vh, sw, sx } = m;
-        const ar = vh / Math.max(1, vw);              // 縦横比（縦長ほど大きい）
-        const widthRatio = vw / Math.max(1, sw);      // 画面全幅に対する自ウィンドウ占有率
-        const notFull = widthRatio < BAR_CAL.splitMaxRatio; // 画面の一部のみ（Split View 等）
-
-        // ① Split View（画面の一部しか使っていない）→ 自ペインの位置で左右に寄せる。
-        //    screenX が取れる端末はその中心位置で判定。取れない端末は
-        //    visualViewport.offsetLeft、さらにそれも無ければ「右端に接しているか」で判定。
-        if (notFull) {
-          if (sx > 0)        return (sx + vw / 2) > sw / 2 ? 'right' : 'left';
-          if (m.vvLeft > 0)  return (m.vvLeft + vw / 2) > sw / 2 ? 'right' : 'left';
-          return 'left'; // 位置不明時は左端（オフセット0＝左ペインの可能性が高い）
-        }
-
-        // ② アウターディスプレイ：全幅・正方形寄りの比率・画面幅が小さい → 右端サイドバー。
-        //    （インナー全画面は画面幅が大きいので除外され bottom のまま）
-        if (ar < BAR_CAL.foldableMaxAR && ar > BAR_CAL.foldableMinAR && sw < BAR_CAL.outerMaxScreenW) {
-          return 'right';
-        }
-
-        // ③ 通常のスマホ／縦長・横長の一般画面／大型デスクトップ → 従来どおり下部バー。
-        return 'bottom';
-      } catch (_) {
-        return 'bottom';
-      }
-    };
-
-    const computeBarLayout = () => readBarMetrics().layout;
-
     window.showToast = (message) => {
       const popup = document.createElement('div');
       popup.textContent = message;
@@ -3686,14 +3617,6 @@
       const [showFixedInput, setShowFixedInput] = React.useState(false); // すべての固定費用ページの入力モーダル
       const [showBookshelf, setShowBookshelf] = React.useState(false);
       const [bookshelfDetailId, setBookshelfDetailId] = React.useState(null);
-      // 折りたたみ端末向け：タブバーの配置（'bottom'|'left'|'right'）を自動判定
-      const [barLayout, setBarLayout] = React.useState(() => computeBarLayout());
-      // キャリブレーション用：生メトリクスの表示（URL に #barcal を付けると表示）
-      const [barMetrics, setBarMetrics] = React.useState(() => readBarMetrics());
-      const [barCal, setBarCal] = React.useState(() => {
-        try { return /barcal/i.test(String(window.location.hash) + String(window.location.search)); }
-        catch (_) { return false; }
-      });
       const walletScrollRef = useRef(null);
       const walletScrollPos = useRef(0);
       const goToWalletSubPage = (page) => {
@@ -3739,39 +3662,6 @@
           container.removeEventListener('scroll', handleScroll);
         };
       }, [activeTab]);
-
-      // タブバー配置の自動判定：リサイズ・回転・Split View の移動に追従。
-      // screenX はイベントを出さない環境があるため軽いポーリングも併用（1.5秒）。
-      useEffect(() => {
-        const update = () => {
-          const m = readBarMetrics();
-          setBarLayout(prev => (m.layout === prev ? prev : m.layout));
-          setBarMetrics(m);
-        };
-        update();
-        const onHash = () => {
-          try { setBarCal(/barcal/i.test(String(window.location.hash) + String(window.location.search))); }
-          catch (_) {}
-        };
-        window.addEventListener('resize', update);
-        window.addEventListener('orientationchange', update);
-        window.addEventListener('hashchange', onHash);
-        if (window.visualViewport) {
-          window.visualViewport.addEventListener('resize', update);
-          window.visualViewport.addEventListener('scroll', update);
-        }
-        const poll = setInterval(update, 1000);
-        return () => {
-          window.removeEventListener('resize', update);
-          window.removeEventListener('orientationchange', update);
-          window.removeEventListener('hashchange', onHash);
-          if (window.visualViewport) {
-            window.visualViewport.removeEventListener('resize', update);
-            window.visualViewport.removeEventListener('scroll', update);
-          }
-          clearInterval(poll);
-        };
-      }, []);
 
       const d = nowJST();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
@@ -4313,55 +4203,14 @@
 
       const tabs = ['予定', '資産', '固定', '変動費', 'ローン', '累計'];
 
-      // タブバー配置に応じたレイアウト計算（'bottom' は従来どおり下部）
-      const SIDEBAR_W = 84; // 縦サイドバーの幅(px)
-      const isSideBar = barLayout === 'left' || barLayout === 'right';
-      const rootStyle = isSideBar
-        ? { [barLayout === 'left' ? 'paddingLeft' : 'paddingRight']: SIDEBAR_W + 'px' }
-        : undefined;
-      const navClassName = isSideBar
-        ? `fixed ${barLayout === 'left' ? 'left-0' : 'right-0'} top-0 h-full z-50`
-        : 'fixed bottom-0 w-full max-w-[100vw] z-50';
-      const navStyle = isSideBar
-        ? { fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', width: SIDEBAR_W + 'px',
-            paddingTop: 'env(safe-area-inset-top, 8px)', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }
-        : { fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: 'env(safe-area-inset-bottom, 12px)' };
-      const navInnerClassName = isSideBar
-        ? 'flex flex-col items-center justify-evenly h-full py-2'
-        : 'flex items-center justify-evenly pt-3 pb-2';
-
       return (
-        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50" style={rootStyle}>
-          {barCal && (
-            <div style={{position:'fixed', top:'env(safe-area-inset-top, 6px)', left:'6px', zIndex:99999,
-                         background:'rgba(15,23,42,0.92)', color:'#fff', fontSize:'11px', lineHeight:'1.5',
-                         fontFamily:'monospace', padding:'8px 10px', borderRadius:'8px', maxWidth:'60vw',
-                         pointerEvents:'auto', boxShadow:'0 4px 12px rgba(0,0,0,.3)'}}
-                 onClick={() => setBarMetrics(readBarMetrics())}>
-              <div style={{fontWeight:'bold', color:'#38bdf8'}}>BARCAL（タップで更新）</div>
-              <div>layout = <b style={{color:'#f97316'}}>{barMetrics.layout}</b></div>
-              <div>inner = {barMetrics.vw} × {barMetrics.vh}</div>
-              <div>screen = {barMetrics.sw} × {barMetrics.sh}</div>
-              <div>visualVP = {barMetrics.vvw} × {barMetrics.vvh} (L{barMetrics.vvLeft})</div>
-              <div>screenX = {barMetrics.sx} / dpr = {barMetrics.dpr}</div>
-              <div>AR(vh/vw) = {(barMetrics.vh / Math.max(1, barMetrics.vw)).toFixed(3)}</div>
-              <div>widthRatio = {(barMetrics.vw / Math.max(1, barMetrics.sw)).toFixed(3)}</div>
-              <div style={{marginTop:'4px', display:'flex', gap:'4px'}}>
-                {['bottom','left','right'].map(v => (
-                  <button key={v} onClick={(e) => { e.stopPropagation(); setBarLayout(v); }}
-                    style={{background: barLayout===v ? '#f97316' : '#334155', color:'#fff',
-                            border:'0', borderRadius:'5px', padding:'3px 7px', fontSize:'11px'}}>{v}</button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
           <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full no-bounce allow-scroll">
             {renderContent()}
           </div>
-          {/* ── タブバー: 各アイコンを独立した丸アイコンで表示（日付矢印は矢印単体・丸なし） ──
-              折りたたみ端末では barLayout に応じて左右の縦サイドバーに自動変化 ── */}
-          <nav className={navClassName} style={navStyle}>
-            <div className={navInnerClassName}>
+          {/* ── タブバー: 各アイコンを独立した丸アイコンで表示（日付矢印は矢印単体・丸なし） ── */}
+          <nav className="fixed bottom-0 w-full max-w-[100vw] z-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: 'env(safe-area-inset-bottom, 12px)'}}>
+            <div className="flex items-center justify-evenly pt-3 pb-2">
 
               {/* 本棚（開いた本） */}
               <button

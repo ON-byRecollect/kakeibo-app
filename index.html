@@ -139,6 +139,38 @@
     // Date を "YYYY-MM-DD" に整形（ローカルget系ベース）。nowJST() と組み合わせると JST 日付になる。
     const ymd = (dateObj) => `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
+    // ── 折りたたみ端末（iPhone Duo 等）向け：下部タブバーを縦サイドバーへ自動切替 ──
+    // Web からは確実な API が無いため、ビューポート幅・アスペクト比・画面内オフセット(screenX)
+    // から推定する。通常の iPhone/Android 利用を絶対に妨げないよう、判定が曖昧なときは 'bottom'。
+    //   戻り値: 'bottom'（通常）| 'left'（左端に縦表示）| 'right'（右端に縦表示）
+    // ※実機でのしきい値微調整が必要（この環境では実機検証不可）。
+    const computeBarLayout = () => {
+      try {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const sw = (window.screen && window.screen.width) || vw;
+        const ar = vh / Math.max(1, vw); // 縦横比（縦長ほど大きい）
+        const sx = (typeof window.screenX === 'number' ? window.screenX
+                   : (typeof window.screenLeft === 'number' ? window.screenLeft : 0));
+        // ウィンドウが画面全幅を占めているか（Split View でなければ true 相当）
+        const fullWidth = vw >= sw - 24;
+
+        // ① Split View（画面全幅を使っていない大型ディスプレイ）
+        //    自ペインの中心が画面中央より右なら右端、左なら左端にバーを寄せる。
+        if (!fullWidth && sw >= 560) {
+          const paneCenter = sx + vw / 2;
+          return paneCenter > sw / 2 ? 'right' : 'left';
+        }
+        // ② アウターディスプレイ（全幅・やや横長・中程度の幅）→ 右端固定
+        if (fullWidth && ar < 1.7 && vw >= 440 && vw < 520) return 'right';
+
+        // ③ 通常のスマホ／縦長画面 → 従来どおり下部バー
+        return 'bottom';
+      } catch (_) {
+        return 'bottom';
+      }
+    };
+
     window.showToast = (message) => {
       const popup = document.createElement('div');
       popup.textContent = message;
@@ -3617,6 +3649,8 @@
       const [showFixedInput, setShowFixedInput] = React.useState(false); // すべての固定費用ページの入力モーダル
       const [showBookshelf, setShowBookshelf] = React.useState(false);
       const [bookshelfDetailId, setBookshelfDetailId] = React.useState(null);
+      // 折りたたみ端末向け：タブバーの配置（'bottom'|'left'|'right'）を自動判定
+      const [barLayout, setBarLayout] = React.useState(() => computeBarLayout());
       const walletScrollRef = useRef(null);
       const walletScrollPos = useRef(0);
       const goToWalletSubPage = (page) => {
@@ -3662,6 +3696,32 @@
           container.removeEventListener('scroll', handleScroll);
         };
       }, [activeTab]);
+
+      // タブバー配置の自動判定：リサイズ・回転・Split View の移動に追従。
+      // screenX はイベントを出さない環境があるため軽いポーリングも併用（1.5秒）。
+      useEffect(() => {
+        const update = () => setBarLayout(prev => {
+          const next = computeBarLayout();
+          return next === prev ? prev : next;
+        });
+        update();
+        window.addEventListener('resize', update);
+        window.addEventListener('orientationchange', update);
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', update);
+          window.visualViewport.addEventListener('scroll', update);
+        }
+        const poll = setInterval(update, 1500);
+        return () => {
+          window.removeEventListener('resize', update);
+          window.removeEventListener('orientationchange', update);
+          if (window.visualViewport) {
+            window.visualViewport.removeEventListener('resize', update);
+            window.visualViewport.removeEventListener('scroll', update);
+          }
+          clearInterval(poll);
+        };
+      }, []);
 
       const d = nowJST();
       const currentYearMonth = `${d.getFullYear()}年${d.getMonth() + 1}月`;
@@ -4203,14 +4263,32 @@
 
       const tabs = ['予定', '資産', '固定', '変動費', 'ローン', '累計'];
 
+      // タブバー配置に応じたレイアウト計算（'bottom' は従来どおり下部）
+      const SIDEBAR_W = 84; // 縦サイドバーの幅(px)
+      const isSideBar = barLayout === 'left' || barLayout === 'right';
+      const rootStyle = isSideBar
+        ? { [barLayout === 'left' ? 'paddingLeft' : 'paddingRight']: SIDEBAR_W + 'px' }
+        : undefined;
+      const navClassName = isSideBar
+        ? `fixed ${barLayout === 'left' ? 'left-0' : 'right-0'} top-0 h-full z-50`
+        : 'fixed bottom-0 w-full max-w-[100vw] z-50';
+      const navStyle = isSideBar
+        ? { fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', width: SIDEBAR_W + 'px',
+            paddingTop: 'env(safe-area-inset-top, 8px)', paddingBottom: 'env(safe-area-inset-bottom, 8px)' }
+        : { fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: 'env(safe-area-inset-bottom, 12px)' };
+      const navInnerClassName = isSideBar
+        ? 'flex flex-col items-center justify-evenly h-full py-2'
+        : 'flex items-center justify-evenly pt-3 pb-2';
+
       return (
-        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50">
+        <div className="flex flex-col h-screen w-full max-w-[100vw] overflow-hidden overflow-x-hidden relative bg-gray-50" style={rootStyle}>
           <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full no-bounce allow-scroll">
             {renderContent()}
           </div>
-          {/* ── タブバー: 各アイコンを独立した丸アイコンで表示（日付矢印は矢印単体・丸なし） ── */}
-          <nav className="fixed bottom-0 w-full max-w-[100vw] z-50" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif', paddingBottom: 'env(safe-area-inset-bottom, 12px)'}}>
-            <div className="flex items-center justify-evenly pt-3 pb-2">
+          {/* ── タブバー: 各アイコンを独立した丸アイコンで表示（日付矢印は矢印単体・丸なし） ──
+              折りたたみ端末では barLayout に応じて左右の縦サイドバーに自動変化 ── */}
+          <nav className={navClassName} style={navStyle}>
+            <div className={navInnerClassName}>
 
               {/* 本棚（開いた本） */}
               <button

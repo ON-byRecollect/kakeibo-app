@@ -3200,23 +3200,19 @@
       const isBG = (i) =>
         (data[i] >= WHITE && data[i + 1] >= WHITE && data[i + 2] >= WHITE) ||
         (data[i] <= BLACK && data[i + 1] <= BLACK && data[i + 2] <= BLACK);
-      const rowHasContent = (y) => {
-        const need = Math.max(2, Math.floor(w * 0.01)); // 1%以上が余白以外ならイラストの行
-        let cnt = 0;
-        for (let x = 0; x < w; x++) { if (!isBG((y * w + x) * 4)) { if (++cnt >= need) return true; } }
-        return false;
-      };
-      const colHasContent = (x) => {
-        const need = Math.max(2, Math.floor(h * 0.01));
-        let cnt = 0;
-        for (let y = 0; y < h; y++) { if (!isBG((y * w + x) * 4)) { if (++cnt >= need) return true; } }
-        return false;
-      };
+      // 「余白」= ほぼ全面が背景（白/黒）で、中身（イラスト）の画素がごくわずかな行/列。
+      // 電子書籍リーダーの時刻・カメラノッチ・位置/％表示などの細い文字帯は、非背景の占有率が
+      // 低い（数%〜十数%）。単純な「1%でも非背景なら中身」ではこれらを余白として除去できず
+      // 上下にUI帯が残っていた。非背景の占有率がしきい値未満の行/列を余白とみなして各辺から
+      // 削ることで、UI帯も白/黒の余白もまとめて除去し、密度の高いイラスト部分だけを残す。
+      const MIN_FILL = 0.20; // 非背景がこの割合以上ある行/列を「中身（イラスト）」とみなす
+      const rowFill = (y) => { let c = 0; for (let x = 0; x < w; x++) if (!isBG((y * w + x) * 4)) c++; return c / w; };
+      const colFill = (x) => { let c = 0; for (let y = 0; y < h; y++) if (!isBG((y * w + x) * 4)) c++; return c / h; };
       let top = 0, bottom = h - 1, left = 0, right = w - 1;
-      while (top < bottom && !rowHasContent(top)) top++;
-      while (bottom > top && !rowHasContent(bottom)) bottom--;
-      while (left < right && !colHasContent(left)) left++;
-      while (right > left && !colHasContent(right)) right--;
+      while (top < bottom && rowFill(top) < MIN_FILL) top++;
+      while (bottom > top && rowFill(bottom) < MIN_FILL) bottom--;
+      while (left < right && colFill(left) < MIN_FILL) left++;
+      while (right > left && colFill(right) < MIN_FILL) right--;
       let l = left / w, t = top / h, r = (right + 1) / w, b = (bottom + 1) / h;
       // 不自然（反転・極端に小さい＝ほぼ単色画像など）なら切り取らず全体を使う
       if (!(r > l && b > t) || (r - l) < 0.15 || (b - t) < 0.15) return { l: 0, t: 0, r: 1, b: 1 };

@@ -3411,7 +3411,7 @@
 
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
-          <div className="bg-white px-4 pt-20 pb-3 border-b border-gray-100 sticky top-0 z-10 shrink-0">
+          <div className="bg-white px-4 pb-3 border-b border-gray-100 sticky top-0 z-10 shrink-0" style={{ paddingTop: 'max(92px, calc(env(safe-area-inset-top, 0px) + 64px))' }}>
             <div className="flex items-center gap-3">
               <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -3543,7 +3543,7 @@
 
       return (
         <div className="flex flex-col h-screen w-full bg-gray-50 overflow-hidden" style={{fontFamily: '-apple-system, "Helvetica Neue", Arial, sans-serif'}}>
-          <div className="bg-white px-4 pt-20 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0">
+          <div className="bg-white px-4 pb-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 z-10 shrink-0" style={{ paddingTop: 'max(92px, calc(env(safe-area-inset-top, 0px) + 64px))' }}>
             <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-slate-700 active:opacity-60 shrink-0">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>

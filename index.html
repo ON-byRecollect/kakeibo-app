@@ -3602,18 +3602,18 @@
               }}>
               <img src={details[viewerIdx].img} alt="" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
               {details.length > 1 && (
-                <div className="absolute left-1/2 -translate-x-1/2 text-white/90 text-sm font-bold pointer-events-none" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>{viewerIdx + 1} / {details.length}</div>
+                <div className="absolute left-1/2 -translate-x-1/2 text-white text-sm font-bold pointer-events-none" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{viewerIdx + 1} / {details.length}</div>
               )}
-              <button onClick={(e) => { e.stopPropagation(); setViewerIdx(null); }} className="absolute right-5 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center backdrop-blur active:opacity-70" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 10px)' }}>
+              <button onClick={(e) => { e.stopPropagation(); setViewerIdx(null); }} className="absolute right-5 w-10 h-10 rounded-full bg-black/45 text-white flex items-center justify-center shadow-lg ring-1 ring-white/30 active:opacity-70" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 10px)' }}>
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
               {viewerIdx > 0 && (
-                <button onClick={(e) => { e.stopPropagation(); setViewerIdx(i => Math.max(0, i - 1)); }} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center backdrop-blur active:opacity-70">
+                <button onClick={(e) => { e.stopPropagation(); setViewerIdx(i => Math.max(0, i - 1)); }} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 text-white flex items-center justify-center shadow-lg ring-1 ring-white/30 active:opacity-70">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
                 </button>
               )}
               {viewerIdx < details.length - 1 && (
-                <button onClick={(e) => { e.stopPropagation(); setViewerIdx(i => Math.min(details.length - 1, i + 1)); }} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center backdrop-blur active:opacity-70">
+                <button onClick={(e) => { e.stopPropagation(); setViewerIdx(i => Math.min(details.length - 1, i + 1)); }} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 text-white flex items-center justify-center shadow-lg ring-1 ring-white/30 active:opacity-70">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </button>
               )}

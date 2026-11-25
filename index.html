@@ -3329,7 +3329,12 @@
 
       useEffect(() => {
         const unsub = db.collection('bookshelf').orderBy('createdAt', 'desc').onSnapshot(
-          (snap) => { setBooks(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false); },
+          (snap) => {
+            const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            // 画像の追加・編集などの最終更新(updatedAt)が新しい順。未設定の旧データは createdAt で代替
+            list.sort((a, b) => ((b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0)));
+            setBooks(list); setLoading(false);
+          },
           (err) => { console.error('本棚の取得エラー', err); setLoading(false); }
         );
         return () => unsub();
@@ -3342,7 +3347,8 @@
         setBusy(true);
         try {
           const cover = await compressCover(file, 1000, 0.72);
-          await db.collection('bookshelf').doc().set({ cover, completed: false, createdAt: Date.now() });
+          const now = Date.now();
+          await db.collection('bookshelf').doc().set({ cover, completed: false, createdAt: now, updatedAt: now });
         } catch (err) { alert('表紙の登録に失敗しました：' + (err.message || err)); }
         setBusy(false);
       };
@@ -3356,7 +3362,7 @@
         setBusy(true);
         try {
           const cover = await compressCover(file, 1000, 0.72);
-          await db.collection('bookshelf').doc(id).update({ cover });
+          await db.collection('bookshelf').doc(id).update({ cover, updatedAt: Date.now() });
           if (window.showToast) window.showToast('表紙を変更しました');
         } catch (err) { alert('表紙の変更に失敗しました：' + (err.message || err)); }
         setBusy(false);
@@ -3532,12 +3538,15 @@
             const img = await compressDetail(files[i], 1400, 0.72);
             await db.collection('bookshelf').doc(bookId).collection('details').doc().set({ img, createdAt: base + i });
           }
+          // 親の本の最終更新時刻を更新（本棚の並び順＝更新が新しい順に反映）
+          await db.collection('bookshelf').doc(bookId).update({ updatedAt: Date.now() });
         } catch (err) { alert('画像の追加に失敗しました：' + (err.message || err)); }
         setBusy(false);
       };
 
       const deleteDetail = (d) => {
         db.collection('bookshelf').doc(bookId).collection('details').doc(d.id).delete()
+          .then(() => db.collection('bookshelf').doc(bookId).update({ updatedAt: Date.now() }))
           .catch(err => console.error('詳細画像の削除エラー', err));
       };
 
@@ -3929,6 +3938,8 @@
       };
 
       const cashTotalForHome = cashAccountsForHome.reduce((sum, acc) => sum + Number(safeCashAssetsForHome[acc.id] || 0), 0);
+      // 現金資産総収支 = 各口座の「現在の資産 − その口座に月々入力されている支出」の合計
+      const cashBalanceTotalForHome = cashAccountsForHome.reduce((sum, acc) => sum + getBalanceForHome(acc.label, safeCashAssetsForHome[acc.id]), 0);
       const pointTotalForHome = Object.values(safePointAssetsForHome).reduce((sum, val) => sum + Number(val || 0), 0);
       const borrowingTotalForHome = Object.values(safeBorrowingAssetsForHome).reduce((sum, val) => sum + Number(val || 0), 0);
       const physicalTotalForHome = safePhysicalAssetsForHome.reduce((sum, item) => sum + Number(item.value || 0), 0);
@@ -4068,14 +4079,14 @@
 
             <div className="px-4 pt-5 space-y-4">
 
-              {/* ── 現金資産総合計カード（水色） ── */}
+              {/* ── 現金資産総収支カード（水色） ── */}
               <div className="rounded-3xl p-5 bg-white" style={{border: '3px solid #009BE5'}}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-bold text-slate-500">現金資産総合計</span>
+                  <span className="text-sm font-bold text-slate-500">現金資産総収支</span>
                   <span className="text-xs font-bold text-slate-400">{lastEditedDate ? lastEditedDate + "時点" : todayStr + "時点"}</span>
                 </div>
-                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: '#009BE5'}}>
-                  ¥{cashTotalForHome.toLocaleString()}
+                <div className="text-[2.2rem] font-black leading-none mb-4" style={{color: cashBalanceTotalForHome < 0 ? '#ef4444' : '#009BE5'}}>
+                  ¥{cashBalanceTotalForHome.toLocaleString()}
                 </div>
                 {/* 各口座の入力欄 */}
                 <div className="space-y-2">
